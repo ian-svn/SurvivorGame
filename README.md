@@ -1,19 +1,20 @@
-Proyecto: Juego de Supervivencia Cooperativo en Red
+## Proyecto: Juego de Supervivencia Cooperativo en Red
 
-Integrantes del Grupo:
-Vila Ian Santiago
-Vinazza Blardone Antonio Santos
-Descripción Corta del Videojuego:
+### Integrantes del Grupo:
+- Vila Ian Santiago
+- Vinazza Blardone Antonio Santos
+### Descripción Corta del Videojuego:
 Un juego de supervivencia cooperativo en red en 2.5D, donde los jugadores deberán colaborar para sobrevivir en un mundo hostil que se genera proceduralmente y que presenta una amenaza inminente: la Luna, que se acerca gradualmente y altera el entorno, introduciendo desafíos crecientes hasta un enfrentamiento final. El juego combina elementos de estrategia en tiempo real (RTS) y rol (RPG), permitiendo a los jugadores elegir roles únicos y desarrollar habilidades mientras construyen bases, recolectan recursos y se defienden de criaturas y desastres naturales.
 
-Tecnologías Principales:
-LibGDX (versión 1.13.1.3), Java (Amazon Corretto 23).
-Plataformas de desarrollo objetivo: Escritorio (PC).
+### Tecnologías Principales:
+- LibGDX (versión 1.13.1.3), Java (Amazon Corretto 23).
+### Plataformas de desarrollo objetivo: 
+- Escritorio (PC).
 
-Enlace a la Wiki del Proyecto:
+### Enlace a la Wiki del Proyecto:
 
 
-Instrucciones Básicas de Compilación y Ejecución:
+### Instrucciones Básicas de Compilación y Ejecución:
 
 Clonar el repositorio:
 Abre tu terminal o Git Bash y ejecuta el siguiente comando en la consola de git:
@@ -31,5 +32,8 @@ Ejecutar el proyecto:
 
 Para la versión de escritorio, busca la clase principal que contiene el método main (generalmente en el módulo desktop o similar). Haz clic derecho sobre ella y selecciona "Run" o "Debug".
 Asegúrate de que la configuración de ejecución esté apuntando al módulo desktop y utilizando la clase principal del juego.
-Aclaración sobre el Nombre del Proyecto:
-El nombre final del videojuego aún no ha sido decidido, se definirá en una etapa posterior del desarrollo.
+
+## Estado actual del proyecto
+### - ESTADO DE DESARROLLO: RECIEN EMPEZADO
+### Aclaración sobre el Nombre del Proyecto:
+- El nombre final del videojuego aún no ha sido decidido, se definirá en una etapa posterior del desarrollo.
