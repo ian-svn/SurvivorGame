@@ -1,5 +1,6 @@
-1- inicializacion de proyecto -> creación del proyecto
-2- inicializacion de proyecto + correción de errores-> creación del proyecto
-3- correccion de errores -> archivos innecesarios
 
-
+## [1.0] - 26/05/2025
+### Added
+- Creación del proyecto con libGDX
+## Fixed
+- Corregido el formato de CHANGELOG.md
