@@ -1,20 +1,20 @@
-# Proyecto: Juego de Supervivencia Cooperativo en Red
+# Proyecto: Juego de Supervivencia Cooperativo en Red (nombre provisorio)
 
-### Integrantes del Grupo:
+## Integrantes del Grupo:
 - Vila Ian Santiago
 - Vinazza Blardone Antonio Santos
-### Descripción Corta del Videojuego:
+## Descripción Corta del Videojuego:
 Un juego de supervivencia cooperativo en red en 2.5D, donde los jugadores deberán colaborar para sobrevivir en un mundo hostil que se genera proceduralmente y que presenta una amenaza inminente: la Luna, que se acerca gradualmente y altera el entorno, introduciendo desafíos crecientes hasta un enfrentamiento final. El juego combina elementos de estrategia en tiempo real (RTS) y rol (RPG), permitiendo a los jugadores elegir roles únicos y desarrollar habilidades mientras construyen bases, recolectan recursos y se defienden de criaturas y desastres naturales.
 
-### Tecnologías Principales:
+## Tecnologías Principales:
 - LibGDX (versión 1.13.1.3), Java (Amazon Corretto 23).
-### Plataformas de desarrollo objetivo: 
+## Plataformas de desarrollo objetivo: 
 - Escritorio (PC).
 
-### Enlace a la Wiki del Proyecto:
+## Enlace a la Wiki del Proyecto:
 https://github.com/ian-svn/SurvivorGame/wiki
 
-### Instrucciones Básicas de Compilación y Ejecución:
+## Instrucciones Básicas de Compilación y Ejecución:
 
 Clonar el repositorio:
 Abre tu terminal o Git Bash y ejecuta el siguiente comando en la consola de git:
@@ -35,5 +35,5 @@ Asegúrate de que la configuración de ejecución esté apuntando al módulo des
 
 ## Estado actual del proyecto
 ### - ESTADO DE DESARROLLO: RECIEN EMPEZADO
-### Aclaración sobre el Nombre del Proyecto:
+## Aclaración sobre el Nombre del Proyecto:
 - El nombre final del videojuego aún no ha sido decidido, se definirá en una etapa posterior del desarrollo.
