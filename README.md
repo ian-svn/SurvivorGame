@@ -1,4 +1,4 @@
-## Proyecto: Juego de Supervivencia Cooperativo en Red
+# Proyecto: Juego de Supervivencia Cooperativo en Red
 
 ### Integrantes del Grupo:
 - Vila Ian Santiago
