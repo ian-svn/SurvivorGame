@@ -12,7 +12,7 @@ Un juego de supervivencia cooperativo en red en 2.5D, donde los jugadores deber�
 - Escritorio (PC).
 
 ### Enlace a la Wiki del Proyecto:
-
+https://github.com/ian-svn/SurvivorGame/wiki
 
 ### Instrucciones Básicas de Compilación y Ejecución:
 
