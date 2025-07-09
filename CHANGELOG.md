@@ -1,6 +1,6 @@
-#Changelog SurvivorGame
+# Changelog SurvivorGame
 
-##[UNRELEASED]
+## [UNRELEASED]
 - Cambio de nombre del proyecto
 - Version Pre Alfa
 
