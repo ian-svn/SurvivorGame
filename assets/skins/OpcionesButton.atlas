@@ -1,0 +1,30 @@
+
+OpcionesButton.png
+size: 512, 512
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+OpcionesOver
+  rotate: false
+  xy: 1, 229
+  size: 358, 63
+  split: 0, 0, 0, 0
+  orig: 358, 63
+  offset: 0, 0
+  index: -1
+OpcionesPressed
+  rotate: false
+  xy: 1, 294
+  size: 358, 63
+  split: 0, 0, 0, 0
+  orig: 358, 63
+  offset: 0, 0
+  index: -1
+OpcionesUp
+  rotate: false
+  xy: 1, 172
+  size: 350, 55
+  split: 0, 0, 0, 0
+  orig: 350, 55
+  offset: 0, 0
+  index: -1

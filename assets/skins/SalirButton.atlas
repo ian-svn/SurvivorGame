@@ -1,0 +1,30 @@
+
+SalirButton.png
+size: 256, 256
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+SalirOver
+  rotate: false
+  xy: 1, 156
+  size: 231, 74
+  split: 0, 0, 0, 0
+  orig: 231, 74
+  offset: 0, 0
+  index: -1
+SalirPressed
+  rotate: false
+  xy: 1, 80
+  size: 228, 74
+  split: 0, 0, 0, 0
+  orig: 228, 74
+  offset: 0, 0
+  index: -1
+SalirUp
+  rotate: false
+  xy: 1, 13
+  size: 220, 65
+  split: 0, 0, 0, 0
+  orig: 220, 65
+  offset: 0, 0
+  index: -1
