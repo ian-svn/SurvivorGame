@@ -2,11 +2,14 @@ package io.github.package_game_survival;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.Graphics;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
@@ -14,10 +17,12 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class Main extends ApplicationAdapter {
 
     private Stage stage;
-    private Table table;
+    private Table tableMenu;
+    private Table tableOpciones;
     private Skin jugarSkin;
     private Skin opcionesSkin;
     private Skin salirSkin;
+    private Skin menuSkin;
     private Button jugarButton;
     private Button opcionesButton;
     private Button salirButton;
@@ -32,26 +37,54 @@ public class Main extends ApplicationAdapter {
         jugarSkin = new Skin(Gdx.files.internal("skins/JugarButton.json"));
         opcionesSkin = new Skin(Gdx.files.internal("skins/OpcionesButton.json"));
         salirSkin = new Skin(Gdx.files.internal("skins/SalirButton.json"));
+        menuSkin = new Skin(Gdx.files.internal("skins/background.json"));
 
         jugarButton = new Button(jugarSkin);
+        jugarButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                tableMenu.setVisible(false);
+            }
+        });
+
         opcionesButton = new Button(opcionesSkin);
+        opcionesButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                tableMenu.setVisible(false);
+                tableOpciones.setVisible(true);
+            }
+        });
+
         salirButton = new Button(salirSkin);
+        salirButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y){
+                Gdx.app.exit();
+            }
+        });
 
         stage = new Stage();
         Gdx.input.setInputProcessor(stage);
 
-        table = new Table();
-        table.setFillParent(true);
-        table.bottom().left();
+        tableMenu = new Table();
+        tableMenu.setFillParent(true);
+        tableMenu.bottom().left();
 
-        table.pad(50);
-        table.add(jugarButton).width(220).height(60).pad(10);
-        table.row();
-        table.add(opcionesButton).prefSize(300,60).pad(10);
-        table.row();
-        table.add(salirButton).width(200).height(60).pad(10);
+        tableOpciones = new Table(menuSkin);
+        tableOpciones.setFillParent(true);
+        tableOpciones.center();
+        tableOpciones.setVisible(false);
 
-        stage.addActor(table);
+
+        tableMenu.pad(50);
+        tableMenu.add(jugarButton).width(220).height(60).pad(10);
+        tableMenu.row();
+        tableMenu.add(opcionesButton).prefSize(300,60).pad(10);
+        tableMenu.row();
+        tableMenu.add(salirButton).width(200).height(60).pad(10);
+
+        stage.addActor(tableMenu);
     }
 
     @Override
@@ -64,6 +97,24 @@ public class Main extends ApplicationAdapter {
         ScreenUtils.clear(0, 0, 0, 1); // fondo negro
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) {
+            Gdx.graphics.setUndecorated(false); // Asegura que los bordes vuelvan a aparecer
+            Gdx.graphics.setWindowedMode(1280, 720);
+        }
+
+        // Alternar a pantalla completa
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F2)) {
+            Graphics.DisplayMode displayMode = Gdx.graphics.getDisplayMode();
+            Gdx.graphics.setFullscreenMode(displayMode);
+        }
+
+        // Alternar a ventana sin bordes
+        if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) {
+            Graphics.DisplayMode displayMode = Gdx.graphics.getDisplayMode();
+            Gdx.graphics.setUndecorated(true);
+            Gdx.graphics.setWindowedMode(displayMode.width, displayMode.height);
+        }
     }
 
     @Override
