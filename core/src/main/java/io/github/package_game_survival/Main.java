@@ -26,13 +26,14 @@ public class Main extends ApplicationAdapter {
     private Button jugarButton;
     private Button opcionesButton;
     private Button salirButton;
-    private Viewport vierport;
+    private Viewport viewport; // Renombrado a "viewport" para mayor claridad
     private final float ANCHO_PANTALLA = 1280f;
     private final float ALTO_PANTALLA = 720f;
 
     @Override
     public void create () {
-        vierport = new FitViewport(ANCHO_PANTALLA, ALTO_PANTALLA);
+        // --- 1. Inicializar el Viewport ---
+        viewport = new FitViewport(ANCHO_PANTALLA, ALTO_PANTALLA);
 
         jugarSkin = new Skin(Gdx.files.internal("skins/JugarButton.json"));
         opcionesSkin = new Skin(Gdx.files.internal("skins/OpcionesButton.json"));
@@ -64,7 +65,7 @@ public class Main extends ApplicationAdapter {
             }
         });
 
-        stage = new Stage();
+        stage = new Stage(viewport);
         Gdx.input.setInputProcessor(stage);
 
         tableMenu = new Table();
@@ -75,7 +76,6 @@ public class Main extends ApplicationAdapter {
         tableOpciones.setFillParent(true);
         tableOpciones.center();
         tableOpciones.setVisible(false);
-
 
         tableMenu.pad(50);
         tableMenu.add(jugarButton).width(220).height(60).pad(10);
@@ -89,37 +89,34 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void resize (int width, int height) {
-        stage.getViewport().update(width, height, true);
+        // --- 3. Actualizar el viewport cuando la ventana cambie de tamaño ---
+        viewport.update(width, height, true);
     }
 
     @Override
     public void render () {
-        ScreenUtils.clear(0, 0, 0, 1); // fondo negro
+        ScreenUtils.clear(0, 0, 0, 1);
         stage.act(Gdx.graphics.getDeltaTime());
         stage.draw();
+           
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.F1)) {
-            Gdx.graphics.setUndecorated(false); // Asegura que los bordes vuelvan a aparecer
+            Gdx.graphics.setUndecorated(false);
             Gdx.graphics.setWindowedMode(1280, 720);
         }
 
-        // Alternar a pantalla completa
         if (Gdx.input.isKeyJustPressed(Input.Keys.F2)) {
             Graphics.DisplayMode displayMode = Gdx.graphics.getDisplayMode();
             Gdx.graphics.setFullscreenMode(displayMode);
-        }
-
-        // Alternar a ventana sin bordes
-        if (Gdx.input.isKeyJustPressed(Input.Keys.F3)) {
-            Graphics.DisplayMode displayMode = Gdx.graphics.getDisplayMode();
-            Gdx.graphics.setUndecorated(true);
-            Gdx.graphics.setWindowedMode(displayMode.width, displayMode.height);
         }
     }
 
     @Override
     public void dispose() {
         stage.dispose();
+        jugarSkin.dispose();
         opcionesSkin.dispose();
+        salirSkin.dispose();
+        menuSkin.dispose();
     }
 }
