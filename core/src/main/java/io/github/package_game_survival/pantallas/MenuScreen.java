@@ -1,67 +1,59 @@
 package io.github.package_game_survival.pantallas;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
+import io.github.package_game_survival.managers.Audio.AudioManager;
+import io.github.package_game_survival.standards.TextButtonStandard;
 
 public class MenuScreen implements Screen {
 
     private final MyGame game;
     private Stage stage;
-    private Skin jugarSkin, opcionesSkin, salirSkin;
+    private Skin menuSkin;
+    private Table tableMenu;
 
     public MenuScreen(final MyGame game) {
         this.game = game;
+
+        Graphics.DisplayMode displayMode = Gdx.graphics.getDisplayMode();
+        Gdx.graphics.setFullscreenMode(displayMode);
     }
 
     @Override
     public void show() {
+
+        AudioManager.getControler().playMusic("menuMusic",true);
+
+        menuSkin = new Skin(Gdx.files.internal("skins/background.json"));
         stage = new Stage(game.getViewport());
         Gdx.input.setInputProcessor(stage);
 
-        jugarSkin = new Skin(Gdx.files.internal("skins/JugarButton.json"));
-        opcionesSkin = new Skin(Gdx.files.internal("skins/OpcionesButton.json"));
-        salirSkin = new Skin(Gdx.files.internal("skins/SalirButton.json"));
-
-        Button jugarButton = new Button(jugarSkin);
-        jugarButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y){
-                game.setScreen(new GameScreen(game));
-            }
-        });
-
-        Button opcionesButton = new Button(opcionesSkin);
-        opcionesButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y){
-                game.setScreen(new OptionsScreen(game));
-            }
-        });
-
-        Button salirButton = new Button(salirSkin);
-        salirButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y){
-                Gdx.app.exit();
-            }
-        });
-
-        Table tableMenu = new Table();
+        tableMenu = new Table();
         tableMenu.setFillParent(true);
-        tableMenu.bottom().left();
-        tableMenu.pad(50);
-        tableMenu.add(jugarButton).width(220).height(60).pad(10);
-        tableMenu.row();
-        tableMenu.add(opcionesButton).prefSize(300,60).pad(10);
-        tableMenu.row();
-        tableMenu.add(salirButton).width(200).height(60).pad(10);
+        tableMenu.bottom().left().pad(50);
+
+        tableMenu.setBackground(menuSkin.getDrawable("fondoMenu"));
+
+        TextButtonStandard jugarButton = new TextButtonStandard("Jugar");
+        jugarButton.setClickListener(() -> game.setScreen(new GameScreen(game)));
+
+        TextButtonStandard opcionesButton = new TextButtonStandard("Opciones");
+        opcionesButton.setClickListener(() -> game.setScreen(new OptionsScreen(game)));
+
+        TextButtonStandard salirButton = new TextButtonStandard("Salir");
+        salirButton.setClickListener(() -> Gdx.app.exit());
+
+        tableMenu.add(jugarButton).width(220).height(60).pad(10).row();
+        tableMenu.add(opcionesButton).width(220).height(60).pad(10).row();
+        tableMenu.add(salirButton).width(220).height(60).pad(10);
 
         stage.addActor(tableMenu);
     }
@@ -92,8 +84,7 @@ public class MenuScreen implements Screen {
     @Override
     public void dispose() {
         stage.dispose();
-        jugarSkin.dispose();
-        opcionesSkin.dispose();
-        salirSkin.dispose();
+        menuSkin.dispose();
+        Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
     }
 }

@@ -6,9 +6,9 @@ filter: Linear, Linear
 repeat: none
 fondoMenu
   rotate: false
-  xy: 1, 434
-  size: 1280, 845
+  xy: 1, 559
+  size: 1280, 720
   split: 0, 0, 0, 0
-  orig: 1280, 845
+  orig: 1280, 720
   offset: 0, 0
   index: -1
