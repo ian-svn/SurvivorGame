@@ -13,7 +13,7 @@
 
 El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/).
 
-## [0.1.0] - 2024-08-06
+## [0.1.0] - 2025-08-06
 ### Added
 - Clase principal **`MyGame`** con `SpriteBatch` y `FitViewport` (1280x720).
 - Pantalla **MenuScreen** con botones:
@@ -37,7 +37,7 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ### Fixed
 - Manejo correcto de recursos: todos los `Stage` y `Skin` se liberan en `dispose()` de cada pantalla.
 
-## [0.2.0] - 2024-08-06
+## [0.2.0] - 2025-08-06
 ### Added
 - **GameScreen**
     - Integración de `TooltipManager` para manejar tooltips en el juego.
@@ -61,4 +61,24 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ### Fixed
 - Limpieza automática de tooltips al inicializar `TooltipManager` con `hideAll()`.
+
+## [0.3.0] - 2025-09-11
+
+### Added
+- Sistema de inventario en `Jugador` con detección y adquisición de objetos.
+- Interfaz `Consumible` y clase `Pocion` (permite curar vida al jugador).
+- Sistema de audio (`AudioControler`, `AudioManager`, `AudioService`) con soporte de música y efectos.
+- Nuevos paths y assets para texturas, sonidos y música en `Assets` y `PathManager`.
+- Pantalla de menú rápido (`FastMenuScreen`) con opciones de reanudar, reiniciar y volver al menú principal.
+- Pantalla de carga (`LoadingScreen`) con barra de progreso animada y label de estado.
+- Nuevas clases estándar en `standards/`:
+    - `TextButtonStandard`: botón reutilizable con cursor dinámico y sonido de click integrado.
+    - `CheckBoxStandard`: checkbox estándar con manejo de cursor y soporte para callbacks.
+    - `TooltipStandard`: tooltip estándar con configuración de tiempos y skin personalizada.
+    - `LabelStandard`: label estándar con skin unificada.
+
+### Changed
+- `MenuScreen`: reemplazo de botones por `TextButtonStandard` para un manejo más simple y consistente.
+- Ahora es más fácil asignar funciones a botones usando `setClickListener(Runnable)`.
+
 

@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 
 import java.util.ArrayList;
@@ -15,24 +16,23 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextTooltip;
 import com.badlogic.gdx.scenes.scene2d.ui.Tooltip;
 import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import io.github.package_game_survival.managers.Assets;
+import io.github.package_game_survival.managers.PathManager;
+import io.github.package_game_survival.standards.TooltipStandard;
 
 import javax.swing.*;
 
 
 public class Jugador extends Personaje {
+
     private List<Objeto> inventario = new ArrayList<>();
     private float velocidad = 400;
-    private TooltipManager tm;
-    private Skin skinTooltip;
-
+    //private TextureAtlas textureAtlas = Assets.get(PathManager.JUGADOR,TextureAtlas.class);
 
     public Jugador(String nombre, Texture texture, int x, int y, TooltipManager tm){
         super(nombre, texture, x, y);
-        this.tm = tm;
-        skinTooltip = new Skin(Gdx.files.internal("skins/toolTip.json"));
-        TextTooltip toolTip = new TextTooltip(nombre, tm, skinTooltip);
-        toolTip.getContainer().setBackground((Drawable) null);
-        this.addListener(toolTip);
+        TooltipStandard tooltipStandard = new TooltipStandard(this.getName());
+        tooltipStandard.attach(this,this.getName());
     }
 
     @Override

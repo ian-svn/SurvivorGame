@@ -9,6 +9,10 @@ public final class AudioManager {
         audioControler = new AudioControler();
     }
 
+    public static AudioControler getControler(){
+        return getInstance().getAudioControler();
+    }
+
     public static AudioControler getAudioControler() {
         return audioControler;
     }

@@ -1,8 +1,13 @@
 package io.github.package_game_survival.lwjgl3;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import io.github.package_game_survival.pantallas.MyGame;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
@@ -24,6 +29,10 @@ public class Lwjgl3Launcher {
 
         configuration.setWindowedMode(1280, 720);
         configuration.setWindowIcon("SurvivalGameLogo.png");
+
         return configuration;
+
+
+
     }
 }
