@@ -42,6 +42,7 @@ public class MenuScreen implements Screen {
         jugarButton.setClickListener(() -> {
             game.setScreen(new GameScreen(game));
             AudioManager.getControler().changeMusic("gameMusic", PathManager.GAME_MUSIC, true);
+            AudioManager.getControler().setVolume(20);
         });
 
         TextButtonStandard opcionesButton = new TextButtonStandard("Opciones");

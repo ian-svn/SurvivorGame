@@ -43,10 +43,12 @@ public class LoadingScreen implements Screen {
         shapeRenderer = new ShapeRenderer();
 
         progressBar = new ProgressBar(0f, 100f, 1f, false,
-            new Skin(Gdx.files.internal(PathManager.PROGRESS_BAR_SKIN),new TextureAtlas(PathManager.PROGRESS_BAR_ATLAS)));
+            new Skin(Gdx.files.internal(PathManager.PROGRESS_BAR_SKIN), new TextureAtlas(PathManager.PROGRESS_BAR_ATLAS)));
+
         progressBar.setValue(0f);
         progressBar.setWidth(1000);
         progressBar.setHeight(100);
+
         progressBar.setPosition(Gdx.graphics.getWidth() / 2f - progressBar.getWidth() / 2f,
             Gdx.graphics.getHeight() / 2 - progressBar.getHeight());
 

@@ -13,7 +13,9 @@ public final class PathManager {
     public static final String MENU_MUSIC = "sounds/MenuTheme.mp3";
     public static final String GRAB_OBJECT = "sounds/grab_object.mp3";
 
-    public static final String PLAYER = "sprites/jugador.png";
+    public static final String PLAYER_TEXTURE = "sprites/jugador.png";
+    public static final String BLOCK_TEXTURE = "sprites/block.png";
+    public static final String GAME_BACKGROUND_TEXTURE = "sprites/fondoJuego.png";
 
     public static final String BACKGROUND = "skins/background.json";
     public static final String LABEL = "skins/label.json";
@@ -23,7 +25,7 @@ public final class PathManager {
     public static final String PROGRESS_BAR_SKIN = "skins/progressBar.json";
 
     public static final String PROGRESS_BAR_ATLAS = "skins/progressBar.atlas";
-    //public static final String JUGADOR = "skins/jugador.atlas";
+    public static final String PLAYER_ATLAS = "sprites/jugador.atlas";
 
 
 

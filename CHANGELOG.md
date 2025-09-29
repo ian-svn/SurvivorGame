@@ -81,4 +81,18 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 - `MenuScreen`: reemplazo de botones por `TextButtonStandard` para un manejo más simple y consistente.
 - Ahora es más fácil asignar funciones a botones usando `setClickListener(Runnable)`.
 
+## [0.4.0] - 2025-09-11
 
+### Added
+- Clase abstracta `Bloque` y subclase `BloqueDeBarro` con texturas y colisiones.
+- Interfaz `Colisionable` para unificar detección de colisiones.
+- Clase `Jugador`:
+    - Implementación de inventario con soporte para adquirir `Objeto`s.
+    - Animaciones de movimiento (arriba, abajo, izquierda, derecha, diagonales).
+    - Sonido al recoger objetos integrado con `AudioManager`.
+- Clase base `Personaje` con atributos de vida, tamaño y métodos para alterarla.
+
+### Changed
+- El jugador ahora utiliza `Rectangle hitbox` para detectar colisiones con `Bloque`s.
+- Colisiones diferenciadas: bloques atravesables y no atravesables.
+- Integración de tooltips estándar para el jugador (`TooltipStandard`).

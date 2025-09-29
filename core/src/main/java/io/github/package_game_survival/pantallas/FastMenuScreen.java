@@ -22,7 +22,7 @@ public class FastMenuScreen implements Screen {
     private final GameScreen gameScreen;
 
     private Stage stage;
-    private Skin menuSkin;
+    private Skin background;
 
     public FastMenuScreen(final MyGame game, final GameScreen gameScreen) {
         this.game = game;
@@ -31,7 +31,7 @@ public class FastMenuScreen implements Screen {
 
     @Override
     public void show() {
-        this.menuSkin = Assets.get(PathManager.BACKGROUND, Skin.class);
+        this.background = Assets.get(PathManager.BACKGROUND, Skin.class);
         stage = new Stage(game.getViewport());
         Gdx.input.setInputProcessor(stage);
 
@@ -51,10 +51,12 @@ public class FastMenuScreen implements Screen {
         volverMenuButton.setClickListener(() -> {
             game.setScreen(new MenuScreen(game));
             AudioManager.getControler().changeMusic("menuMusic", PathManager.MENU_MUSIC, true);
+            AudioManager.getControler().setVolume(20);
             dispose();
         });
 
-        Table table = new Table(menuSkin);
+        Table table = new Table();
+        table.setBackground(background.getDrawable("fondoMenu"));
         table.setFillParent(true);
         table.center();
         table.pad(50);
@@ -86,7 +88,6 @@ public class FastMenuScreen implements Screen {
     @Override
     public void dispose() {
         stage.dispose();
-        menuSkin.dispose();
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
     }
 }

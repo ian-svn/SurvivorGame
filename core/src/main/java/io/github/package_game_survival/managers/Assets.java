@@ -10,7 +10,9 @@ public class Assets {
     private static final AssetManager manager = new AssetManager();
 
     public static void load() {
-        manager.load(PathManager.PLAYER, Texture.class);
+        manager.load(PathManager.PLAYER_TEXTURE, Texture.class);
+        manager.load(PathManager.BLOCK_TEXTURE, Texture.class);
+        manager.load(PathManager.GAME_BACKGROUND_TEXTURE, Texture.class);
 
         manager.load(PathManager.MENU_MUSIC, Music.class);
         manager.load(PathManager.GAME_MUSIC, Music.class);
@@ -24,7 +26,10 @@ public class Assets {
         manager.load(PathManager.TOOLTIP, Skin.class);
         manager.load(PathManager.CHECK_BOX, Skin.class);
 
-        //manager.load(PathManager.JUGADOR, TextureAtlas.class);
+        manager.load(PathManager.PROGRESS_BAR_SKIN, Skin.class);
+
+        manager.load(PathManager.PROGRESS_BAR_ATLAS, TextureAtlas.class);
+        manager.load(PathManager.PLAYER_ATLAS, TextureAtlas.class);
 
     }
 

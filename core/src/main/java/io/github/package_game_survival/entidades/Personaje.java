@@ -2,11 +2,12 @@ package io.github.package_game_survival.entidades;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import io.github.package_game_survival.interfaces.Colisionable;
 
-public abstract class Personaje extends Actor {
+public abstract class Personaje extends Actor implements Colisionable {
 
     private int vida;
-    private int ancho = 100, alto = 100;
+    private int ancho = 100, alto = 140;
     private int vidaMinima = 1, vidaMaxima = 100;
     protected Texture texture;
 

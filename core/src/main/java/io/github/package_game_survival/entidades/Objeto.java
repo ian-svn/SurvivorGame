@@ -4,11 +4,14 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import io.github.package_game_survival.interfaces.Colisionable;
 
-public abstract class Objeto extends Actor {
-    private Texture texture;
+public abstract class Objeto extends Actor implements Colisionable {
+    protected Texture texture;
     private int ANCHO = 100;
     private int ALTO = 100;
+    private boolean atravesable = true;
+    private int puntos = 5;
 
     public Objeto(Texture texture){
         this.texture = texture;
@@ -21,6 +24,10 @@ public abstract class Objeto extends Actor {
         setY(y);
     }
 
+    public int getPuntos() {
+        return this.puntos;
+    }
+
     @Override
     public void draw(Batch batch, float parentAlpha) {
         batch.draw(texture, getX(), getY());
@@ -30,10 +37,8 @@ public abstract class Objeto extends Actor {
         return new Rectangle(getX(), getY(), getWidth(), getHeight());
     }
 
-    public boolean overlaps(Actor otro) {
-        if (otro instanceof Objeto) {
-            return this.getBounds().overlaps(((Objeto) otro).getBounds());
-        }
-        return false;
+    public void adquirir() {
+        setWidth(0);
+        setHeight(0);
     }
 }
