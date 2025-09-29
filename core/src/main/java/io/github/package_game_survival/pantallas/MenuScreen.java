@@ -9,12 +9,14 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
+import groovy.swing.impl.TableLayout;
 
 public class MenuScreen implements Screen {
 
     private final MyGame game;
     private Stage stage;
     private Skin jugarSkin, opcionesSkin, salirSkin;
+    private Table tableMenu;
 
     public MenuScreen(final MyGame game) {
         this.game = game;
@@ -22,6 +24,7 @@ public class MenuScreen implements Screen {
 
     @Override
     public void show() {
+        tableMenu = new Table();
         stage = new Stage(game.getViewport());
         Gdx.input.setInputProcessor(stage);
 
@@ -32,7 +35,7 @@ public class MenuScreen implements Screen {
         Button jugarButton = new Button(jugarSkin);
         jugarButton.addListener(new ClickListener() {
             @Override
-            public void clicked(InputEvent event, float x, float y){
+            public void clicked(InputEvent event, float x, float y) {
                 game.setScreen(new GameScreen(game));
             }
         });
@@ -53,7 +56,6 @@ public class MenuScreen implements Screen {
             }
         });
 
-        Table tableMenu = new Table();
         tableMenu.setFillParent(true);
         tableMenu.bottom().left();
         tableMenu.pad(50);

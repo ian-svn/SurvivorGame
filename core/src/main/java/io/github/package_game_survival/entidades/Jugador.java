@@ -9,24 +9,36 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.badlogic.gdx.math.Intersector.overlaps;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextTooltip;
+import com.badlogic.gdx.scenes.scene2d.ui.Tooltip;
+import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+
+import javax.swing.*;
 
 
 public class Jugador extends Personaje {
     private List<Objeto> inventario = new ArrayList<>();
     private float velocidad = 400;
+    private TooltipManager tm;
+    private Skin skinTooltip;
 
-    public Jugador(String nombre, Texture texture, int x, int y) {
+
+    public Jugador(String nombre, Texture texture, int x, int y, TooltipManager tm){
         super(nombre, texture, x, y);
+        this.tm = tm;
+        skinTooltip = new Skin(Gdx.files.internal("skins/toolTip.json"));
+        TextTooltip toolTip = new TextTooltip(nombre, tm, skinTooltip);
+        toolTip.getContainer().setBackground((Drawable) null);
+        this.addListener(toolTip);
     }
 
     @Override
     public void act(float delta) {
         super.act(delta);
 
-        // Detección de colisión
-        // Asegúrate de que el stage no sea null antes de usarlo
         if (getStage() != null) {
             for (Actor actor : getStage().getActors()) {
                 if (actor instanceof Objeto && actor != this) {

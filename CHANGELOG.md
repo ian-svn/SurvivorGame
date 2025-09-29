@@ -36,3 +36,29 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ### Fixed
 - Manejo correcto de recursos: todos los `Stage` y `Skin` se liberan en `dispose()` de cada pantalla.
+
+## [0.2.0] - 2024-08-06
+### Added
+- **GameScreen**
+    - Integración de `TooltipManager` para manejar tooltips en el juego.
+    - Parámetros de configuración del tooltip:
+        - `initialTime = 1f`
+        - `subsequentTime = 0.2f`
+        - `resetTime = 0f`
+        - `animations = false`
+        - `maxWidth = 200f`
+    - Ahora `Jugador` recibe una referencia a `TooltipManager` para mostrar información contextual.
+- **MyGame**
+    - Se agregó una variable estática `TooltipManager tm` accesible desde todo el juego.
+    - Inicialización de `TooltipManager` en `create()`.
+- **MenuScreen**
+    - Refactor: uso de la variable de clase `tableMenu` para organizar mejor el layout.
+
+### Changed
+- `GameScreen` ahora carga la textura del jugador usando **`PathManager.JUGADOR`** en lugar de la ruta hardcodeada (`sprites/jugador.png`).
+- Ajustada la posición inicial del jugador a `(100, 100)` en lugar de `(50, 50)`.
+- `MenuScreen` reorganizado: la `Table` se instancia antes que el `Stage` para mayor claridad.
+
+### Fixed
+- Limpieza automática de tooltips al inicializar `TooltipManager` con `hideAll()`.
+
