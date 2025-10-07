@@ -16,7 +16,6 @@ import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.LabelStandard;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class GameScreen implements Screen {
     private final MyGame game;
@@ -98,7 +97,6 @@ public class GameScreen implements Screen {
         stage.draw();
 
         labelPantallCompleta.setText("Puntos: " + jugador.getPuntos());
-
 
         jugador.actualizar(bloques, objetos, delta);
 

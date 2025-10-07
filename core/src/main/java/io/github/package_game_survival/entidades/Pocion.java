@@ -4,8 +4,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import io.github.package_game_survival.interfaces.Consumible;
 
-import java.util.ArrayList;
-
 public class Pocion extends Objeto implements Consumible {
     private int vidaCurada;
 

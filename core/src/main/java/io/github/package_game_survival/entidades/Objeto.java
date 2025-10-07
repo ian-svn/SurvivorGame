@@ -10,7 +10,6 @@ public abstract class Objeto extends Actor implements Colisionable {
     protected Texture texture;
     private int ANCHO = 100;
     private int ALTO = 100;
-    private boolean atravesable = true;
     private int puntos = 5;
 
     public Objeto(Texture texture){
@@ -38,7 +37,6 @@ public abstract class Objeto extends Actor implements Colisionable {
     }
 
     public void adquirir() {
-        setWidth(0);
-        setHeight(0);
+        remove();
     }
 }

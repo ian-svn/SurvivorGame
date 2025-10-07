@@ -13,6 +13,7 @@ import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.TooltipStandard;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class Jugador extends Personaje {
@@ -111,11 +112,16 @@ public class Jugador extends Personaje {
             }
         } setY(hitbox.y);
 
-        for(Objeto objeto : objetos){
-            if(objeto.getBounds().overlaps(this.getBounds())){
+        Iterator<Objeto> it = objetos.iterator();
+        while(it.hasNext()) {
+            Objeto objeto = it.next();
+            if(objeto.getBounds().overlaps(this.getBounds())) {
+                it.remove();
+                if(objeto.getStage() != null) objeto.remove();
                 adquirirObjeto(objeto);
             }
         }
+
     }
 
     @Override
