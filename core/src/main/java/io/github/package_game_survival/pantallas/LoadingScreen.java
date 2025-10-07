@@ -1,56 +1,124 @@
 package io.github.package_game_survival.pantallas;
 
-
-import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import io.github.package_game_survival.managers.Assets;
+import io.github.package_game_survival.managers.PathManager;
 
 public class LoadingScreen implements Screen {
 
-        private final MyGame game;
-        private SpriteBatch batch;
-        private BitmapFont font;
+    private final MyGame game;
+    private SpriteBatch batch;
+    private Stage stage;
+    private Label label; // Actor de Scene2D
+    private ShapeRenderer shapeRenderer;
+    private ProgressBar progressBar;
 
-        public LoadingScreen(MyGame game) {
-            this.game = game;
+    private float minTime = 2f;
+    private float timer = 0f;
+
+    public LoadingScreen(MyGame game) {
+        this.game = game;
+    }
+
+
+    @Override
+    public void show() {
+
+        //Graphics.DisplayMode displayMode = Gdx.graphics.getDisplayMode();
+        //Gdx.graphics.setFullscreenMode(displayMode);
+
+        batch = new SpriteBatch();
+        stage = new Stage();
+        shapeRenderer = new ShapeRenderer();
+
+        progressBar = new ProgressBar(0f, 100f, 1f, false,
+            new Skin(Gdx.files.internal(PathManager.PROGRESS_BAR_SKIN), new TextureAtlas(PathManager.PROGRESS_BAR_ATLAS)));
+
+        progressBar.setValue(0f);
+        progressBar.setWidth(1000);
+        progressBar.setHeight(100);
+
+        progressBar.setPosition(Gdx.graphics.getWidth() / 2f - progressBar.getWidth() / 2f,
+            Gdx.graphics.getHeight() / 2 - progressBar.getHeight());
+
+        Skin skinLabel = new Skin(Gdx.files.internal(PathManager.LABEL)); //no se puede hacer con assets porque justamente esto no se cargó aún
+        label = new Label("Cargando... 0%", skinLabel);
+
+        label.setPosition(Gdx.graphics.getWidth() / 2f - label.getWidth() / 2f,
+            Gdx.graphics.getHeight() * 0.55f);
+
+        stage.addActor(label);
+        stage.addActor(progressBar);
+
+        Assets.load();
+    }
+
+    @Override
+    public void render(float delta) {
+        timer += delta;
+
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        float progress = Assets.getProgress();
+        if((((int)(progress * 100))<100)){
+            label.setText("Cargando... " + (int)(progress * 100) + "%");
+        } else {
+            label.setText("Abriendo juego...");
         }
 
-        @Override
-        public void show() {
-            batch = new SpriteBatch();
-            font = new BitmapFont();
-            Assets.load();
-        }
+        progressBar.setValue((int)(progress * 100));
 
-        @Override
-        public void render(float delta) {
-            Gdx.gl.glClearColor(0, 0, 0, 1);
-            Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-            batch.begin();
-            font.draw(batch, "Cargando... " + (int)(Assets.getProgress() * 100) + "%", 100, 200);
-            batch.end();
+//        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+//        shapeRenderer.setColor(1, 1, 1, 1);
+//        shapeRenderer.rect(
+//            Gdx.graphics.getWidth() * 0.1f,
+//            Gdx.graphics.getHeight() * 0.45f,
+//            Gdx.graphics.getWidth() * 0.8f * progress,
+//            30
+//        );
+//        shapeRenderer.end();
 
-            if (Assets.update()) {
-                game.setScreen(new MenuScreen(game));
-            }
-        }
 
-        @Override
-        public void resize(int width, int height) {}
-        @Override
-        public void pause() {}
-        @Override
-        public void resume() {}
-        @Override
-        public void hide() {}
-        @Override
-        public void dispose() {
-            batch.dispose();
-            font.dispose();
+
+        stage.act(delta);
+        stage.draw();
+
+        if (Assets.update() && timer >= minTime) {
+            game.setScreen(new MenuScreen(game));
         }
     }
+
+    @Override
+    public void resize(int i, int i1) {
+    }
+
+    @Override
+    public void pause() {
+    }
+
+    @Override
+    public void resume() {
+    }
+
+    @Override
+    public void hide() {
+    }
+
+    @Override
+    public void dispose() {
+        batch.dispose();
+        stage.dispose();
+        shapeRenderer.dispose();
+    }
+}

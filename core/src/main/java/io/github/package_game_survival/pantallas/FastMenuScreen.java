@@ -3,15 +3,13 @@ package io.github.package_game_survival.pantallas;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Cursor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Button;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
+import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.Audio.AudioManager;
+import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.TextButtonStandard;
 
 public class FastMenuScreen implements Screen {
@@ -20,7 +18,7 @@ public class FastMenuScreen implements Screen {
     private final GameScreen gameScreen;
 
     private Stage stage;
-    private Skin menuSkin;
+    private Skin background;
 
     public FastMenuScreen(final MyGame game, final GameScreen gameScreen) {
         this.game = game;
@@ -29,38 +27,32 @@ public class FastMenuScreen implements Screen {
 
     @Override
     public void show() {
-        this.menuSkin = new Skin(Gdx.files.internal("skins/background.json"));
+        this.background = Assets.get(PathManager.BACKGROUND, Skin.class);
         stage = new Stage(game.getViewport());
         Gdx.input.setInputProcessor(stage);
 
         TextButtonStandard reanudarButton = new TextButtonStandard("Reanudar");
-        reanudarButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y){
+        reanudarButton.setClickListener(() -> {
                 game.setScreen(gameScreen);
                 dispose();
-            }
         });
 
         TextButtonStandard resetButton = new TextButtonStandard("Jugar otra vez");
-        resetButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y){
+        resetButton.setClickListener(() -> {
                 game.setScreen(new GameScreen(game));
                 dispose();
-            }
         });
 
         TextButtonStandard volverMenuButton = new TextButtonStandard("Volver al Menu");
-        volverMenuButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y){
-                game.setScreen(new MenuScreen(game));
-                dispose();
-            }
+        volverMenuButton.setClickListener(() -> {
+            game.setScreen(new MenuScreen(game));
+            AudioManager.getControler().changeMusic("menuMusic", PathManager.MENU_MUSIC, true);
+            AudioManager.getControler().setVolume(20);
+            dispose();
         });
 
-        Table table = new Table(menuSkin);
+        Table table = new Table();
+        table.setBackground(background.getDrawable("fondoMenu"));
         table.setFillParent(true);
         table.center();
         table.pad(50);
@@ -92,7 +84,6 @@ public class FastMenuScreen implements Screen {
     @Override
     public void dispose() {
         stage.dispose();
-        menuSkin.dispose();
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
     }
 }

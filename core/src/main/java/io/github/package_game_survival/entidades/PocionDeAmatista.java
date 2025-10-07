@@ -5,7 +5,9 @@ import com.badlogic.gdx.graphics.Texture;
 
 public class PocionDeAmatista extends Pocion{
 
-    public PocionDeAmatista() {
+    public PocionDeAmatista(int x, int y) {
         super(new Texture(Gdx.files.internal("sprites/objeto.png")),100);
+        setX(x);
+        setY(y);
     }
 }

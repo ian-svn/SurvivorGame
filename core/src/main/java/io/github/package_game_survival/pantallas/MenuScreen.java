@@ -1,16 +1,14 @@
 package io.github.package_game_survival.pantallas;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Cursor;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.ScreenUtils;
 import io.github.package_game_survival.managers.Audio.AudioManager;
+import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.TextButtonStandard;
 
 public class MenuScreen implements Screen {
@@ -22,15 +20,10 @@ public class MenuScreen implements Screen {
 
     public MenuScreen(final MyGame game) {
         this.game = game;
-
-        Graphics.DisplayMode displayMode = Gdx.graphics.getDisplayMode();
-        Gdx.graphics.setFullscreenMode(displayMode);
     }
 
     @Override
     public void show() {
-
-        AudioManager.getControler().playMusic("menuMusic",true);
 
         menuSkin = new Skin(Gdx.files.internal("skins/background.json"));
         stage = new Stage(game.getViewport());
@@ -43,10 +36,15 @@ public class MenuScreen implements Screen {
         tableMenu.setBackground(menuSkin.getDrawable("fondoMenu"));
 
         TextButtonStandard jugarButton = new TextButtonStandard("Jugar");
-        jugarButton.setClickListener(() -> game.setScreen(new GameScreen(game)));
+        jugarButton.setClickListener(() -> {
+            game.setScreen(new GameScreen(game));
+            AudioManager.getControler().changeMusic("gameMusic", PathManager.GAME_MUSIC, true);
+            AudioManager.getControler().setVolume(20);
+        });
 
         TextButtonStandard opcionesButton = new TextButtonStandard("Opciones");
-        opcionesButton.setClickListener(() -> game.setScreen(new OptionsScreen(game)));
+            opcionesButton.setClickListener(() -> {game.setScreen(new OptionsScreen(game));
+        });
 
         TextButtonStandard salirButton = new TextButtonStandard("Salir");
         salirButton.setClickListener(() -> Gdx.app.exit());

@@ -1,31 +1,24 @@
 package io.github.package_game_survival.entidades;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import io.github.package_game_survival.interfaces.Seleccionable;
+import io.github.package_game_survival.interfaces.Colisionable;
 
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.List;
+public abstract class Personaje extends Actor implements Colisionable {
 
-public abstract class Personaje extends Actor {
-
-    private String nombre;
     private int vida;
-    protected int x, y;
-    private final int ANCHO = 100, ALTO = 100;
-    private int vidaMinima, vidaMaxima;
+    private int ancho = 100, alto = 140;
+    private int vidaMinima = 1, vidaMaxima = 100;
     protected Texture texture;
 
     public Personaje(String nombre, Texture texture, int x, int y) {
-        this.nombre = nombre;
-        this.texture = texture;
-        this.vida = 100;
+        setName(nombre);
         setX(x);
         setY(y);
-        setWidth(ANCHO);
-        setHeight(ALTO);
+        setWidth(ancho);
+        setHeight(alto);
+        this.texture = texture;
+        this.vida = 100;
     }
 
     public void alterarVida(int vida){

@@ -40,6 +40,12 @@ public class AudioControler implements AudioService {
         }
     }
 
+    public void changeMusic(String musicId, String filePath, boolean looping){
+        currentMusic.stop();
+        loadMusic(musicId, filePath);
+        playMusic(musicId, looping);
+    }
+
     @Override
     public void stopMusic() {
         if (currentMusic != null) {

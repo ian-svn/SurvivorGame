@@ -5,49 +5,46 @@ import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.InputListener;
+import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import io.github.package_game_survival.managers.Assets;
-import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.PathManager;
 
-public class TextButtonStandard extends TextButton {
+public class CheckBoxStandard extends CheckBox {
 
-    public TextButtonStandard(String text) {
-        super(text, Assets.get(PathManager.TEXT_BUTTON, Skin.class));
+    public CheckBoxStandard() {
+        super("", Assets.get(PathManager.CHECK_BOX, Skin.class));
+
         this.addListener(new InputListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-                Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Hand);
+                if(!CheckBoxStandard.super.isDisabled()) {
+                    Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Hand);
+                }
             }
 
             @Override
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-                Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
-            }
-
-        });
-
-
-        this.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                AudioManager.getAudioControler().playSound("click");
+                if(!CheckBoxStandard.super.isDisabled()) {
+                    Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
+                }
             }
         });
 
     }
 
-    public void setClickListener(Runnable run){
+    public void setClickLister(Runnable run){
         this.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 run.run();
-                Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
             }
         });
     }
 
+    public void dispose(){
+        getSkin().dispose();
+    }
 
 }

@@ -23,11 +23,15 @@ public class MyGame extends Game {
     public void create () {
 
         AudioManager.getControler().loadMusic("menuMusic","sounds/MenuTheme.mp3");
+        AudioManager.getControler().playMusic("menuMusic",true);
+        AudioManager.getControler().setVolume(20);
 
         batch = new SpriteBatch();
         viewport = new FitViewport(ANCHO_PANTALLA, ALTO_PANTALLA);
         tm = new TooltipManager();
         this.setScreen(new LoadingScreen(this));
+
+            Assets.load();
     }
 
     @Override

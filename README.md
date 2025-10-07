@@ -1,39 +1,33 @@
-# Proyecto: Juego de Supervivencia Cooperativo en Red (nombre provisorio)
+# SurvivorGame
 
-## Integrantes del Grupo:
-- Vila Ian Santiago
-- Vinazza Blardone Antonio Santos
-## Descripción Corta del Videojuego:
-Un juego de supervivencia cooperativo en red en 2.5D, donde los jugadores deberán colaborar para sobrevivir en un mundo hostil que se genera proceduralmente y que presenta una amenaza inminente: la Luna, que se acerca gradualmente y altera el entorno, introduciendo desafíos crecientes hasta un enfrentamiento final. El juego combina elementos de estrategia en tiempo real (RTS) y rol (RPG), permitiendo a los jugadores elegir roles únicos y desarrollar habilidades mientras construyen bases, recolectan recursos y se defienden de criaturas y desastres naturales.
+A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
 
-## Tecnologías Principales y Plataformas de desarrollo objetivo:
-- LibGDX (versión 1.13.1.3), Java (Amazon Corretto 23).
-- IDE: IntellliJ IDEA.
-- Escritorio (PC).
+This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
 
-## Enlace a la Wiki del Proyecto:
-https://github.com/ian-svn/SurvivorGame/wiki
+## Platforms
 
-## Instrucciones Básicas de Compilación y Ejecución:
+- `core`: Main module with the application logic shared by all platforms.
+- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
 
-Clonar el repositorio:
-Abre tu terminal o Git Bash y ejecuta el siguiente comando en la consola de git:
+## Gradle
 
-git clone https://github.com/ian-svn/SurvivorGame.git
+This project uses [Gradle](https://gradle.org/) to manage dependencies.
+The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
+Useful Gradle tasks and flags:
 
-Abrir el proyecto en un IDE (por ejemplo, IntelliJ IDEA o Eclipse):
+- `--continue`: when using this flag, errors will not stop the tasks from running.
+- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
+- `--offline`: when using this flag, cached dependency archives will be used.
+- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
+- `build`: builds sources and archives of every project.
+- `cleanEclipse`: removes Eclipse project data.
+- `cleanIdea`: removes IntelliJ project data.
+- `clean`: removes `build` folders, which store compiled classes and built archives.
+- `eclipse`: generates Eclipse project data.
+- `idea`: generates IntelliJ project data.
+- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
+- `lwjgl3:run`: starts the application.
+- `test`: runs unit tests (if any).
 
-IntelliJ IDEA: Selecciona "Open" y navega hasta la carpeta del proyecto clonado. Asegúrate de que tu IDE esté configurado para usar Java Amazon Corretto 17 y tenga soporte para Gradle (LibGDX usa Gradle para la gestión de dependencias).
-Eclipse: Importa el proyecto como un proyecto Gradle existente.
-Sincronizar las dependencias de Gradle:
-Una vez abierto el proyecto en tu IDE, Gradle debería comenzar a descargar las dependencias automáticamente. Si no lo hace, busca la opción "Refresh Gradle Project" o "Sync Project with Gradle Files" dentro de tu IDE.
-
-Ejecutar el proyecto:
-
-Para la versión de escritorio, busca la clase principal que contiene el método main (generalmente en el módulo desktop o similar). Haz clic derecho sobre ella y selecciona "Run" o "Debug".
-Asegúrate de que la configuración de ejecución esté apuntando al módulo desktop y utilizando la clase principal del juego.
-
-## Estado actual del proyecto
-### - ESTADO DE DESARROLLO: RECIEN EMPEZADO
-## Aclaración sobre el Nombre del Proyecto:
-- El nombre final del videojuego aún no ha sido decidido, se definirá en una etapa posterior del desarrollo.
+Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
+For example, `core:clean` removes `build` folder only from the `core` project.

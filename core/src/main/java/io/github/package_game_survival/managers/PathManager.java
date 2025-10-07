@@ -13,13 +13,19 @@ public final class PathManager {
     public static final String MENU_MUSIC = "sounds/MenuTheme.mp3";
     public static final String GRAB_OBJECT = "sounds/grab_object.mp3";
 
-    public static final String PLAYER = "sprites/jugador.png";
+    public static final String PLAYER_TEXTURE = "sprites/jugador.png";
+    public static final String BLOCK_TEXTURE = "sprites/block.png";
+    public static final String GAME_BACKGROUND_TEXTURE = "sprites/fondoJuego.png";
 
-    public static final String sd = "skins/background.json";
-    public static final String getSd = "skins/label.json";
-    public static final String FD = "skins/OpcionesButton.json";
-    public static final String CV = "skins/SalirButton.json";
-    public static final String VB = "skins/SalirButton.json";
+    public static final String BACKGROUND = "skins/background.json";
+    public static final String LABEL = "skins/label.json";
+    public static final String TEXT_BUTTON = "skins/TextButton.json";
+    public static final String TOOLTIP = "skins/tooltip.json";
+    public static final String CHECK_BOX = "skins/checkBox.json";
+    public static final String PROGRESS_BAR_SKIN = "skins/progressBar.json";
+
+    public static final String PROGRESS_BAR_ATLAS = "skins/progressBar.atlas";
+    public static final String PLAYER_ATLAS = "sprites/jugador.atlas";
 
 
 

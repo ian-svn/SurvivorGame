@@ -4,16 +4,32 @@ size: 1024, 1024
 format: RGBA8888
 filter: Linear, Linear
 repeat: none
+selectBoxDisabledOpen
+  rotate: false
+  xy: 103, 103
+  size: 100, 100
+  split: 0, 0, 0, 0
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
 lexend
   rotate: false
-  xy: 1, 103
+  xy: 1, 205
   size: 512, 512
   orig: 512, 512
   offset: 0, 0
   index: -1
+selectBoxDisabled
+  rotate: false
+  xy: 1, 1
+  size: 100, 100
+  split: 0, 0, 0, 0
+  orig: 100, 100
+  offset: 0, 0
+  index: -1
 selectBoxOpen
   rotate: false
-  xy: 515, 515
+  xy: 1, 103
   size: 100, 100
   split: 0, 0, 0, 0
   orig: 100, 100
@@ -21,7 +37,7 @@ selectBoxOpen
   index: -1
 selectBoxOver
   rotate: false
-  xy: 1, 1
+  xy: 515, 617
   size: 100, 100
   split: 0, 0, 0, 0
   orig: 100, 100

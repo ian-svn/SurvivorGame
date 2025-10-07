@@ -31,7 +31,7 @@ configure(subprojects) {
   apply plugin: 'java-library'
   apply plugin: 'groovy'
   apply plugin: 'io.freefair.lombok'
-  sourceCompatibility = 23
+  sourceCompatibility = 17
 
   // From https://lyze.dev/2021/04/29/libGDX-Internal-Assets-List/
   // The article can be helpful when using assets.txt in your project.
@@ -60,7 +60,7 @@ configure(subprojects) {
 
 subprojects {
   version = "$projectVersion"
-  ext.appName = 'SurvivalGame'
+  ext.appName = 'SurvivorGame'
   repositories {
     mavenCentral()
     maven { url 'https://s01.oss.sonatype.org' }
@@ -72,4 +72,4 @@ subprojects {
   }
 }
 
-eclipse.project.name = 'SurvivalGame' + '-parent'
+eclipse.project.name = 'SurvivorGame' + '-parent'
