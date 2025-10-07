@@ -14,6 +14,10 @@ gradle-app.setting
 /server/build/
 /shared/build/
 
+.idea/
+build/
+out/
+
 ## Java:
 *.class
 *.war
