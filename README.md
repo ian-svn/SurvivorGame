@@ -14,6 +14,9 @@ Un juego de supervivencia cooperativo en red en 2.5D, donde los jugadores deber�
 ## Enlace a la Wiki del Proyecto:
 https://github.com/ian-svn/SurvivorGame/wiki
 
+## Video Corto de Demostración:
+https://youtu.be/y4Y17grUKIs
+
 ## Instrucciones Básicas de Compilación y Ejecución:
 
 Clonar el repositorio:
@@ -34,6 +37,6 @@ Para la versión de escritorio, busca la clase principal que contiene el método
 Asegúrate de que la configuración de ejecución esté apuntando al módulo desktop y utilizando la clase principal del juego.
 
 ## Estado actual del proyecto
-### - ESTADO DE DESARROLLO: RECIEN EMPEZADO
+### - ESTADO DE DESARROLLO: DEMO
 ## Aclaración sobre el Nombre del Proyecto:
 - El nombre final del videojuego aún no ha sido decidido, se definirá en una etapa posterior del desarrollo.
