@@ -7,7 +7,7 @@
 Un juego de supervivencia cooperativo en red en 2.5D, donde los jugadores deberán colaborar para sobrevivir en un mundo hostil que se genera proceduralmente y que presenta una amenaza inminente: la Luna, que se acerca gradualmente y altera el entorno, introduciendo desafíos crecientes hasta un enfrentamiento final. El juego combina elementos de estrategia en tiempo real (RTS) y rol (RPG), permitiendo a los jugadores elegir roles únicos y desarrollar habilidades mientras construyen bases, recolectan recursos y se defienden de criaturas y desastres naturales.
 
 ## Tecnologías Principales y Plataformas de desarrollo objetivo:
-- LibGDX (versión 1.13.1.3), Java (Amazon Corretto 23).
+- LibGDX (versión 1.13.1.3), Java (Amazon Corretto 17).
 - IDE: IntellliJ IDEA.
 - Escritorio (PC).
 
