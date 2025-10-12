@@ -3,10 +3,12 @@ package io.github.package_game_survival.pantallas;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Cursor;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.ScreenUtils;
+import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.TextButtonStandard;
@@ -15,7 +17,6 @@ public class MenuScreen implements Screen {
 
     private final MyGame game;
     private Stage stage;
-    private Skin menuSkin;
     private Table tableMenu;
 
     public MenuScreen(final MyGame game) {
@@ -25,15 +26,17 @@ public class MenuScreen implements Screen {
     @Override
     public void show() {
 
-        menuSkin = new Skin(Gdx.files.internal("skins/background.json"));
         stage = new Stage(game.getViewport());
+
+        Image fondo = new Image(Assets.get(PathManager.MENU_BACKGROUND_TEXTURE, Texture.class));
+        fondo.setSize(stage.getViewport().getWorldWidth(), stage.getViewport().getWorldHeight());
+        stage.addActor(fondo);
+
         Gdx.input.setInputProcessor(stage);
 
         tableMenu = new Table();
         tableMenu.setFillParent(true);
         tableMenu.bottom().left().pad(50);
-
-        tableMenu.setBackground(menuSkin.getDrawable("fondoMenu"));
 
         TextButtonStandard jugarButton = new TextButtonStandard("Jugar");
         jugarButton.setClickListener(() -> {
@@ -82,7 +85,6 @@ public class MenuScreen implements Screen {
     @Override
     public void dispose() {
         stage.dispose();
-        menuSkin.dispose();
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
     }
 }

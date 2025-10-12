@@ -7,7 +7,7 @@ import io.github.package_game_survival.managers.PathManager;
 public class BloqueDeBarro extends Bloque{
 
     public BloqueDeBarro(int x, int y) {
-        super(x, y);
+        super(x, y, "Bloque de barro");
         this.texture = Assets.get(PathManager.BLOCK_TEXTURE, Texture.class);
     }
 

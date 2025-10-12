@@ -78,7 +78,6 @@ public class LoadingScreen implements Screen {
 
         progressBar.setValue((int)(progress * 100));
 
-
 //        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 //        shapeRenderer.setColor(1, 1, 1, 1);
 //        shapeRenderer.rect(
@@ -88,8 +87,6 @@ public class LoadingScreen implements Screen {
 //            30
 //        );
 //        shapeRenderer.end();
-
-
 
         stage.act(delta);
         stage.draw();

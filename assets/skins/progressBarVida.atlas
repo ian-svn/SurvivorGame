@@ -1,0 +1,20 @@
+
+progressBarVida.png
+size: 1024, 1024
+format: RGBA8888
+filter: Linear, Linear
+repeat: none
+knob_bar3
+  rotate: false
+  xy: 1, 880
+  size: 1000, 119
+  orig: 1000, 119
+  offset: 0, 0
+  index: -1
+progres_bar1
+  rotate: false
+  xy: 1, 778
+  size: 600, 100
+  orig: 600, 100
+  offset: 0, 0
+  index: -1

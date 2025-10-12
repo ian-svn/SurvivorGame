@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import io.github.package_game_survival.interfaces.Colisionable;
+import io.github.package_game_survival.standards.TooltipStandard;
 
 public abstract class Bloque extends Actor implements Colisionable {
 
@@ -13,11 +14,14 @@ public abstract class Bloque extends Actor implements Colisionable {
     public boolean atravesable = false;
     public Texture texture;
 
-    public Bloque(int x, int y){
+    public Bloque(int x, int y, String nombre){
         setX(x);
         setY(y);
         setWidth(ANCHO);
         setHeight(ALTO);
+        setName(nombre);
+        TooltipStandard tooltipStandard = new TooltipStandard(getName());
+        tooltipStandard.attach(this);
     }
 
     @Override

@@ -5,7 +5,7 @@ import com.badlogic.gdx.math.Rectangle;
 
 public class Enemigo extends Personaje {
     public Enemigo(String nombre, Texture texture, int x, int y) {
-        super(nombre, texture, x, y);
+        super(nombre, texture, 100, x, y);
     }
     @Override
     public Rectangle getBounds() {

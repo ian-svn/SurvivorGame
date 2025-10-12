@@ -43,8 +43,4 @@ public class CheckBoxStandard extends CheckBox {
         });
     }
 
-    public void dispose(){
-        getSkin().dispose();
-    }
-
 }

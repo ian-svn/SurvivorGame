@@ -13,7 +13,6 @@ import io.github.package_game_survival.entidades.*;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.PathManager;
-import io.github.package_game_survival.standards.LabelStandard;
 
 import java.util.ArrayList;
 
@@ -26,25 +25,26 @@ public class GameScreen implements Screen {
     private TooltipManager tm;
     private ArrayList<Bloque> bloques;
     private ArrayList<Objeto> objetos;
-    private LabelStandard labelPantallCompleta;
+
+    private final float WORLD_WIDTH = 1800; // ancho del mundo
+    private final float WORLD_HEIGHT = 1000; // alto del mundo
 
     public GameScreen(MyGame game) {
-
         this.game = game;
 
         stage = new Stage(game.getViewport());
-        Gdx.input.setInputProcessor(stage);
 
         Image fondo = new Image(Assets.get(PathManager.GAME_BACKGROUND_TEXTURE, Texture.class));
-        fondo.setSize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        fondo.setSize(WORLD_WIDTH, WORLD_HEIGHT);
         stage.addActor(fondo);
 
-        this.bloques = new ArrayList<Bloque>();
+        Gdx.input.setInputProcessor(stage);
+
+        this.bloques = new ArrayList<>();
         inicializarBloques();
 
-        this.objetos = new ArrayList<Objeto>();
+        this.objetos = new ArrayList<>();
         inicializarObjetos();
-
 
         for (Bloque bloque : bloques){
             stage.addActor(bloque);
@@ -62,26 +62,39 @@ public class GameScreen implements Screen {
         tm.hideAll();
         tm.maxWidth = 200f;
 
-        jugador = new Jugador("ian", tm, 100,100);
-
-        stage.addActor(jugador);
-
         fm = new FastMenuScreen(game, this);
 
-        labelPantallCompleta = new LabelStandard("Puntos: 0");
-        labelPantallCompleta.setPosition(1000, 630);
-        stage.addActor(labelPantallCompleta);
-
+        jugador = new Jugador("ian", tm, 100, 100);
+        jugador.agregarAlStage(stage);
     }
 
     private void inicializarBloques() {
-        bloques.add(new BloqueDeBarro(500,250));
-        bloques.add(new BloqueDeBarro(500,250+ Bloque.ALTO));
-        bloques.add(new BloqueDeBarro(500,250+ Bloque.ALTO*2));
+        for (int x = 0; x < WORLD_WIDTH; x += Bloque.ANCHO) {
+            bloques.add(new BloqueDeBarro(x, 0));
+            bloques.add(new BloqueDeBarro(x, (int)WORLD_HEIGHT - Bloque.ALTO));
+        }
+
+        for (int y = Bloque.ALTO; y < WORLD_HEIGHT - Bloque.ALTO; y += Bloque.ALTO) {
+            bloques.add(new BloqueDeBarro(0, y));
+            bloques.add(new BloqueDeBarro((int)WORLD_WIDTH - Bloque.ANCHO, y));
+        }
+
+        bloques.add(new BloqueDeBarro(300, 300));
+        bloques.add(new BloqueDeBarro(400, 300));
+        bloques.add(new BloqueDeBarro(500, 300));
+
+        bloques.add(new BloqueDeBarro(700, 500));
+        bloques.add(new BloqueDeBarro(700, 560));
+        bloques.add(new BloqueDeBarro(760, 500));
+
+        bloques.add(new BloqueDeBarro(1200, 200));
+        bloques.add(new BloqueDeBarro(1260, 200));
     }
 
     private void inicializarObjetos() {
-        objetos.add(new PocionDeAmatista(300,100));
+        objetos.add(new PocionDeAmatista(300, 100));
+        objetos.add(new PocionDeAmatista(900, 400));
+        objetos.add(new PocionDeAmatista(400, 700));
     }
 
     @Override
@@ -91,14 +104,24 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-
         ScreenUtils.clear(0, 0, 0, 1);
-        stage.act(delta);
-        stage.draw();
-
-        labelPantallCompleta.setText("Puntos: " + jugador.getPuntos());
 
         jugador.actualizar(bloques, objetos, delta);
+
+        // --- CAMARA SIGUE AL JUGADOR ---
+        float camX = jugador.getX();
+        float camY = jugador.getY();
+
+        // Limitar para no mostrar fuera del mundo
+        camX = Math.max(MyGame.ANCHO_PANTALLA / 2f, Math.min(camX, WORLD_WIDTH - MyGame.ANCHO_PANTALLA / 2f));
+        camY = Math.max(MyGame.ALTO_PANTALLA / 2f, Math.min(camY, WORLD_HEIGHT - MyGame.ALTO_PANTALLA / 2f));
+
+        stage.getCamera().position.set(camX, camY, 0);
+        stage.getCamera().update();
+        // --------------------------------
+
+        stage.act(delta);
+        stage.draw();
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             game.setScreen(fm);
@@ -112,14 +135,12 @@ public class GameScreen implements Screen {
 
     @Override public void pause() {}
     @Override public void resume() {}
-    @Override public void hide() {
-    }
+    @Override public void hide() {}
 
     @Override
     public void dispose() {
         if (stage != null) stage.dispose();
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
-
         AudioManager.getControler().stopMusic();
     }
 }

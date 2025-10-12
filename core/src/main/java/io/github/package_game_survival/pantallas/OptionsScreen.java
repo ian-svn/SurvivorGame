@@ -10,7 +10,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.CheckBox;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.CheckBoxStandard;
@@ -32,7 +31,7 @@ public class OptionsScreen implements Screen {
 
     @Override
     public void show() {
-        stage = new Stage(new ScreenViewport());
+        stage = new Stage(game.getViewport());
         Gdx.input.setInputProcessor(stage);
 
         LabelStandard labelPantallCompleta = new LabelStandard("Pantalla Completa");

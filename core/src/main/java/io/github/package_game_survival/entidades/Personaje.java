@@ -11,24 +11,27 @@ public abstract class Personaje extends Actor implements Colisionable {
     private int vidaMinima = 1, vidaMaxima = 100;
     protected Texture texture;
 
-    public Personaje(String nombre, Texture texture, int x, int y) {
+    public Personaje(String nombre, Texture texture, int vidaInicial, int x, int y) {
         setName(nombre);
         setX(x);
         setY(y);
         setWidth(ancho);
         setHeight(alto);
         this.texture = texture;
-        this.vida = 100;
+        this.vida = vidaInicial;
     }
 
     public void alterarVida(int vida){
         this.vida+=vida;
 
-        if(vida<=vidaMinima){
+        if(vida<vidaMinima){
             this.vida=vidaMinima;
-        } else if(vida>=vidaMaxima){
+        } else if(vida>vidaMaxima){
             this.vida=vidaMaxima;
         }
     }
 
+    public int getVida() {
+        return vida;
+    }
 }

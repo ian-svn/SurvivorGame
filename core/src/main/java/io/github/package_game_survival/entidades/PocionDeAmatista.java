@@ -1,13 +1,15 @@
 package io.github.package_game_survival.entidades;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import io.github.package_game_survival.managers.Assets;
+import io.github.package_game_survival.managers.PathManager;
 
 public class PocionDeAmatista extends Pocion{
 
     public PocionDeAmatista(int x, int y) {
-        super(new Texture(Gdx.files.internal("sprites/objeto.png")),100);
+        super(Assets.get(PathManager.POCION_TEXTURE,Texture.class),"Pocion de amatista", 25);
         setX(x);
         setY(y);
     }
 }
+

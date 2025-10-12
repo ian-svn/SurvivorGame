@@ -15,7 +15,9 @@ public final class PathManager {
 
     public static final String PLAYER_TEXTURE = "sprites/jugador.png";
     public static final String BLOCK_TEXTURE = "sprites/block.png";
+    public static final String POCION_TEXTURE = "sprites/pocionAmatista.png";
     public static final String GAME_BACKGROUND_TEXTURE = "sprites/fondoJuego.png";
+    public static final String MENU_BACKGROUND_TEXTURE = "sprites/background.png";
 
     public static final String BACKGROUND = "skins/background.json";
     public static final String LABEL = "skins/label.json";
@@ -23,6 +25,7 @@ public final class PathManager {
     public static final String TOOLTIP = "skins/tooltip.json";
     public static final String CHECK_BOX = "skins/checkBox.json";
     public static final String PROGRESS_BAR_SKIN = "skins/progressBar.json";
+    public static final String PROGRESS_BAR_SKIN_VIDA = "skins/progressBarVida.json";
 
     public static final String PROGRESS_BAR_ATLAS = "skins/progressBar.atlas";
     public static final String PLAYER_ATLAS = "sprites/jugador.atlas";

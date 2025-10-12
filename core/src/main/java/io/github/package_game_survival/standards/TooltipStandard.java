@@ -24,8 +24,8 @@ public class TooltipStandard extends TextTooltip {
         this.getContainer().setBackground((Drawable) null);
     }
 
-    public static void attach(Actor actor, String text) {
-        actor.addListener(new TooltipStandard(text));
+    public void attach(Actor actor) {
+        actor.addListener(this);
     }
 
 }
