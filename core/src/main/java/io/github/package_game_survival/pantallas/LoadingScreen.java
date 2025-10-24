@@ -29,35 +29,18 @@ public class LoadingScreen implements Screen {
         this.game = game;
     }
 
-
     @Override
     public void show() {
+        inicializacionBarraCarga();
 
-        //Graphics.DisplayMode displayMode = Gdx.graphics.getDisplayMode();
-        //Gdx.graphics.setFullscreenMode(displayMode);
-
-        batch = new SpriteBatch();
         stage = new Stage();
         shapeRenderer = new ShapeRenderer();
 
-        progressBar = new ProgressBar(0f, 100f, 1f, false,
-            new Skin(Gdx.files.internal(PathManager.PROGRESS_BAR_SKIN), new TextureAtlas(PathManager.PROGRESS_BAR_ATLAS)));
-
-        progressBar.setValue(0f);
-        progressBar.setWidth(1000);
-        progressBar.setHeight(100);
-
-        progressBar.setPosition(Gdx.graphics.getWidth() / 2f - progressBar.getWidth() / 2f,
-            Gdx.graphics.getHeight() / 2 - progressBar.getHeight());
-
-        Skin skinLabel = new Skin(Gdx.files.internal(PathManager.LABEL)); //no se puede hacer con assets porque justamente esto no se cargó aún
-        label = new Label("Cargando... 0%", skinLabel);
-
-        label.setPosition(Gdx.graphics.getWidth() / 2f - label.getWidth() / 2f,
-            Gdx.graphics.getHeight() * 0.55f);
-
         stage.addActor(label);
         stage.addActor(progressBar);
+
+        //Graphics.DisplayMode displayMode = Gdx.graphics.getDisplayMode();
+        //Gdx.graphics.setFullscreenMode(displayMode);
 
         Assets.load();
     }
@@ -78,22 +61,26 @@ public class LoadingScreen implements Screen {
 
         progressBar.setValue((int)(progress * 100));
 
-//        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-//        shapeRenderer.setColor(1, 1, 1, 1);
-//        shapeRenderer.rect(
-//            Gdx.graphics.getWidth() * 0.1f,
-//            Gdx.graphics.getHeight() * 0.45f,
-//            Gdx.graphics.getWidth() * 0.8f * progress,
-//            30
-//        );
-//        shapeRenderer.end();
-
         stage.act(delta);
         stage.draw();
 
         if (Assets.update() && timer >= minTime) {
             game.setScreen(new MenuScreen(game));
         }
+    }
+
+    private void inicializacionBarraCarga() {
+        progressBar = new ProgressBar(0f, 100f, 1f, false,
+            new Skin(Gdx.files.internal(PathManager.PROGRESS_BAR_SKIN), new TextureAtlas(PathManager.PROGRESS_BAR_ATLAS)));
+        progressBar.setValue(0f);
+        progressBar.setWidth(1000);
+        progressBar.setHeight(100);
+        progressBar.setPosition(Gdx.graphics.getWidth() / 2f - progressBar.getWidth() / 2f,
+            Gdx.graphics.getHeight() / 2 - progressBar.getHeight());
+        Skin skinLabel = new Skin(Gdx.files.internal(PathManager.LABEL)); //no se puede hacer con assets porque justamente esto no se cargó aún
+        label = new Label("Cargando... 0%", skinLabel);
+        label.setPosition(Gdx.graphics.getWidth() / 2f - label.getWidth() / 2f,
+            Gdx.graphics.getHeight() * 0.55f);
     }
 
     @Override
@@ -114,7 +101,6 @@ public class LoadingScreen implements Screen {
 
     @Override
     public void dispose() {
-        batch.dispose();
         stage.dispose();
         shapeRenderer.dispose();
     }

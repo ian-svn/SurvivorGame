@@ -148,6 +148,11 @@ www-test/
 nbactions.xml
 nb-configuration.xml
 
+core/src/main/java/io/github/package_game_survival/algoritmos/MapaPathfinding.java
+core/src/main/java/io/githu|b/package_game_survival/algoritmos/NodoMapa.java
+core/src/main/java/io/github/package_game_survival/entidades/Escenario.java
+core/src/main/java/io/github/package_game_survival/entidades/Entidad.java
+core/src/main/java/io/github/package_game_survival/managers/GestorDeColisiones.java
 ## OS-Specific:
 .DS_Store
 Thumbs.db

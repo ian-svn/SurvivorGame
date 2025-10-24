@@ -7,10 +7,12 @@ import io.github.package_game_survival.standards.TooltipStandard;
 
 public class Pocion extends Objeto implements Consumible {
     private int vidaCurada;
+    private boolean consumido;
 
     public Pocion(Texture texture, String nombre, int vidaCurada){
         super(texture);
         this.vidaCurada = vidaCurada;
+        this.consumido = false;
         setName(nombre);
         TooltipStandard tooltip = new TooltipStandard(getName() + "\n" + "vida curada: " + this.vidaCurada);
         tooltip.attach(this);
@@ -23,6 +25,9 @@ public class Pocion extends Objeto implements Consumible {
 
     @Override
     public void consumir(Jugador jugador) {
-        jugador.alterarVida(vidaCurada);
+        if(!consumido) {
+            jugador.alterarVida(vidaCurada);
+            consumido = true;
+        }
     }
 }

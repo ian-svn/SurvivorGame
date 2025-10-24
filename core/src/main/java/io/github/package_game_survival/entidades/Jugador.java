@@ -5,11 +5,14 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager;
 import com.badlogic.gdx.utils.Array;
+import io.github.package_game_survival.algoritmos.EstrategiaMoverAPunto;
 import io.github.package_game_survival.interfaces.Consumible;
+import io.github.package_game_survival.interfaces.IEstrategiaMovimiento;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.PathManager;
@@ -25,7 +28,6 @@ import java.util.List;
 public class Jugador extends Personaje {
 
     private List<Objeto> inventario = new ArrayList<>();
-    private float velocidad = 50;
     private Rectangle hitbox;
 
     private Animation<TextureRegion> walkDown, walkUpRight, walkRight, walkLeft, walkUp;
@@ -36,119 +38,154 @@ public class Jugador extends Personaje {
     private int puntos = 0;
     private ProgressBarStandard barraDeVida;
     private LabelStandard labelPuntos;
+    private float tiempoUltimoDaño = 0f;
+    private final float COOLDOWN_DAÑO = 3.0f;
 
-    public Jugador(String nombre, TooltipManager tm, int x, int y) {
-        super(nombre, null, 50, x, y);
+    private IEstrategiaMovimiento estrategiaActual;
+    private final Vector3 tempVec = new Vector3();
 
-        barraDeVida = new ProgressBarStandard(0,100, 200, 30, this.getVida(), false, "Hp");
-        barraDeVida.setPosicion(MyGame.ANCHO_PANTALLA - barraDeVida.getWidth() - 20, MyGame.ALTO_PANTALLA - barraDeVida.getHeight() - 20);
+    public Jugador(String nombre, int x, int y) {
+        super(nombre, null, 100,100, x, y);
+        hitbox = new Rectangle(x, y, 32, 16);
 
-        labelPuntos = new LabelStandard("Puntos: 0");
-        labelPuntos.setPosition(20, MyGame.ALTO_PANTALLA - labelPuntos.getHeight());
+        inicializarAtlas();
+        inicializarBarraVida();
+        inicializarLabel();
 
-        hitbox = new Rectangle(x, y, getWidth(), getHeight());
+        setWidth(50);
+        setHeight(80);
+        setVelocidad(150);
 
         TooltipStandard tooltipStandard = new TooltipStandard(this.getName());
         tooltipStandard.attach(this);
-
-        TextureAtlas atlas = Assets.get(PathManager.PLAYER_ATLAS, TextureAtlas.class);
-
-        Array<TextureRegion> rightFrames = new Array<>();
-        rightFrames.add(atlas.findRegion("Der1"));
-        rightFrames.add(atlas.findRegion("der2"));
-        rightFrames.add(atlas.findRegion("der3"));
-        walkRight = new Animation<>(0.2f, rightFrames, Animation.PlayMode.LOOP);
-
-        Array<TextureRegion> leftFrames = new Array<>();
-        for (TextureRegion r : rightFrames) {
-            TextureRegion copy = new TextureRegion(r);
-            copy.flip(true, false);
-            leftFrames.add(copy);
-        }
-        walkLeft = new Animation<>(0.2f, leftFrames, Animation.PlayMode.LOOP);
-
-        Array<TextureRegion> upFrames = new Array<>();
-        upFrames.add(atlas.findRegion("arriba"));
-        upFrames.add(atlas.findRegion("arriba1"));
-        walkUp = new Animation<>(0.2f, upFrames, Animation.PlayMode.LOOP);
-
-        Array<TextureRegion> upRightFrames = new Array<>();
-        upRightFrames.add(atlas.findRegion("diagnalDer2"));
-        upRightFrames.add(atlas.findRegion("diagnalDer3"));
-        walkUpRight = new Animation<>(0.2f, upRightFrames, Animation.PlayMode.LOOP);
-
-        Array<TextureRegion> downFrames = new Array<>();
-        downFrames.add(atlas.findRegion("abajo1png"));
-        downFrames.add(atlas.findRegion("abajo2"));
-        walkDown = new Animation<>(0.2f, downFrames, Animation.PlayMode.LOOP);
-
-        idleDown = atlas.findRegion("abajoIdle");
-        TextureRegion idleUp = atlas.findRegion("arribaIdle");
-        TextureRegion idleRight = atlas.findRegion("DerIdle");
-        TextureRegion idleUpRight = atlas.findRegion("diagonalDerIdle");
-        TextureRegion idleLeft = new TextureRegion(idleRight);
-        idleLeft.flip(true, false);
-
-        if (idleDown == null) idleDown = rightFrames.first();
-        if (walkDown.getKeyFrame(0) == null) walkDown = walkRight;
-
     }
 
-    public int getPuntos(){
-        int puntos = 0;
-        for(Objeto objeto : this.inventario) {
-            puntos += objeto.getPuntos();
-        }
-        return puntos;
+    public List<Objeto> getInventario() {
+        return inventario;
     }
 
-    public void actualizar(ArrayList<Bloque> bloques, ArrayList<Objeto> objetos, float delta){
-        int dx = 0, dy = 0;
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) dx = 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) dx = -1;
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) dy = 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) dy = -1;
+    @Override
+    public void act(float delta) {
+        super.act(delta);
 
-        float moveX = dx * velocidad * delta;
-        float moveY = dy * velocidad * delta;
-        hitbox.x += moveX;
+        stateTime += delta;
+        Camera cam = getStage().getCamera();
+        
+        actualizarUI(cam);
+        moverse(delta, cam);
 
-        for (Bloque bloque : bloques) {
-            if (hitbox.overlaps(bloque.getBounds())) {
-                hitbox.x -= moveX; break;
-            }
-        }
-        setX(hitbox.x);
-        hitbox.y += moveY;
-        for (Bloque bloque : bloques) {
-            if (hitbox.overlaps(bloque.getBounds())) {
-                hitbox.y -= moveY; break;
-            }
-        } setY(hitbox.y);
+        revisarRecoleccionObjetos();
+        revisarConsumibles();
+        revisarChoqueEnemigo();
+    }
 
-        Iterator<Objeto> it = objetos.iterator();
-        while(it.hasNext()) {
-            Objeto objeto = it.next();
-            if(objeto.getBounds().overlaps(this.getBounds())) {
-                it.remove();
-                if(objeto.getStage() != null) objeto.remove();
-                adquirirObjeto(objeto);
-            }
+    private void moverse(float delta, Camera cam) {
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+            tempVec.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+            cam.unproject(tempVec);
+            Vector2 destino = new Vector2(tempVec.x, tempVec.y);
+            estrategiaActual = new EstrategiaMoverAPunto(destino);
         }
 
-        boolean seguir = true;
-        int x = 0;
-        while(x < inventario.size() && seguir){
-            if(inventario.get(x) instanceof Consumible){
-                ((Consumible) inventario.get(x)).consumir(this); //por ahora
-                inventario.remove(x);
-                seguir = false;
+        float oldX = getX();
+        float oldY = getY();
+
+        if (estrategiaActual != null) {
+            estrategiaActual.actualizar(this, delta);
+            if (estrategiaActual.haTerminado(this)) {
+                estrategiaActual = null;
             }
-            x++;
         }
 
-        labelPuntos.setText("Puntos: " + this.puntos);
-        barraDeVida.actualizar(getVida());
+        revisarColisiones();
+        actualizarAnimacion(oldX, oldY);
+    }
+
+//
+//    private void moverConTeclado(float delta) {
+//        float moveX = 0, moveY = 0;
+//        if (Gdx.input.isKeyPressed(Input.Keys.D)) moveX = velocidad * delta;
+//        if (Gdx.input.isKeyPressed(Input.Keys.A)) moveX = -velocidad * delta;
+//        if (Gdx.input.isKeyPressed(Input.Keys.W)) moveY = velocidad * delta;
+//        if (Gdx.input.isKeyPressed(Input.Keys.S)) moveY = -velocidad * delta;
+//        moveBy(moveX, moveY);
+//    }
+
+    private void revisarColisiones() {
+        float originalX = getX();
+        float originalY = getY();
+        boolean colision = false;
+
+        for (Actor actor : getStage().getActors()) {
+            if (actor instanceof Bloque bloque && !bloque.atravesable) {
+                if (getBounds().overlaps(bloque.getBounds())) {
+                    colision = true;
+                    break;
+                }
+            }
+        }
+
+        if (colision) {
+            setPosition(originalX, getY());
+            boolean sigueColisionando = false;
+            for (Actor actor : getStage().getActors()) {
+                if (actor instanceof Bloque bloque && !bloque.atravesable && getBounds().overlaps(bloque.getBounds())) {
+                    sigueColisionando = true;
+                    break;
+                }
+            }
+            if(sigueColisionando){
+                setPosition(originalX, originalY);
+            }
+        }
+    }
+
+    @Override
+    public void draw(Batch batch, float parentAlpha) {
+        if(currentFrame != null) {
+            batch.draw(currentFrame, getX(), getY(), getWidth(), getHeight());
+        }
+    }
+
+    public Vector2 getPosition(Vector2 out) {
+        return out.set(getX(), getY());
+    }
+
+    private void revisarChoqueEnemigo() {
+        tiempoUltimoDaño += Gdx.graphics.getDeltaTime();
+
+        Array<Actor> actores = getParent().getChildren();
+        for (Actor actor : actores) {
+            if (actor instanceof Enemigo enemigo) {
+                if (enemigo.getBounds().overlaps(this.getBounds())) {
+                    if (tiempoUltimoDaño >= COOLDOWN_DAÑO) {
+                        this.alterarVida(-enemigo.getDano());
+                        tiempoUltimoDaño = 0f;
+
+                        AudioManager.getControler().loadSound("dañoRecibido", PathManager.HIT_SOUND);
+                        AudioManager.getControler().playSound("dañoRecibido");
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public Rectangle getBounds() {
+        hitbox.setPosition(getX(), getY());
+        return hitbox;
+    }
+
+    @Override
+    public void setPosition(float x, float y) {
+        super.setPosition(x, y);
+        if (hitbox != null) hitbox.setPosition(x, y);
+    }
+
+    @Override
+    public void moveBy(float x, float y) {
+        super.moveBy(x, y);
+        if (hitbox != null) hitbox.setPosition(getX(), getY());
     }
 
     public void agregarAlStage(Stage stage){
@@ -158,103 +195,110 @@ public class Jugador extends Personaje {
         stage.addActor(this.labelPuntos);
     }
 
-    @Override
-    public void act(float delta) {
-        super.act(delta);
-        stateTime += delta;
 
-        Camera cam = getStage().getCamera();
-        barraDeVida.setPosicion(cam.position.x + cam.viewportWidth/2 - barraDeVida.getWidth() - 20,
-            cam.position.y + cam.viewportHeight/2 - barraDeVida.getHeight() - 20);
 
-        labelPuntos.setPosition(cam.position.x - cam.viewportWidth/2 + 20,
-            cam.position.y + cam.viewportHeight/2 - labelPuntos.getHeight() - 20);
+    private void inicializarLabel() {
+        labelPuntos = new LabelStandard("Puntos: 0");
+        labelPuntos.setPosition(20, MyGame.ALTO_PANTALLA - labelPuntos.getHeight());
+    }
 
-        int dx = 0, dy = 0;
+    private void inicializarBarraVida() {
+        barraDeVida = new ProgressBarStandard(0,100, 200, 30, this.getVida(), false, "Hp");
+        barraDeVida.setPosicion(MyGame.ANCHO_PANTALLA - barraDeVida.getWidth() - 20, MyGame.ALTO_PANTALLA - barraDeVida.getHeight() - 20);
+    }
 
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) dx = 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) dx = -1;
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) dy = 1;
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) dy = -1;
-
-        float moveX = dx * velocidad * delta;
-        float moveY = dy * velocidad * delta;
-
-        hitbox.x += moveX;
-        boolean colisionX = false;
-        for (Actor actor : getStage().getActors()) {
-            if (actor instanceof Bloque bloque && hitbox.overlaps(bloque.getBounds()) && !bloque.atravesable) {
-                colisionX = true;
-                break;
-            }
+    private void inicializarAtlas() {
+        TextureAtlas atlas = Assets.get(PathManager.PLAYER_ATLAS, TextureAtlas.class);
+        Array<TextureRegion> rightFrames = new Array<>();
+        rightFrames.add(atlas.findRegion("Der1"));
+        rightFrames.add(atlas.findRegion("der2"));
+        rightFrames.add(atlas.findRegion("der3"));
+        walkRight = new Animation<>(0.2f, rightFrames, Animation.PlayMode.LOOP);
+        Array<TextureRegion> leftFrames = new Array<>();
+        for (TextureRegion r : rightFrames) {
+            TextureRegion copy = new TextureRegion(r);
+            copy.flip(true, false);
+            leftFrames.add(copy);
         }
-        if (colisionX) hitbox.x -= moveX;
-        setX(hitbox.x);
+        walkLeft = new Animation<>(0.2f, leftFrames, Animation.PlayMode.LOOP);
+        Array<TextureRegion> upFrames = new Array<>();
+        upFrames.add(atlas.findRegion("arriba"));
+        upFrames.add(atlas.findRegion("arriba1"));
+        walkUp = new Animation<>(0.2f, upFrames, Animation.PlayMode.LOOP);
+        Array<TextureRegion> upRightFrames = new Array<>();
+        upRightFrames.add(atlas.findRegion("diagnalDer2"));
+        upRightFrames.add(atlas.findRegion("diagnalDer3"));
+        walkUpRight = new Animation<>(0.2f, upRightFrames, Animation.PlayMode.LOOP);
+        Array<TextureRegion> downFrames = new Array<>();
+        downFrames.add(atlas.findRegion("abajo1png"));
+        downFrames.add(atlas.findRegion("abajo2"));
+        walkDown = new Animation<>(0.2f, downFrames, Animation.PlayMode.LOOP);
+        idleDown = atlas.findRegion("abajoIdle");
+        currentFrame = idleDown;
+    }
 
-        hitbox.y += moveY;
-        boolean colisionY = false;
-        for (Actor actor : getStage().getActors()) {
-            if (actor instanceof Bloque bloque && hitbox.overlaps(bloque.getBounds()) && !bloque.atravesable) {
-                colisionY = true;
-                break;
-            }
-        }
-        if (colisionY) hitbox.y -= moveY;
-        setY(hitbox.y);
+    private void actualizarAnimacion(float oldX, float oldY) {
+        float dx = getX() - oldX;
+        float dy = getY() - oldY;
 
-        if (dx == 0 && dy == 0) currentFrame = idleDown;
-        else if (dx > 0 && dy == 0) currentFrame = walkRight.getKeyFrame(stateTime);
-        else if (dx < 0 && dy == 0) currentFrame = walkLeft.getKeyFrame(stateTime);
-        else if (dx == 0 && dy > 0) currentFrame = walkUp.getKeyFrame(stateTime);
-        else if (dx == 0 && dy < 0) currentFrame = walkDown.getKeyFrame(stateTime);
-        else if (dx > 0 && dy > 0) currentFrame = walkUpRight.getKeyFrame(stateTime);
-        else if (dx < 0 && dy > 0) {
-            TextureRegion frame = walkUpRight.getKeyFrame(stateTime);
-            if (frame != null) {
-                frame = new TextureRegion(frame);
-                frame.flip(true, false);
-            }
-            currentFrame = frame;
-        }
-        else if (dx > 0 && dy < 0) {
-            currentFrame = walkDown.getKeyFrame(stateTime);
-        }
-        else if (dx < 0 && dy < 0) {
-            TextureRegion frame = walkDown.getKeyFrame(stateTime);
-            if (frame != null) {
-                frame = new TextureRegion(frame);
-                frame.flip(true, false);
-            }
-            currentFrame = frame;
+        if (Math.abs(dx) < 0.1f && Math.abs(dy) < 0.1f) {
+            currentFrame = idleDown;
+            stateTime = 0;
+        } else if (Math.abs(dx) > Math.abs(dy)) {
+            if (dx > 0) currentFrame = walkRight.getKeyFrame(stateTime);
+            else currentFrame = walkLeft.getKeyFrame(stateTime);
+        } else {
+            if (dy > 0) currentFrame = walkUp.getKeyFrame(stateTime);
+            else currentFrame = walkDown.getKeyFrame(stateTime);
         }
     }
 
+    private void actualizarUI(Camera cam) {
+        barraDeVida.setPosicion(cam.position.x + cam.viewportWidth / 2 - barraDeVida.getWidth() - 20,
+            cam.position.y + cam.viewportHeight / 2 - barraDeVida.getHeight() - 20);
+        barraDeVida.actualizar(getVida());
 
-
-    @Override
-    public void draw(Batch batch, float parentAlpha) {
-        batch.draw(currentFrame, getX(), getY(), getWidth(), getHeight());
+        labelPuntos.setPosition(cam.position.x - cam.viewportWidth / 2 + 20,
+            cam.position.y + cam.viewportHeight / 2 - labelPuntos.getHeight() - 20);
+        labelPuntos.setText("Puntos: " + puntos);
     }
 
-    public Rectangle getBounds() {
-        return hitbox;
+    private void revisarRecoleccionObjetos() {
+        if (getParent() == null) return;
+        Array<Actor> actores = getParent().getChildren();
+
+        for (int i = 0; i < actores.size; i++) {
+            Actor actor = actores.get(i);
+            if (actor instanceof Objeto objeto) {
+                if (getBounds().overlaps(objeto.getBounds())) {
+                    adquirirObjeto(objeto);
+                }
+            }
+        }
+    }
+
+    private void revisarConsumibles() {
+        Iterator<Objeto> it = inventario.iterator();
+        while(it.hasNext()){
+            Objeto o = it.next();
+            if (o instanceof Consumible consumible) {
+                consumible.consumir(this); // por ahora
+                it.remove();
+                break;
+            }
+        }
     }
 
     public void adquirirObjeto(Objeto objeto) {
         if (inventario.add(objeto)) {
-            objeto.remove();
             objeto.adquirir();
-            AudioManager.getControler().loadSound("agarrarObjeto",PathManager.GRAB_OBJECT);
+            AudioManager.getControler().loadSound("agarrarObjeto",PathManager.GRAB_OBJECT_SOUND);
             AudioManager.getControler().playSound("agarrarObjeto");
-            this.puntos+=5;
+            this.puntos += objeto.getPuntos();
         }
     }
 
-    public List<Objeto> getInventario() {
-        return inventario;
-    }
-
-    public ProgressBarStandard getBarraDeVida() {
-        return barraDeVida;
+    public void setEstrategia(IEstrategiaMovimiento estrategiaActual) {
+        this.estrategiaActual = estrategiaActual;
     }
 }

@@ -15,12 +15,14 @@ public class Assets {
         manager.load(PathManager.GAME_BACKGROUND_TEXTURE, Texture.class);
         manager.load(PathManager.MENU_BACKGROUND_TEXTURE, Texture.class);
         manager.load(PathManager.POCION_TEXTURE, Texture.class);
+        manager.load(PathManager.ENEMIGO_TEXTURE, Texture.class);
 
         manager.load(PathManager.MENU_MUSIC, Music.class);
         manager.load(PathManager.GAME_MUSIC, Music.class);
 
-        manager.load(PathManager.GRAB_OBJECT, Sound.class);
-        manager.load(PathManager.PLACE_BLOCK, Sound.class);
+        manager.load(PathManager.GRAB_OBJECT_SOUND, Sound.class);
+        manager.load(PathManager.PLACE_BLOCK_SOUND, Sound.class);
+        manager.load(PathManager.HIT_SOUND, Sound.class);
 
         manager.load(PathManager.BACKGROUND, Skin.class);
         manager.load(PathManager.LABEL, Skin.class);
@@ -33,6 +35,7 @@ public class Assets {
 
         manager.load(PathManager.PROGRESS_BAR_ATLAS, TextureAtlas.class);
         manager.load(PathManager.PLAYER_ATLAS, TextureAtlas.class);
+        manager.load(PathManager.CLICK_ANIMATION, TextureAtlas.class);
 
     }
 

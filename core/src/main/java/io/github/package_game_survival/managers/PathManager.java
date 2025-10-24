@@ -8,14 +8,17 @@ public final class PathManager {
 
     private static final FileHandle s = Gdx.files.internal("");
 
-    public static final String PLACE_BLOCK = "sounds/place_block.mp3";
+    public static final String PLACE_BLOCK_SOUND = "sounds/place_block.mp3";
+    public static final String GRAB_OBJECT_SOUND = "sounds/grab_object.mp3";
+    public static final String HIT_SOUND = "sounds/hit.mp3";
+
     public static final String GAME_MUSIC = "sounds/MyCastleTown.mp3";
     public static final String MENU_MUSIC = "sounds/MenuTheme.mp3";
-    public static final String GRAB_OBJECT = "sounds/grab_object.mp3";
 
     public static final String PLAYER_TEXTURE = "sprites/jugador.png";
     public static final String BLOCK_TEXTURE = "sprites/block.png";
     public static final String POCION_TEXTURE = "sprites/pocionAmatista.png";
+    public static final String ENEMIGO_TEXTURE = "sprites/enemigo.png";
     public static final String GAME_BACKGROUND_TEXTURE = "sprites/fondoJuego.png";
     public static final String MENU_BACKGROUND_TEXTURE = "sprites/background.png";
 
@@ -29,7 +32,7 @@ public final class PathManager {
 
     public static final String PROGRESS_BAR_ATLAS = "skins/progressBar.atlas";
     public static final String PLAYER_ATLAS = "sprites/jugador.atlas";
-
+    public static final String CLICK_ANIMATION = "atlas/click.atlas";
 
 
 }

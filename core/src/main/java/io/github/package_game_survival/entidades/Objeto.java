@@ -4,9 +4,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import io.github.package_game_survival.interfaces.Colisionable;
 
-public abstract class Objeto extends Actor implements Colisionable {
+public abstract class Objeto extends Actor {
     protected Texture texture;
     private int ANCHO = 100;
     private int ALTO = 100;

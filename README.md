@@ -14,6 +14,9 @@ Un juego de supervivencia cooperativo en red en 2.5D, donde los jugadores deber√
 ## Enlace a la Wiki del Proyecto:
 https://github.com/ian-svn/SurvivorGame/wiki
 
+## Imagenes del juego:
+
+
 ## Video Corto de Demostraci√≥n:
 https://youtu.be/y4Y17grUKIs
 

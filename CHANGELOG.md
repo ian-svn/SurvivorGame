@@ -116,7 +116,18 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ### Fixed
 - Arreglo de viewport mal cargado en la pantalla `OptionScreen` y en `GameScreen`.
-- 
 
 ### Changed
-- Cambio de compilador de `JDK 23` a `JDK 17` debido a la estabilidad.
+- Cambio de compilador de `JDK 23` a `JDK 17` debido a la estabilidad.}
+
+## [0.7.0] - 2025-10-24
+
+### Added
+- Se agrega daño del `Enemigo` más el sonido q genera.
+- Efecto de mouse al precionar el la `GameScreen` con el click derecho.
+- Menu de perder y ganar el juego.
+- Refactorizacion de codigo.
+
+### Changed
+- Cambio de método para moverse y colisionarse para los `Personajes` del juego.
+
