@@ -1,6 +1,9 @@
 package io.github.package_game_survival.standards;
 
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextTooltip;
 import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager;
@@ -19,7 +22,7 @@ public class TooltipStandard extends TextTooltip {
         tm.resetTime = 1f;
     }
 
-    public TooltipStandard(String text) {
+    public TooltipStandard(String text, Actor actor) {
         super(text, tm, skinTooltip);
         this.getContainer().setBackground((Drawable) null);
     }
@@ -27,6 +30,4 @@ public class TooltipStandard extends TextTooltip {
     public void attach(Actor actor) {
         actor.addListener(this);
     }
-
 }
-

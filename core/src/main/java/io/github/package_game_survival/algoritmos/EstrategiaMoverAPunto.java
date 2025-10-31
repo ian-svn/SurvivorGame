@@ -3,8 +3,8 @@ package io.github.package_game_survival.algoritmos;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import io.github.package_game_survival.entidades.Bloque;
-import io.github.package_game_survival.entidades.Personaje;
+import io.github.package_game_survival.entidades.bloques.Bloque;
+import io.github.package_game_survival.entidades.seres.SerVivo;
 import io.github.package_game_survival.interfaces.IEstrategiaMovimiento;
 
 public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
@@ -17,10 +17,10 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
     }
 
     @Override
-    public void actualizar(Personaje personaje, float delta) {
+    public void actualizar(SerVivo serVivo, float delta) {
         if (terminado) return;
 
-        Vector2 posicion = new Vector2(personaje.getCentroX(), personaje.getY());
+        Vector2 posicion = new Vector2(serVivo.getCentroX(), serVivo.getY());
         Vector2 direccion = destino.cpy().sub(posicion);
         float distancia = direccion.len();
 
@@ -30,27 +30,27 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
         }
 
         direccion.nor();
-        float distanciaMovimiento = personaje.getVelocidad() * delta;
+        float distanciaMovimiento = serVivo.getVelocidad() * delta;
 
-        float nextX = personaje.getX() + direccion.x * distanciaMovimiento;
-        float nextY = personaje.getY() + direccion.y * distanciaMovimiento;
+        float nextX = serVivo.getX() + direccion.x * distanciaMovimiento;
+        float nextY = serVivo.getY() + direccion.y * distanciaMovimiento;
 
-        boolean colision = hayColision(nextX, nextY, personaje);
+        boolean colision = hayColision(nextX, nextY, serVivo);
         if (colision) {
             boolean esquivado = false;
             for (int angulo = -90; angulo <= 90; angulo += 15) {
                 Vector2 desviada = direccion.cpy().rotateDeg(angulo);
-                float desX = personaje.getX() + desviada.x * distanciaMovimiento;
-                float desY = personaje.getY() + desviada.y * distanciaMovimiento;
-                if (!hayColision(desX, desY, personaje)) {
-                    personaje.setPosition(desX, desY);
+                float desX = serVivo.getX() + desviada.x * distanciaMovimiento;
+                float desY = serVivo.getY() + desviada.y * distanciaMovimiento;
+                if (!hayColision(desX, desY, serVivo)) {
+                    serVivo.setPosition(desX, desY);
                     esquivado = true;
                     break;
                 }
             }
             if (!esquivado) return;
         } else {
-            personaje.setPosition(nextX, nextY);
+            serVivo.setPosition(nextX, nextY);
         }
     }
 
@@ -58,16 +58,16 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
      * Comprueba colisión usando una copia temporal del rectángulo de bounds del personaje,
      * posicionada en (nextX,nextY). Nunca modifica la hitbox real del personaje.
      */
-    private boolean hayColision(float nextX, float nextY, Personaje personaje) {
-        if (personaje.getStage() == null) return false;
+    private boolean hayColision(float nextX, float nextY, SerVivo serVivo) {
+        if (serVivo.getStage() == null) return false;
 
         // Copia la hitbox actual para no modificar la real
-        Rectangle testRect = new Rectangle(personaje.getBounds());
+        Rectangle testRect = new Rectangle(serVivo.getRectColision());
         testRect.setPosition(nextX, nextY);
 
-        for (Actor actor : personaje.getStage().getActors()) {
+        for (Actor actor : serVivo.getStage().getActors()) {
             if (actor instanceof Bloque bloque && !bloque.atravesable) {
-                if (testRect.overlaps(bloque.getBounds())) {
+                if (testRect.overlaps(bloque.getRectColision())) {
                     return true;
                 }
             }
@@ -76,7 +76,7 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
     }
 
     @Override
-    public boolean haTerminado(Personaje personaje) {
+    public boolean haTerminado(SerVivo serVivo) {
         return terminado;
     }
 

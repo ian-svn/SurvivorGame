@@ -18,15 +18,14 @@ public class ProgressBarStandard extends ProgressBar {
         this.setWidth(ancho);
         this.setHeight(alto);
         this.label = new LabelStandard(text);
-        label.setFontScale(0.5f); // Duplicar el tamaño del texto
+        label.setFontScale(0.5f);
 
         ProgressBar.ProgressBarStyle style = this.getStyle();
         style.background.setMinHeight(30);
         style.knobBefore.setMinHeight(30);
 
 
-        TooltipStandard tooltipStandard = new TooltipStandard("Vida del jugador");
-        tooltipStandard.attach(this);
+        TooltipStandard tooltipStandard = new TooltipStandard("Vida del jugador",this);
 
         this.setStyle(style);
     }

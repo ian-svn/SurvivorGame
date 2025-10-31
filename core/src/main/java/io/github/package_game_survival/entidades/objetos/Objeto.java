@@ -1,25 +1,17 @@
-package io.github.package_game_survival.entidades;
+package io.github.package_game_survival.entidades.objetos;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import io.github.package_game_survival.entidades.Entidad;
 
-public abstract class Objeto extends Actor {
+public abstract class Objeto extends Entidad {
     protected Texture texture;
-    private int ANCHO = 100;
-    private int ALTO = 100;
     private int puntos = 5;
 
-    public Objeto(Texture texture){
+    public Objeto(String nombre, float x, float y, float ancho, float alto, Texture texture){
+        super(nombre, x, y, ancho, alto);
         this.texture = texture;
-        setWidth(ANCHO);
-        setHeight(ALTO);
-    }
-
-    public void spawnear(int x, int y){
-        setX(x);
-        setY(y);
     }
 
     public int getPuntos() {
@@ -38,4 +30,10 @@ public abstract class Objeto extends Actor {
     public void adquirir() {
         remove();
     }
+
+    @Override
+    public Rectangle getRectColision() {
+        return new Rectangle(getX(), getY(), getAncho(), getAlto());
+    }
+
 }

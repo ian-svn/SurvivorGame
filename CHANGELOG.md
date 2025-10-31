@@ -131,3 +131,20 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ### Changed
 - Cambio de método para moverse y colisionarse para los `Personajes` del juego.
 
+## [0.8.0] - 2025-10-31
+
+### Added
+- Sistema de inventario mejorado en `Jugador` para almacenar `PocionDeAmatista` y otros consumibles.
+- Implementación de consumo de pociones en orden de llegada mediante la tecla **E**.
+- Clases base `SerVivo` y `Entidad` para unificar atributos y métodos de enemigos y jugadores.
+- Nuevos tipos de enemigos (`InvasorArquero`, `InvasorDeLaLuna`, `InvasorMago`) con herencia de `Enemigo`.
+- Actualización del `GameScreen` para soportar la interacción de teclas con inventario y efectos visuales.
+- Efecto visual al recibir daño el `Jugador`.
+
+### Changed
+- Refactor de clases de enemigos y jugador para reducir código repetido usando herencia.
+- `Jugador` ahora procesa objetos consumibles solo al presionar **E**, en lugar de automáticamente.
+- El jugador ya no puede moverse ni recoger items mientras el juego está terminado.
+
+### Fixed
+- Corrección de errores en recolección de objetos y consumo de pociones.

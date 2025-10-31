@@ -1,6 +1,6 @@
 package io.github.package_game_survival.interfaces;
 
-import io.github.package_game_survival.entidades.Jugador;
+import io.github.package_game_survival.entidades.seres.Jugador;
 
 public interface Consumible {
 

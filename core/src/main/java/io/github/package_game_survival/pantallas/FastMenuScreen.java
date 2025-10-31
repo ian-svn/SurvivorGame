@@ -1,6 +1,7 @@
 package io.github.package_game_survival.pantallas;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -11,6 +12,8 @@ import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.TextButtonStandard;
+
+import java.security.Key;
 
 public class FastMenuScreen implements Screen {
 
@@ -70,6 +73,10 @@ public class FastMenuScreen implements Screen {
         ScreenUtils.clear(0, 0, 0, 1);
         stage.act(delta);
         stage.draw();
+
+        if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
+            game.setScreen(gameScreen);
+        }
     }
 
     @Override

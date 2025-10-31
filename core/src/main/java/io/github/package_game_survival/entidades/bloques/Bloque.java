@@ -1,13 +1,14 @@
-package io.github.package_game_survival.entidades;
+package io.github.package_game_survival.entidades.bloques;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.Actor;
+import io.github.package_game_survival.entidades.Entidad;
+import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.interfaces.Colisionable;
 import io.github.package_game_survival.standards.TooltipStandard;
 
-public abstract class Bloque extends Actor implements Colisionable {
+public abstract class Bloque extends Entidad implements Colisionable {
 
     public static final int ANCHO = 60;
     public static final int ALTO = 60;
@@ -15,13 +16,8 @@ public abstract class Bloque extends Actor implements Colisionable {
     public Texture texture;
 
     public Bloque(int x, int y, String nombre){
-        setX(x);
-        setY(y);
-        setWidth(ANCHO);
-        setHeight(ALTO);
-        setName(nombre);
-        TooltipStandard tooltipStandard = new TooltipStandard(getName());
-        tooltipStandard.attach(this);
+        super(nombre, x, y, ANCHO, ALTO);
+        TooltipStandard tooltipStandard = new TooltipStandard(getName(),this);
     }
 
     @Override
@@ -30,7 +26,7 @@ public abstract class Bloque extends Actor implements Colisionable {
     }
 
     @Override
-    public Rectangle getBounds() {
-        return new Rectangle(getX(), getY(), getWidth(), getHeight());
+    public void agregarAlEscenario(Escenario escenario) {
+        escenario.agregar(this);
     }
 }
