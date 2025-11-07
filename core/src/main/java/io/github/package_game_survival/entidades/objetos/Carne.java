@@ -4,11 +4,9 @@ import com.badlogic.gdx.graphics.Texture;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.PathManager;
 
-public class PocionDeAmatista extends ObjetoConsumible {
-
-    public PocionDeAmatista(float x, float y) {
-        super("Pocion de amatista", x, y, Assets.get(PathManager.POCION_TEXTURE,Texture.class),
-            25,0,10);
+public class Carne extends ObjetoConsumible{
+    public Carne(float x, float y) {
+        super("Carne", x, y, Assets.get(PathManager.CARNE_TEXTURE,Texture.class)
+            , 0,30,5);
     }
 }
-

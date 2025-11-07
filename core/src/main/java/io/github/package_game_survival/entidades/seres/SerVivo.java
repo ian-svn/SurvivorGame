@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Rectangle;
 import io.github.package_game_survival.entidades.Entidad;
 import io.github.package_game_survival.interfaces.Colisionable;
+import io.github.package_game_survival.interfaces.IEstrategiaMovimiento;
 
 public abstract class SerVivo extends Entidad implements Colisionable {
 
@@ -11,6 +12,7 @@ public abstract class SerVivo extends Entidad implements Colisionable {
     private int vidaMinima = 0, vidaMaxima = 100;
     private int velocidad;
     private int danio;
+    protected IEstrategiaMovimiento estrategia;
     private TextureAtlas atlas;
 
     public SerVivo(String nombre, float x, float y, float ancho, float alto,
@@ -55,6 +57,14 @@ public abstract class SerVivo extends Entidad implements Colisionable {
 
     public int getDanio() {
         return danio;
+    }
+
+    public IEstrategiaMovimiento getEstrategia() {
+        return estrategia;
+    }
+
+    public void setEstrategia(IEstrategiaMovimiento estrategiaMovimiento) {
+        this.estrategia = estrategiaMovimiento;
     }
 
     @Override

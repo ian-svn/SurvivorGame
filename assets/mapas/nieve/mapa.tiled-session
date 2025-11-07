@@ -1,0 +1,40 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "mapaNieve.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "fileStates": {
+        "mapaNieve.tmx": {
+            "scale": 1,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 438.5,
+                "y": 289
+            }
+        },
+        "nieve.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 5.5
+        }
+    },
+    "last.exportedFilePath": "C:/Users/iansa/OneDrive/Escritorio/Proyects/SurvivalGame/assets/mapas",
+    "last.imagePath": "C:/Users/iansa/OneDrive/Escritorio/Proyects/SurvivalGame/assets/mapas",
+    "map.lastUsedExportFilter": "Todos los archivos (*)",
+    "map.lastUsedFormat": "tmx",
+    "openFiles": [
+        "mapaNieve.tmx",
+        "nieve.tsx"
+    ],
+    "project": "mapa.tiled-project",
+    "recentFiles": [
+        "nieve.tsx",
+        "mapaNieve.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 1,
+    "tileset.spacing": 1
+}

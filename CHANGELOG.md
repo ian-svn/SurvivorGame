@@ -148,3 +148,16 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ### Fixed
 - Corrección de errores en recolección de objetos y consumo de pociones.
+
+## [0.9.0] - 2025-11-07
+
+### Added
+- `Animales` y `Enemigos` con diferentes tamaños, daños y vida.
+- Nuevo sprite de `Invasor de La Luna` y `Animales`.
+- Mapa `Tiled` con su `Tileset`.
+- Diseño mejorado ampliamente.
+
+### Changed
+- Sin más `Puntos` al agarrar objetos.
+- `Barra de vida` con distinto diseño.
+

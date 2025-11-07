@@ -9,8 +9,8 @@ public abstract class Objeto extends Entidad {
     protected Texture texture;
     private int puntos = 5;
 
-    public Objeto(String nombre, float x, float y, float ancho, float alto, Texture texture){
-        super(nombre, x, y, ancho, alto);
+    public Objeto(String nombre, float x, float y, Texture texture){
+        super(nombre, x, y, 32, 32);
         this.texture = texture;
     }
 

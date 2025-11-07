@@ -1,0 +1,118 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "bosque/tilemap_bosque.tmx",
+    "expandedProjectPaths": [
+        "desierto",
+        ".",
+        "nieve",
+        "bosque"
+    ],
+    "fileStates": {
+        "bosque/tilemap_bosque.tmx": {
+            "scale": 1.056875,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 934.8314606741574,
+                "y": 511.886457717327
+            }
+        },
+        "bosque/tileset_bosque.tsx": {
+            "scaleInDock": 2,
+            "scaleInEditor": 4
+        },
+        "desierto/nieve.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "desierto/tilemap_desierto.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 479,
+                "y": 319
+            }
+        },
+        "desierto/tileset_desierto.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 4
+        },
+        "mapa.tmx": {
+            "scale": 1.0341145833333334,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 480.12087635356323,
+                "y": 182.76504658776128
+            }
+        },
+        "mapaNieve.tmx": {
+            "scale": 1,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 438.5,
+                "y": 289
+            }
+        },
+        "nieve.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 5.5
+        },
+        "nieve/mapa.tmx": {
+            "scale": 1.0341145833333334,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 480.12087635356323,
+                "y": 320.08058423570884
+            }
+        },
+        "nieve/mapaNieve.tmx": {
+            "scale": 1,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 504,
+                "y": 290
+            }
+        },
+        "nieve/nieve.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 4
+        },
+        "nieve/tileset_desierto.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        }
+    },
+    "last.exportedFilePath": "C:/Users/iansa/OneDrive/Escritorio/Proyects/SurvivalGame/assets/mapas/bosque",
+    "last.imagePath": "C:/Users/iansa/OneDrive/Escritorio/Proyects/SurvivalGame/assets/mapas/bosque",
+    "map.lastUsedExportFilter": "Todos los archivos (*)",
+    "map.lastUsedFormat": "tmx",
+    "openFiles": [
+        "bosque/tileset_bosque.tsx",
+        "bosque/tilemap_bosque.tmx"
+    ],
+    "project": "mapa.tiled-project",
+    "property.type": "int",
+    "recentFiles": [
+        "bosque/tilemap_bosque.tmx",
+        "bosque/tileset_bosque.tsx",
+        "desierto/tileset_desierto.tsx",
+        "nieve/nieve.tsx",
+        "nieve/mapaNieve.tmx",
+        "desierto/tilemap_desierto.tmx",
+        "nieve/mapa.tmx",
+        "desierto/nieve.tsx",
+        "nieve/tileset_desierto.tsx",
+        "mapa.tmx",
+        "nieve.tsx",
+        "mapaNieve.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.margin": 0,
+    "tileset.spacing": 0,
+    "tileset.tileSize": {
+        "height": 32,
+        "width": 32
+    }
+}

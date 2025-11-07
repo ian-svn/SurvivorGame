@@ -38,6 +38,7 @@ public class FastMenuScreen implements Screen {
         reanudarButton.setClickListener(() -> {
                 game.setScreen(gameScreen);
                 dispose();
+                gameScreen.getCamara().zoom = 0.6f;
         });
 
         TextButtonStandard resetButton = new TextButtonStandard("Jugar otra vez");
@@ -76,6 +77,7 @@ public class FastMenuScreen implements Screen {
 
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
             game.setScreen(gameScreen);
+            gameScreen.getCamara().zoom = 0.6f;
         }
     }
 

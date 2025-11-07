@@ -1,110 +1,163 @@
 package io.github.package_game_survival.entidades.mapas;
 
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapObject;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import io.github.package_game_survival.entidades.bloques.Bloque;
-import io.github.package_game_survival.entidades.bloques.BloqueDeBarro;
+import io.github.package_game_survival.entidades.bloques.*;
 import io.github.package_game_survival.entidades.objetos.Objeto;
 import io.github.package_game_survival.entidades.objetos.PocionDeAmatista;
-import io.github.package_game_survival.entidades.seres.Enemigo;
-import io.github.package_game_survival.entidades.seres.InvasorArquero;
-import io.github.package_game_survival.entidades.seres.InvasorDeLaLuna;
-import io.github.package_game_survival.entidades.seres.Jugador;
+import io.github.package_game_survival.entidades.seres.animales.Animal;
+import io.github.package_game_survival.entidades.seres.animales.Jabali;
+import io.github.package_game_survival.entidades.seres.animales.Vaca;
+import io.github.package_game_survival.entidades.seres.enemigos.Enemigo;
+import io.github.package_game_survival.entidades.seres.enemigos.InvasorArquero;
+import io.github.package_game_survival.entidades.seres.enemigos.InvasorDeLaLuna;
+import io.github.package_game_survival.entidades.seres.enemigos.InvasorMago;
+import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.PathManager;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Escenario {
 
-    private Stage stage;
-    private Jugador jugador;
-    private ArrayList<Bloque> bloques;
-    private ArrayList<Objeto> objetos;
-    private ArrayList<Enemigo> enemigos;
+    private final Stage stage;
+    private final Jugador jugador;
+    private final ArrayList<Bloque> bloques;
+    private final ArrayList<Enemigo> enemigos;
+    private final ArrayList<Animal> animales;
+    private final ArrayList<Objeto> objetos;
+    private final Mapa mapa;
 
-    private float anchoMundo;
-    private float altoMundo;
-
-    public Escenario(Stage stage, Jugador jugador, float anchoMundo, float altoMundo) {
+    public Escenario(Stage stage, Jugador jugador) {
         this.stage = stage;
         this.jugador = jugador;
-        this.anchoMundo = anchoMundo;
-        this.altoMundo = altoMundo;
-
         this.bloques = new ArrayList<>();
+        this.animales = new ArrayList<>();
         this.objetos = new ArrayList<>();
         this.enemigos = new ArrayList<>();
 
-        Texture fondoTexture = Assets.get(PathManager.GAME_BACKGROUND_TEXTURE, Texture.class);
-        Image fondo = new Image(fondoTexture);
-        fondo.setSize(anchoMundo, altoMundo);
-        fondo.setPosition(0, 0);
-        agregar(fondo);
+        mapa = new Mapa();
 
-        inicializarBloques();
-        inicializarObjetos();
         inicializarEnemigos();
+        inicializarAnimales();
+        inicializarObjetos();
+        inicializarBloquesDesdeMapa();
         agregarEntidadesAlStage();
     }
 
-    private void inicializarBloques() {
-        for (int x = 0; x < anchoMundo; x += Bloque.ANCHO) {
-            bloques.add(new BloqueDeBarro(x, 0));
-            bloques.add(new BloqueDeBarro(x, (int) altoMundo - Bloque.ALTO));
-        }
-        for (int y = Bloque.ALTO; y < altoMundo - Bloque.ALTO; y += Bloque.ALTO) {
-            bloques.add(new BloqueDeBarro(0, y));
-            bloques.add(new BloqueDeBarro((int) anchoMundo - Bloque.ANCHO, y));
-        }
-
-        bloques.add(new BloqueDeBarro(Bloque.ANCHO * 3, Bloque.ALTO * 3));
-        bloques.add(new BloqueDeBarro(Bloque.ANCHO * 4, Bloque.ALTO * 3));
-        bloques.add(new BloqueDeBarro(Bloque.ANCHO * 10, Bloque.ALTO * 3));
+    private void inicializarObjetos() {
+        objetos.add(new PocionDeAmatista(200,600));
+        objetos.add(new PocionDeAmatista(400,400));
+        objetos.add(new PocionDeAmatista(600,200));
     }
 
-    private void inicializarObjetos() {
-        objetos.add(new PocionDeAmatista(300, 100));
-        objetos.add(new PocionDeAmatista(900, 400));
-        objetos.add(new PocionDeAmatista(400, 700));
+    private void inicializarAnimales() {
+        animales.add(new Vaca(400,300));
+        animales.add(new Jabali(20,100));
+        animales.add(new Vaca(350,500));
     }
 
     private void inicializarEnemigos() {
-        enemigos.add(new InvasorDeLaLuna(100, 400));
-        enemigos.add(new InvasorArquero(400, 100));
+        enemigos.add(new InvasorArquero(200,500));
+        enemigos.add(new InvasorMago(50,100));
+        enemigos.add(new InvasorDeLaLuna(280,100));
     }
 
-    private void agregarEntidadesAlStage() {
+    private void inicializarBloquesDesdeMapa() {
+        TiledMap tiledMap = mapa.getMapa();
 
-        for (Bloque bloque : bloques) bloque.agregarAlEscenario(this);
-        for (Objeto objeto : objetos) objeto.agregarAlEscenario(this);
-        for (Enemigo enemigo : enemigos) enemigo.agregarAlEscenario(this);
+        for (MapLayer layer : tiledMap.getLayers()) {
+            if (!(layer instanceof com.badlogic.gdx.maps.tiled.TiledMapTileLayer tileLayer)) continue;
+
+            for (int x = 0; x < tileLayer.getWidth(); x++) {
+                for (int y = 0; y < tileLayer.getHeight(); y++) {
+                    var cell = tileLayer.getCell(x, y);
+                    if (cell == null || cell.getTile() == null) continue;
+
+                    var tile = cell.getTile();
+                    var props = tile.getProperties();
+
+                    boolean transitable = props.get("transitable", true, Boolean.class);
+                    if (!transitable) {
+                        String tipo = props.get("tipo", "bloque", String.class);
+                        boolean destructible = props.get("destructible", false, Boolean.class);
+                        String objetoTirado = props.get("objetoTirado", null, String.class);
+
+                        Bloque bloque = destructible
+                            ? new BloqueDestructible(x * 32, y * 32, tipo, objetoTirado)
+                            : new BloqueNoTransitable(x * 32, y * 32, tipo);
+
+                        bloques.add(bloque);
+                    }
+                }
+            }
+        }
+    }
+
+
+    public List<Rectangle> getRectangulosBloquesNoTransitables() {
+        List<Rectangle> rectangulos = new ArrayList<>();
+        for (Bloque bloque : bloques) {
+            if (!bloque.isTransitable()) {
+                rectangulos.add(bloque.getRectColision());
+            }
+        }
+        return rectangulos;
+    }
+
+
+    private void agregarEntidadesAlStage() {
+        for (Bloque bloque : bloques)
+            bloque.agregarAlEscenario(this);
+        for (Enemigo enemigo : enemigos)
+            enemigo.agregarAlEscenario(this);
+        for (Animal animal : animales)
+            animal.agregarAlEscenario(this);
+        for (Objeto objeto : objetos)
+            objeto.agregarAlEscenario(this);
         jugador.agregarAlEscenario(this);
     }
 
-    public void agregar(Actor actor) {
-        getStage().addActor(actor);
+    public void renderMapa(OrthographicCamera camara) {
+        mapa.render(camara);
     }
 
-    public Stage getStage() {
-        return stage;
+    public void dispose() {
+        mapa.dispose();
+    }
+
+    public void agregar(Actor actor) {
+        stage.addActor(actor);
     }
 
     public ArrayList<Bloque> getBloques() {
         return bloques;
     }
 
-    public ArrayList<Objeto> getObjetos() {
-        return objetos;
+    public OrthographicCamera getCamara(){
+        return (OrthographicCamera) this.stage.getCamera();
+    }
+
+    public Jugador getJugador() {
+        return jugador;
     }
 
     public ArrayList<Enemigo> getEnemigos() {
         return enemigos;
     }
 
-    public Jugador getJugador() {
-        return jugador;
+    public ArrayList<Objeto> getObjetos() {
+        return objetos;
+    }
+
+    public ArrayList<Animal> getAnimales() {
+        return animales;
     }
 }

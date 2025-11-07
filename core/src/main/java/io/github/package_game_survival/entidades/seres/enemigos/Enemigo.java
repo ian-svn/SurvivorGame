@@ -1,16 +1,17 @@
-package io.github.package_game_survival.entidades.seres;
+package io.github.package_game_survival.entidades.seres.enemigos;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.Stage;
 import io.github.package_game_survival.algoritmos.EstrategiaMoverAPunto;
-import io.github.package_game_survival.entidades.Entidad;
 import io.github.package_game_survival.entidades.bloques.Bloque;
 import io.github.package_game_survival.entidades.mapas.Escenario;
+import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
+import io.github.package_game_survival.entidades.seres.SerVivo;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.PathManager;
+import io.github.package_game_survival.standards.TooltipStandard;
 
 import java.util.ArrayList;
 
@@ -28,12 +29,14 @@ public abstract class Enemigo extends SerVivo {
         this.objetivo = objetivo;
         this.bloques = bloques;
         this.estrategia = null;
+        setDebug(true);
     }
 
     @Override
     public void act(float delta) {
         super.act(delta);
         moverse(delta);
+        getTooltip().actualizarPosicion();
     }
 
     private void moverse(float delta) {
@@ -64,6 +67,15 @@ public abstract class Enemigo extends SerVivo {
 
     @Override
     public Rectangle getRectColision() {
-        return new Rectangle(getX(), getY(), getAncho(), getAlto()/2);
+        return new Rectangle(getX(), getY(), getAncho(), getAlto() / 2);
+    }
+
+    @Override
+    public void agregarAlEscenario(Escenario escenario) {
+        escenario.agregar(this);
+        objetivo = escenario.getJugador();
+        bloques = escenario.getBloques();
+        this.estrategia = new EstrategiaMoverAPunto(new Vector2(objetivo.getX(), objetivo.getY()));
+        instanciarTooltip(new TooltipStandard(getName(), this, escenario));
     }
 }

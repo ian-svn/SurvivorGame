@@ -1,10 +1,14 @@
 package io.github.package_game_survival.managers;
 import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import io.github.package_game_survival.entidades.mapas.Mapa;
 
 public class Assets {
     private static final AssetManager manager = new AssetManager();
@@ -16,6 +20,11 @@ public class Assets {
         manager.load(PathManager.MENU_BACKGROUND_TEXTURE, Texture.class);
         manager.load(PathManager.POCION_TEXTURE, Texture.class);
         manager.load(PathManager.ENEMIGO_TEXTURE, Texture.class);
+        manager.load(PathManager.PALO_TEXTURE, Texture.class);
+        manager.load(PathManager.AGUA_TEXTURE, Texture.class);
+        manager.load(PathManager.CARNE_TEXTURE, Texture.class);
+        manager.load(PathManager.PIEDRA_TEXTURE, Texture.class);
+        manager.load(PathManager.VACA_TEXTURE, Texture.class);
 
         manager.load(PathManager.MENU_MUSIC, Music.class);
         manager.load(PathManager.GAME_MUSIC, Music.class);
@@ -37,6 +46,9 @@ public class Assets {
         manager.load(PathManager.PLAYER_ATLAS, TextureAtlas.class);
         manager.load(PathManager.CLICK_ANIMATION, TextureAtlas.class);
 
+
+        manager.setLoader(TiledMap.class, new TmxMapLoader(new InternalFileHandleResolver()));
+        manager.load(PathManager.MAPA_BOSQUE, TiledMap.class);
     }
 
     public static boolean update() {

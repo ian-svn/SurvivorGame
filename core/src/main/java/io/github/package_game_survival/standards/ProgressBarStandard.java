@@ -1,5 +1,6 @@
 package io.github.package_game_survival.standards;
 
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
@@ -18,14 +19,11 @@ public class ProgressBarStandard extends ProgressBar {
         this.setWidth(ancho);
         this.setHeight(alto);
         this.label = new LabelStandard(text);
-        label.setFontScale(0.5f);
+        label.setFontScale(1f);
 
         ProgressBar.ProgressBarStyle style = this.getStyle();
-        style.background.setMinHeight(30);
-        style.knobBefore.setMinHeight(30);
-
-
-        TooltipStandard tooltipStandard = new TooltipStandard("Vida del jugador",this);
+        style.background.setMinHeight(20);
+        style.knobBefore.setMinHeight(20);
 
         this.setStyle(style);
     }

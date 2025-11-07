@@ -2,7 +2,7 @@
 com.badlogic.gdx.graphics.g2d.BitmapFont: {
 	lexend: {
 		file: lexend.fnt
-		scaledSize: 16
+		scaledSize: 10
 		markupEnabled: false
 		flip: false
 	}

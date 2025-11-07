@@ -15,7 +15,7 @@ public class ClickEffect extends Actor {
 
         TextureRegion frame = animation.getKeyFrame(0);
         if (frame != null) {
-            setSize(frame.getRegionWidth(), frame.getRegionHeight());
+            setSize(frame.getRegionWidth()/2, frame.getRegionHeight()/2);
         }
 
         setPosition(x - (getWidth() / 2), y - (getHeight() / 2));

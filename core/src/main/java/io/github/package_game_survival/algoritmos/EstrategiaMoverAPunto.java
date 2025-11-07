@@ -66,7 +66,7 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
         testRect.setPosition(nextX, nextY);
 
         for (Actor actor : serVivo.getStage().getActors()) {
-            if (actor instanceof Bloque bloque && !bloque.atravesable) {
+            if (actor instanceof Bloque bloque && !bloque.transitable) {
                 if (testRect.overlaps(bloque.getRectColision())) {
                     return true;
                 }
@@ -83,5 +83,13 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
     public void setDestino(Vector2 vector2) {
         this.destino = vector2;
         this.terminado = false;
+    }
+
+    public Vector2 getX(){
+        return Vector2.X;
+    }
+
+    public Vector2 getY(){
+        return Vector2.Y;
     }
 }
