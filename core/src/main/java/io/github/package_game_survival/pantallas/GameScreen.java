@@ -31,7 +31,9 @@ public class GameScreen implements Screen {
 
     private final MyGame game;
     private final FastMenuScreen fm;
-    private final Stage stage;
+
+    private final Stage stageMundo; // 🌍 Mundo (con shader)
+    private final Stage stageUI;    // 🎛️ Interfaz (sin shader)
     private final Jugador jugador;
     private final Escenario escenario;
     private final OrthographicCamera camara;
@@ -45,17 +47,24 @@ public class GameScreen implements Screen {
     private LabelStandard labelVolverMenu;
     private Image fondoOscuro;
     private boolean juegoTerminado = false;
+    private float brillo = 0.3f;
 
     public GameScreen(MyGame game) {
         this.game = game;
-        this.stage = new Stage(game.getViewport());
-        Gdx.input.setInputProcessor(stage);
+
+        this.stageMundo = new Stage(game.getViewport());
+        this.stageUI = new Stage(game.getViewport());
+
+        // Entradas: solo UI
+        Gdx.input.setInputProcessor(stageUI);
 
         this.jugador = new Jugador("Ian", ANCHO_MUNDO/2, ALTO_MUNDO/2);
-        this.escenario = new Escenario(stage, jugador);
+        this.escenario = new Escenario(stageMundo, jugador);
+        this.escenario.setStageUI(stageUI);
+
         this.fm = new FastMenuScreen(game, this);
 
-        this.camara = (OrthographicCamera) stage.getCamera();
+        this.camara = (OrthographicCamera) stageMundo.getCamera();
         this.camara.zoom = 0.6f;
         this.camara.update();
 
@@ -79,21 +88,25 @@ public class GameScreen implements Screen {
         labelVolverMenu.setFontScale(0.6f);
         labelVolverMenu.setVisible(false);
 
-        stage.addActor(fondoOscuro);
-        stage.addActor(labelFinJuego);
-        stage.addActor(labelVolverMenu);
+        stageUI.addActor(fondoOscuro);
+        stageUI.addActor(labelFinJuego);
+        stageUI.addActor(labelVolverMenu);
     }
 
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
-
         actualizarCamara();
-        escenario.renderMapa(camara);
 
-        stage.act(delta);
-        stage.draw();
+        // 🌍 Mundo con shader
+        escenario.setBrillo(brillo);
+        escenario.renderConShader(camara, delta);
 
+        // 🎛️ UI sin shader
+        stageUI.act(delta);
+        stageUI.draw();
+
+        // 🧠 Lógica
         if (juegoTerminado) {
             jugador.setEstrategia(null);
         } else {
@@ -127,7 +140,6 @@ public class GameScreen implements Screen {
         camara.update();
     }
 
-
     private void verificarCondicionesFinJuego() {
         if (jugador.getVida() <= 0) {
             terminarJuego("PERDISTE");
@@ -144,7 +156,7 @@ public class GameScreen implements Screen {
             jugador.setEstrategia(new EstrategiaMoverAPunto(destino));
 
             if (clickAnimation != null)
-                stage.addActor(new ClickEffect(clickAnimation, destino.x, destino.y));
+                stageMundo.addActor(new ClickEffect(clickAnimation, destino.x, destino.y));
         }
     }
 
@@ -165,17 +177,9 @@ public class GameScreen implements Screen {
     }
 
     private void terminarJuego(String mensaje) {
-        for (Enemigo enemigo : escenario.getEnemigos()) {
-            enemigo.remove();
-        }
-
-        for (Objeto objeto : escenario.getObjetos()) {
-            objeto.remove();
-        }
-
-        for (Animal animal : escenario.getAnimales()) {
-            animal.remove();
-        }
+        for (Enemigo enemigo : escenario.getEnemigos()) enemigo.remove();
+        for (Objeto objeto : escenario.getObjetos()) objeto.remove();
+        for (Animal animal : escenario.getAnimales()) animal.remove();
 
         juegoTerminado = true;
 
@@ -208,20 +212,20 @@ public class GameScreen implements Screen {
 
     @Override
     public void resize(int width, int height) {
-        stage.getViewport().update(width, height, true);
+        stageMundo.getViewport().update(width, height, true);
+        stageUI.getViewport().update(width, height, true);
     }
 
     @Override
     public void dispose() {
-        stage.dispose();
+        stageMundo.dispose();
+        stageUI.dispose();
+        escenario.dispose();
         AudioManager.getControler().stopMusic();
     }
 
-    public OrthographicCamera getCamara() {
-        return camara;
-    }
-
-    @Override public void show() { Gdx.input.setInputProcessor(stage); }
+    public OrthographicCamera getCamara() { return camara; }
+    @Override public void show() { Gdx.input.setInputProcessor(stageUI); }
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}

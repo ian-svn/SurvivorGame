@@ -15,12 +15,9 @@ import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.entidades.objetos.Objeto;
 import io.github.package_game_survival.entidades.seres.SerVivo;
 import io.github.package_game_survival.entidades.seres.enemigos.Enemigo;
-import io.github.package_game_survival.interfaces.Accionable;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.PathManager;
-import io.github.package_game_survival.pantallas.MyGame;
-import io.github.package_game_survival.standards.LabelStandard;
 import io.github.package_game_survival.standards.ProgressBarStandard;
 import io.github.package_game_survival.standards.TooltipStandard;
 
@@ -48,6 +45,11 @@ public class Jugador extends SerVivo {
     private Escenario escenarioActual;
 
     private static final float COOLDOWN_DANO = 3.0f;
+    private static final float VELOCIDAD_MOVIMIENTO = 120f;
+
+    // Dirección de la última animación (para idle)
+    private enum Direccion {ARRIBA, ABAJO, IZQUIERDA, DERECHA}
+    private Direccion ultimaDireccion = Direccion.ABAJO;
 
     public Jugador(String nombre, float x, float y) {
         super(nombre, x, y, 30, 50, 100, 100, 80, 20,
@@ -89,7 +91,12 @@ public class Jugador extends SerVivo {
         batch.setColor(Color.WHITE);
     }
 
+    /**
+     * Movimiento con clic derecho y teclas WASD.
+     * Si el jugador se mueve en diagonal, se prioriza el sprite vertical (arriba/abajo).
+     */
     private void moverse(float delta, Camera cam) {
+        // Movimiento con clic
         if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
             tempVec.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             cam.unproject(tempVec);
@@ -100,7 +107,24 @@ public class Jugador extends SerVivo {
         float oldX = getX();
         float oldY = getY();
 
-        if (estrategia != null) {
+        // Movimiento con WASD
+        float dx = 0;
+        float dy = 0;
+
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) dy += 1;
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) dy -= 1;
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) dx -= 1;
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) dx += 1;
+
+        if (dx != 0 || dy != 0) {
+            Vector2 dir = new Vector2(dx, dy).nor().scl(VELOCIDAD_MOVIMIENTO * delta);
+            moveBy(dir.x, dir.y);
+            estrategia = null;
+
+            if (escenarioActual != null && colisionaConBloqueNoTransitable()) {
+                setPosition(oldX, oldY);
+            }
+        } else if (estrategia != null) {
             estrategia.actualizar(this, delta);
 
             if (escenarioActual != null && colisionaConBloqueNoTransitable()) {
@@ -129,10 +153,21 @@ public class Jugador extends SerVivo {
     @Override
     public void agregarAlEscenario(Escenario escenario) {
         this.escenarioActual = escenario;
+
+        // El jugador va al stage del mundo (shader)
         escenario.agregar(this);
-        escenario.agregar(barraDeVida);
+
+        // 🟢 La barra de vida va al stage de la UI (sin shader)
+        if (escenario.getStageUI() != null) {
+            escenario.getStageUI().addActor(barraDeVida);
+        } else {
+            // Fallback por si alguien usa el Jugador sin UI separada
+            escenario.agregar(barraDeVida);
+        }
+
         instanciarTooltip(new TooltipStandard(getName(), this, escenario));
     }
+
 
     @Override
     public void setPosition(float x, float y) {
@@ -185,19 +220,46 @@ public class Jugador extends SerVivo {
         currentFrame = idleDown;
     }
 
+    /**
+     * Prioriza animaciones verticales en movimiento diagonal.
+     */
     private void actualizarAnimacion(float oldX, float oldY) {
         float dx = getX() - oldX;
         float dy = getY() - oldY;
 
-        if (Math.abs(dx) < 0.1f && Math.abs(dy) < 0.1f) {
-            currentFrame = idleDown;
-            stateTime = 0;
-        } else if (Math.abs(dx) > Math.abs(dy)) {
-            currentFrame = (dx > 0 ? walkRight : walkLeft).getKeyFrame(stateTime);
+        boolean seMueve = Math.abs(dx) > 0.1f || Math.abs(dy) > 0.1f;
+
+        if (!seMueve) {
+            // Cuando se detiene, se queda mirando a la última dirección
+            switch (ultimaDireccion) {
+                case ARRIBA -> currentFrame = walkUp.getKeyFrame(0);
+                case ABAJO -> currentFrame = walkDown.getKeyFrame(0);
+                case IZQUIERDA -> currentFrame = walkLeft.getKeyFrame(0);
+                case DERECHA -> currentFrame = walkRight.getKeyFrame(0);
+            }
+            return;
+        }
+
+        // Prioridad vertical
+        if (Math.abs(dy) >= Math.abs(dx)) {
+            if (dy > 0) {
+                currentFrame = walkUp.getKeyFrame(stateTime);
+                ultimaDireccion = Direccion.ARRIBA;
+            } else {
+                currentFrame = walkDown.getKeyFrame(stateTime);
+                ultimaDireccion = Direccion.ABAJO;
+            }
         } else {
-            currentFrame = (dy > 0 ? walkUp : walkDown).getKeyFrame(stateTime);
+            if (dx > 0) {
+                currentFrame = walkRight.getKeyFrame(stateTime);
+                ultimaDireccion = Direccion.DERECHA;
+            } else {
+                currentFrame = walkLeft.getKeyFrame(stateTime);
+                ultimaDireccion = Direccion.IZQUIERDA;
+            }
         }
     }
+
 
     private void actualizarUI(Camera cam) {
         if (cam == null) return;
@@ -254,7 +316,6 @@ public class Jugador extends SerVivo {
 
         tiempoTitileo += delta;
 
-        // alterna visibilidad para efecto de parpadeo
         if ((int) (tiempoTitileo * 10) % 2 == 0) {
             visible = true;
             setColor(Color.RED);
