@@ -65,7 +65,7 @@ public class LoadingScreen implements Screen {
         stage.draw();
 
         if (Assets.update() && timer >= minTime) {
-            game.setScreen(new MenuScreen(game));
+            game.setScreen(new GameScreen(game));
         }
     }
 

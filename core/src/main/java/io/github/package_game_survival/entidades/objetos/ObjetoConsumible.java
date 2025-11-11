@@ -47,9 +47,9 @@ public abstract class ObjetoConsumible extends Objeto implements Consumible {
     public void agregarAlEscenario(Escenario escenario) {
         escenario.agregar(this);
         instanciarTooltip(new TooltipStandard(getName() + "\n" +
-            "vida curada: " + this.vidaCurada + "\n" +
-            "vida curada: " + this.hambreSaciada+ "\n" +
-            "vida curada: " + this.sedSaciada,
+            "Vida Curada: " + this.vidaCurada + "\n" +
+            "Hambre Saciada: " + this.hambreSaciada+ "\n" +
+            "Sed Saciada: " + this.sedSaciada,
             this, escenario));
     }
 }

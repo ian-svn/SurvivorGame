@@ -15,6 +15,7 @@ import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.entidades.objetos.Objeto;
 import io.github.package_game_survival.entidades.seres.SerVivo;
 import io.github.package_game_survival.entidades.seres.enemigos.Enemigo;
+import io.github.package_game_survival.interfaces.Accionable;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.PathManager;
