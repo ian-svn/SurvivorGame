@@ -37,6 +37,7 @@ public final class PathManager {
 
     public static final String PROGRESS_BAR_ATLAS = "skins/progressBar.atlas";
     public static final String PLAYER_ATLAS = "sprites/jugador.atlas";
+    public static final String ENEMIGO_ATLAS = "sprites/enemigo.atlas";
     public static final String CLICK_ANIMATION = "atlas/click.atlas";
 
     public static final String MAPA_BOSQUE = "mapas/bosque/tilemap_bosque.tmx";

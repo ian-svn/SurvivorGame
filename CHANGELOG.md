@@ -164,10 +164,15 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
  ## [0.9.1] - 2025-11-11
 
  ### Added
- - 'Shaders' para controlar el brillo de los elementos del escenario y conseguir el efecto de día y noche
- -  El 'Jugador' ahora puede moverse tanto con el click secundario del ratón como con las teclas 'WASD' del teclado
+ - `Shaders` para controlar el brillo de los elementos del escenario y conseguir el efecto de día y noche
+ -  El `Jugador` ahora puede moverse tanto con el click secundario del ratón como con las teclas 'WASD' del teclado
 
 ### Observaciones
 - Se produce un bug con los sprites al moverse en diagonal
 - Error con los shaders y la barra de vida
 
+## [0.9.2] - 2025-11-18
+
+### Added
+- `Gestor de animaciones` que centraliza codigo de animaciones de las entidades.
+- Animacion del `Invasor de la Luna`.

@@ -25,7 +25,8 @@ public abstract class Enemigo extends SerVivo {
                    int vidaInicial, int vidaMaxima, int velocidad, int danio, TextureAtlas atlas,
                    Jugador objetivo, ArrayList<Bloque> bloques) {
 
-        super(nombre, x, y, ancho, alto, vidaInicial, vidaMaxima, velocidad, danio, atlas);
+        super(nombre, x, y, ancho, alto, vidaInicial, vidaMaxima, velocidad, danio,
+            Assets.get(PathManager.ENEMIGO_ATLAS, TextureAtlas.class));
         this.objetivo = objetivo;
         this.bloques = bloques;
         this.estrategia = null;
@@ -40,21 +41,16 @@ public abstract class Enemigo extends SerVivo {
     }
 
     private void moverse(float delta) {
-        if (objetivo != null && estrategia != null) {
-            estrategia.setDestino(new Vector2(objetivo.getX(), objetivo.getY()));
-            estrategia.actualizar(this, delta);
-        }
-    }
+        if (objetivo == null || estrategia == null) return;
 
-    @Override
-    public void draw(com.badlogic.gdx.graphics.g2d.Batch batch, float parentAlpha) {
-        batch.draw(
-            Assets.get(PathManager.ENEMIGO_TEXTURE, Texture.class),
-            getX(),
-            getY(),
-            getWidth(),
-            getHeight()
-        );
+        float oldX = getX();
+        float oldY = getY();
+
+        estrategia.setDestino(new Vector2(objetivo.getX(), objetivo.getY()));
+
+        estrategia.actualizar(this, delta);
+
+        actualizarAnimacion(oldX, oldY);
     }
 
     public void setObjetivo(Jugador objetivo) {

@@ -6,6 +6,8 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
 import io.github.package_game_survival.interfaces.Consumible;
+import io.github.package_game_survival.managers.Assets;
+import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.TooltipStandard;
 
 public abstract class ObjetoConsumible extends Objeto implements Consumible {
@@ -32,7 +34,7 @@ public abstract class ObjetoConsumible extends Objeto implements Consumible {
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        batch.draw(super.texture, getX(), getY(), getWidth(), getHeight());
+        batch.draw(Assets.get(PathManager.POCION_TEXTURE, Texture.class), getX(), getY(), getWidth(), getHeight());
     }
 
     @Override
