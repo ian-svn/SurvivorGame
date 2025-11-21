@@ -28,7 +28,6 @@ public class Escenario implements IMundoJuego, Disposable {
     private final Stage stageMundo;
     private Stage stageUI;
     private final Jugador jugador;
-
     private final GestorTiempo gestorTiempo;
 
     private final Array<Bloque> bloques;
@@ -49,7 +48,7 @@ public class Escenario implements IMundoJuego, Disposable {
         this.cacheRectangulosColision = new Array<>();
 
         this.mapa = new Mapa();
-        this.gestorTiempo = new GestorTiempo(); // Empieza a las 12:00 (Día)
+        this.gestorTiempo = new GestorTiempo();
 
         inicializarEnemigos();
         inicializarAnimales();
@@ -59,18 +58,14 @@ public class Escenario implements IMundoJuego, Disposable {
     }
 
     public void renderConShader(OrthographicCamera camara, float delta) {
-        // 1. Actualizamos lógica de tiempo
         gestorTiempo.update(delta);
-
-        // 2. Actualizamos el brillo global basado en la hora
-        float brilloActual = gestorTiempo.getFactorBrillo();
-        BrilloManager.setBrillo(brilloActual);
+        BrilloManager.setBrillo(gestorTiempo.getFactorBrillo());
 
         FrameBuffer fbo = BrilloManager.getFBO();
         SpriteBatch batchShader = BrilloManager.getBatchShader();
         ShaderProgram shader = BrilloManager.getShader();
 
-        // --- Render al FBO ---
+        // 1. Mundo al FBO
         fbo.begin();
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -80,29 +75,20 @@ public class Escenario implements IMundoJuego, Disposable {
         stageMundo.getViewport().apply();
         stageMundo.getBatch().setProjectionMatrix(camara.combined);
         stageMundo.getBatch().setColor(1, 1, 1, 1);
-
         stageMundo.act(delta);
         stageMundo.draw();
-
         fbo.end();
 
-        // --- Render con Shader ---
+        // 2. Post-Proceso (Shader)
         Texture tex = fbo.getColorBufferTexture();
-
         batchShader.setShader(shader);
         batchShader.begin();
-
-        // Pasamos el brillo actualizado al shader
         shader.setUniformf("u_brightness", BrilloManager.getBrillo());
-
         batchShader.setColor(1, 1, 1, 1);
-        // IMPORTANTE: Invertimos coordenadas V (0,0 a 1,1 o 0,1 a 1,0) si el FBO sale al revés.
-        // Si se ve bien, dejalo así. Si se ve dado vuelta, cambia el ultimo 1 por -1 o visceversa en los UV.
         batchShader.draw(tex, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0, 0, 1, 1);
-
         batchShader.end();
 
-        // --- UI ---
+        // 3. UI (Al final y sin shader)
         if (stageUI != null) {
             stageUI.getViewport().apply();
             stageUI.act(delta);
@@ -110,7 +96,6 @@ public class Escenario implements IMundoJuego, Disposable {
         }
     }
 
-    // ... (Getters de IMundoJuego iguales que antes) ...
     @Override public Array<Bloque> getBloques() { return bloques; }
     @Override public Array<Enemigo> getEnemigos() { return enemigos; }
     @Override public Array<Objeto> getObjetos() { return objetos; }
@@ -134,7 +119,6 @@ public class Escenario implements IMundoJuego, Disposable {
         return cacheRectangulosColision;
     }
 
-    // ... (Inicializadores iguales que antes) ...
     private void inicializarObjetos() {
         objetos.add(new PocionDeAmatista(200, 600));
         objetos.add(new PocionDeAmatista(400, 400));
@@ -187,7 +171,6 @@ public class Escenario implements IMundoJuego, Disposable {
 
     public void setStageUI(Stage stageUI) {
         this.stageUI = stageUI;
-        // AQUI ESTA LA CLAVE: Agregar los labels al UI cuando se setea
         if (gestorTiempo != null) {
             gestorTiempo.agregarAlStage(stageUI);
         }

@@ -177,7 +177,7 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 - `Gestor de animaciones` que centraliza codigo de animaciones de las entidades.
 - Animacion del `Invasor de la Luna`.
 
-[0.9.3] - 2025-11-20
+[0.10.0] - 2025-11-20
 ### Added
 - Sistema de ciclo día/noche con `GestorTiempo` y actualización dinámica de `brillo`.
 - `Interfaz UI` independiente con reloj y contador de días (fija en pantalla).
@@ -186,3 +186,8 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 
 ### Added
 - Optimización de memoria en sistema de colisiones y vectores de movimiento.
+
+## [0.10.1] - 2025-11-21
+
+### Fixed
+- Error de pantalla de juego terminado.

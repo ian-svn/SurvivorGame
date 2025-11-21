@@ -13,9 +13,12 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.FitViewport; // Importante
+import com.badlogic.gdx.utils.viewport.FitViewport; // Volvemos al FitViewport único
+
 import io.github.package_game_survival.algoritmos.ClickEffect;
 import io.github.package_game_survival.algoritmos.EstrategiaMoverAPunto;
 import io.github.package_game_survival.entidades.mapas.Escenario;
@@ -36,9 +39,6 @@ public class GameScreen implements Screen {
     private final Stage stageMundo;
     private final Stage stageUI;
 
-    // --- CORRECCIÓN 1: Viewport separado para la UI ---
-    private final FitViewport viewportUI;
-
     private final Jugador jugador;
     private final Escenario escenario;
     private final OrthographicCamera camara;
@@ -48,28 +48,28 @@ public class GameScreen implements Screen {
 
     private final Vector3 tempVec = new Vector3();
     private Animation<TextureRegion> clickAnimation;
+
+    private Image fondoOscuro;
+    private Table tablaGameOver;
     private LabelStandard labelFinJuego;
     private LabelStandard labelVolverMenu;
-    private Image fondoOscuro;
+
     private boolean juegoTerminado = false;
 
     public GameScreen(MyGame game) {
         this.game = game;
 
-        // 1. Mundo: Usa el viewport del juego (que se mueve)
-        this.stageMundo = new Stage(game.getViewport());
+        // 1. Mundo
+        this.stageMundo = new Stage(new FitViewport(ANCHO_MUNDO, ALTO_MUNDO));
 
-        // --- CORRECCIÓN 2: UI independiente ---
-        // Creamos un viewport nuevo que se quedará quieto
-        this.viewportUI = new FitViewport(ANCHO_MUNDO, ALTO_MUNDO);
-        this.stageUI = new Stage(viewportUI);
+        // 2. UI (Ahora usa FitViewport también, igual que el mundo)
+        this.stageUI = new Stage(new FitViewport(ANCHO_MUNDO, ALTO_MUNDO));
 
         Gdx.input.setInputProcessor(stageUI);
 
         this.jugador = new Jugador("Ian", ANCHO_MUNDO/2, ALTO_MUNDO/2);
         this.escenario = new Escenario(stageMundo, jugador);
 
-        // Conectamos la UI al escenario
         this.escenario.setStageUI(stageUI);
 
         this.fm = new FastMenuScreen(game, this);
@@ -84,23 +84,29 @@ public class GameScreen implements Screen {
 
     private void inicializarUI() {
         fondoOscuro = new Image(Assets.get(PathManager.GAME_BACKGROUND_TEXTURE, Texture.class));
-        fondoOscuro.setColor(0, 0, 0, 0.6f);
-        fondoOscuro.setSize(ANCHO_MUNDO, ALTO_MUNDO);
+        fondoOscuro.setColor(0, 0, 0, 0.85f);
+        fondoOscuro.setFillParent(true); // Cubrirá todo el FitViewport
         fondoOscuro.setVisible(false);
+
+        tablaGameOver = new Table();
+        tablaGameOver.setFillParent(true);
+        tablaGameOver.setVisible(false);
 
         labelFinJuego = new LabelStandard("");
         labelFinJuego.setColor(Color.RED);
-        labelFinJuego.setFontScale(3f);
-        labelFinJuego.setVisible(false);
+        labelFinJuego.setFontScale(2.0f);
+        labelFinJuego.setAlignment(Align.center);
 
         labelVolverMenu = new LabelStandard("Presione [ESC] para volver al menu");
         labelVolverMenu.setColor(Color.WHITE);
-        labelVolverMenu.setFontScale(0.6f);
-        labelVolverMenu.setVisible(false);
+        labelVolverMenu.setFontScale(0.8f);
+        labelVolverMenu.setAlignment(Align.center);
+
+        tablaGameOver.add(labelFinJuego).padBottom(20).row();
+        tablaGameOver.add(labelVolverMenu);
 
         stageUI.addActor(fondoOscuro);
-        stageUI.addActor(labelFinJuego);
-        stageUI.addActor(labelVolverMenu);
+        stageUI.addActor(tablaGameOver);
     }
 
     private void cargarEfectosVisuales() {
@@ -120,11 +126,10 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
+        // Limpiamos la pantalla real (las bandas negras fuera del FitViewport)
         ScreenUtils.clear(0, 0, 0, 1);
-        actualizarCamara(); // Esto mueve la cámara del MUNDO
+        actualizarCamara();
 
-        // Renderizamos Mundo + Shader + UI
-        // El escenario internamente llama a stageUI.draw()
         escenario.renderConShader(camara, delta);
 
         if (escenario.getGestorTiempo().isJuegoGanado()) {
@@ -148,7 +153,6 @@ public class GameScreen implements Screen {
         float viewportAlto = camara.viewportHeight * zoom;
         float camX = jugador.getX(); float camY = jugador.getY();
 
-        // Límites del mapa
         float minX = viewportAncho / 2f; float maxX = ANCHO_MUNDO - viewportAncho / 2f;
         float minY = viewportAlto / 2f; float maxY = ALTO_MUNDO - viewportAlto / 2f;
 
@@ -180,28 +184,27 @@ public class GameScreen implements Screen {
     }
 
     private void terminarJuego(String mensaje) {
-        for (Enemigo enemigo : escenario.getEnemigos()) enemigo.remove();
-        for (Objeto objeto : escenario.getObjetos()) objeto.remove();
-        for (Animal animal : escenario.getAnimales()) animal.remove();
-        juegoTerminado = true;
-        fondoOscuro.setVisible(true); fondoOscuro.toFront();
-        labelFinJuego.setText(mensaje); labelFinJuego.setVisible(true); labelFinJuego.toFront();
-        labelVolverMenu.setVisible(true); labelVolverMenu.toFront();
-        centrarUI();
-    }
+        if (!juegoTerminado) {
+            for (Enemigo enemigo : escenario.getEnemigos()) enemigo.remove();
+            for (Objeto objeto : escenario.getObjetos()) objeto.remove();
+            for (Animal animal : escenario.getAnimales()) animal.remove();
 
-    private void centrarUI() {
-        // Centramos respecto a la cámara de UI (que está en el centro de la pantalla)
-        // Como la cámara UI no se mueve, podemos usar width/2 height/2
-        fondoOscuro.setPosition(0, 0); // Cubre toda la pantalla
-        labelFinJuego.setPosition(ANCHO_MUNDO/2f - labelFinJuego.getPrefWidth()/2f, ALTO_MUNDO/2f);
-        labelVolverMenu.setPosition(ANCHO_MUNDO/2f - labelVolverMenu.getPrefWidth()/2f, ALTO_MUNDO/2f - 60);
+            juegoTerminado = true;
+
+            labelFinJuego.setText(mensaje);
+
+            fondoOscuro.setVisible(true);
+            tablaGameOver.setVisible(true);
+
+            fondoOscuro.toFront();
+            tablaGameOver.toFront();
+        }
     }
 
     @Override
     public void resize(int width, int height) {
         stageMundo.getViewport().update(width, height, true);
-        viewportUI.update(width, height, true);
+        stageUI.getViewport().update(width, height, true);
     }
 
     @Override

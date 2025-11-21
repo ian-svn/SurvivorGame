@@ -32,12 +32,10 @@ public class Jugador extends SerVivo {
 
     private ProgressBarStandard barraDeVida;
 
-    // Vectores reutilizables
     private final Vector3 tempVecInput = new Vector3();
     private final Vector2 tempDirMovimiento = new Vector2();
     private final Vector2 tempDestino = new Vector2();
 
-    // Referencia al mundo a través de la Interfaz
     private IMundoJuego mundo;
 
     private static final float COOLDOWN_DANO = 3.0f;
@@ -51,25 +49,20 @@ public class Jugador extends SerVivo {
         inicializarBarraVida();
     }
 
-    // --- IMPLEMENTACIÓN DE LA INTERFAZ (LO QUE FALTABA) ---
     @Override
     public void agregarAlMundo(IMundoJuego mundo) {
         this.mundo = mundo;
 
-        // 1. Agregamos al jugador al Stage principal
         mundo.agregarActor(this);
 
-        // 2. Agregamos la UI al Stage de UI (si existe)
         if (barraDeVida != null) {
             mundo.agregarActorUI(barraDeVida);
         }
 
-        // 3. Tooltip (Casteo seguro para mantener compatibilidad)
         if (mundo instanceof Escenario) {
             instanciarTooltip(new TooltipStandard(getName(), this, (Escenario) mundo));
         }
     }
-    // ------------------------------------------------------
 
     @Override
     public void act(float delta) {
