@@ -42,4 +42,7 @@ public final class PathManager {
 
     public static final String MAPA_BOSQUE = "mapas/bosque/tilemap_bosque.tmx";
 
+    public static final String BRILLO_FRAG = "shaders/brillo.frag";
+    public static final String BRILLO_VERT = "shaders/brillo.vert";
+
 }

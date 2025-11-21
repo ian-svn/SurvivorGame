@@ -9,6 +9,6 @@ uniform float u_brightness;
 
 void main() {
     vec4 color = texture2D(u_texture, v_texCoords) * v_color;
-    color.rgb *= u_brightness; // Aplicar brillo multiplicativo
+    color.rgb *= u_brightness;
     gl_FragColor = color;
 }

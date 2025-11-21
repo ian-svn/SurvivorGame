@@ -4,30 +4,26 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import io.github.package_game_survival.algoritmos.EstrategiaMoverAPunto;
 import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.entidades.objetos.Objeto;
 import io.github.package_game_survival.entidades.seres.SerVivo;
 import io.github.package_game_survival.entidades.seres.enemigos.Enemigo;
+import io.github.package_game_survival.interfaces.IMundoJuego;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.PathManager;
-// Importa tu VisualComponent
 import io.github.package_game_survival.standards.ProgressBarStandard;
 import io.github.package_game_survival.standards.TooltipStandard;
 
-import java.util.*;
-import java.util.List;
-
 public class Jugador extends SerVivo {
 
-    private final List<Objeto> inventario = new ArrayList<>();
+    private final Array<Objeto> inventario = new Array<>();
     private final Rectangle hitbox;
 
     private int puntos = 0;
@@ -35,22 +31,45 @@ public class Jugador extends SerVivo {
     private float tiempoTitileo = 0f;
 
     private ProgressBarStandard barraDeVida;
-    private final Vector3 tempVec = new Vector3();
 
-    private Escenario escenarioActual;
+    // Vectores reutilizables
+    private final Vector3 tempVecInput = new Vector3();
+    private final Vector2 tempDirMovimiento = new Vector2();
+    private final Vector2 tempDestino = new Vector2();
+
+    // Referencia al mundo a través de la Interfaz
+    private IMundoJuego mundo;
 
     private static final float COOLDOWN_DANO = 3.0f;
     private static final float VELOCIDAD_MOVIMIENTO = 120f;
 
-
-
     public Jugador(String nombre, float x, float y) {
-        super(nombre, x, y, 32, 54, 100, 100, 80, 20,
-                Assets.get(PathManager.PLAYER_ATLAS, TextureAtlas.class));
+        super(nombre, x, y, 24, 40, 100, 100, 80, 20,
+            Assets.get(PathManager.PLAYER_ATLAS, TextureAtlas.class));
 
-        this.hitbox = new Rectangle(x, y, 16, 16);
+        this.hitbox = new Rectangle(x, y, 1, 1);
         inicializarBarraVida();
     }
+
+    // --- IMPLEMENTACIÓN DE LA INTERFAZ (LO QUE FALTABA) ---
+    @Override
+    public void agregarAlMundo(IMundoJuego mundo) {
+        this.mundo = mundo;
+
+        // 1. Agregamos al jugador al Stage principal
+        mundo.agregarActor(this);
+
+        // 2. Agregamos la UI al Stage de UI (si existe)
+        if (barraDeVida != null) {
+            mundo.agregarActorUI(barraDeVida);
+        }
+
+        // 3. Tooltip (Casteo seguro para mantener compatibilidad)
+        if (mundo instanceof Escenario) {
+            instanciarTooltip(new TooltipStandard(getName(), this, (Escenario) mundo));
+        }
+    }
+    // ------------------------------------------------------
 
     @Override
     public void act(float delta) {
@@ -72,15 +91,18 @@ public class Jugador extends SerVivo {
 
     private void moverse(float delta, Camera cam) {
         if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
-            tempVec.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            cam.unproject(tempVec);
-            Vector2 destino = new Vector2(tempVec.x, tempVec.y);
-            estrategia = new EstrategiaMoverAPunto(destino);
+            tempVecInput.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+            cam.unproject(tempVecInput);
+            tempDestino.set(tempVecInput.x, tempVecInput.y);
+
+            if (mundo != null) {
+                // Usamos getBloques() de la interfaz IMundoJuego
+                estrategia = new EstrategiaMoverAPunto(tempDestino, mundo.getBloques());
+            }
         }
 
         float oldX = getX();
         float oldY = getY();
-
         float dx = 0;
         float dy = 0;
 
@@ -90,17 +112,17 @@ public class Jugador extends SerVivo {
         if (Gdx.input.isKeyPressed(Input.Keys.D)) dx += 1;
 
         if (dx != 0 || dy != 0) {
-            Vector2 dir = new Vector2(dx, dy).nor().scl(VELOCIDAD_MOVIMIENTO * delta);
-            moveBy(dir.x, dir.y);
+            tempDirMovimiento.set(dx, dy).nor().scl(VELOCIDAD_MOVIMIENTO * delta);
+            moveBy(tempDirMovimiento.x, tempDirMovimiento.y);
             estrategia = null;
 
-            if (escenarioActual != null && colisionaConBloqueNoTransitable()) {
+            if (mundo != null && colisionaConBloqueNoTransitable()) {
                 setPosition(oldX, oldY);
             }
         } else if (estrategia != null) {
             estrategia.actualizar(this, delta);
 
-            if (escenarioActual != null && colisionaConBloqueNoTransitable()) {
+            if (mundo != null && colisionaConBloqueNoTransitable()) {
                 setPosition(oldX, oldY);
                 estrategia = null;
             }
@@ -114,30 +136,18 @@ public class Jugador extends SerVivo {
     }
 
     private boolean colisionaConBloqueNoTransitable() {
-        if (escenarioActual == null) return false;
+        if (mundo == null) return false;
 
         float centerX = getX() + (getWidth() / 2) - (hitbox.width / 2);
         hitbox.setPosition(centerX, getY());
 
-        for (Rectangle bloque : escenarioActual.getRectangulosBloquesNoTransitables()) {
+        // Usamos getRectangulosNoTransitables() de la interfaz
+        for (Rectangle bloque : mundo.getRectangulosNoTransitables()) {
             if (hitbox.overlaps(bloque)) {
                 return true;
             }
         }
         return false;
-    }
-
-    @Override
-    public void agregarAlEscenario(Escenario escenario) {
-        // ... (Tu código aquí no cambia)
-        this.escenarioActual = escenario;
-        escenario.agregar(this);
-        if (escenario.getStageUI() != null) {
-            escenario.getStageUI().addActor(barraDeVida);
-        } else {
-            escenario.agregar(barraDeVida);
-        }
-        instanciarTooltip(new TooltipStandard(getName(), this, escenario));
     }
 
     @Override
@@ -160,13 +170,10 @@ public class Jugador extends SerVivo {
     }
 
     private void inicializarBarraVida() {
-        // ... (Tu código aquí no cambia)
         barraDeVida = new ProgressBarStandard(0, 100, 130, 10, getVida(), false, "HP");
     }
 
-
     private void actualizarUI(Camera cam) {
-        // ... (Tu código aquí no cambia)
         if (cam == null) return;
         float zoom = 0.6f;
         float offsetX = (cam.viewportWidth * zoom) / 2f - 140;
@@ -176,37 +183,34 @@ public class Jugador extends SerVivo {
     }
 
     public void adquirirObjeto(Objeto objeto) {
-        // ... (Tu código aquí no cambia)
-        if (inventario.add(objeto)) {
-            objeto.adquirir();
-            AudioManager.getControler().loadSound("agarrarObjeto", PathManager.GRAB_OBJECT_SOUND);
-            AudioManager.getControler().playSound("agarrarObjeto");
-            this.puntos += objeto.getPuntos();
-        }
+        inventario.add(objeto);
+        objeto.adquirir(); // Esto llama a remove() visualmente en Objeto
+        AudioManager.getControler().loadSound("agarrarObjeto", PathManager.GRAB_OBJECT_SOUND);
+        AudioManager.getControler().playSound("agarrarObjeto");
+        this.puntos += objeto.getPuntos();
     }
 
     private void revisarRecoleccionObjetos() {
-        // ... (Tu código aquí no cambia)
-        if (getStage() == null) return;
-        Array<Actor> actores = getStage().getActors();
-        for (int i = actores.size - 1; i >= 0; i--) {
-            Actor actor = actores.get(i);
-            // Usamos getRectColision() (nuestra hitbox)
-            if (actor instanceof Objeto objeto && getRectColision().overlaps(objeto.getRectColision())) {
+        if (mundo == null) return;
+
+        Array<Objeto> objetosMundo = mundo.getObjetos();
+
+        // Iteramos hacia atrás y eliminamos de la lista lógica del mundo
+        for (int i = objetosMundo.size - 1; i >= 0; i--) {
+            Objeto objeto = objetosMundo.get(i);
+            if (getRectColision().overlaps(objeto.getRectColision())) {
                 adquirirObjeto(objeto);
+                objetosMundo.removeIndex(i); // IMPORTANTE: Evita recolección infinita
             }
         }
     }
 
     private void revisarChoqueEnemigo(float delta) {
-        // ... (Tu código aquí no cambia)
         tiempoUltimoDaño += delta;
-        if (getStage() == null) return;
+        if (mundo == null) return;
 
-        Array<Actor> actores = getStage().getActors();
-        for (Actor actor : actores) {
-            if (actor instanceof Enemigo enemigo &&
-                    enemigo.getRectColision().overlaps(getRectColision())) {
+        for (Enemigo enemigo : mundo.getEnemigos()) {
+            if (enemigo.getRectColision().overlaps(getRectColision())) {
                 if (tiempoUltimoDaño >= COOLDOWN_DANO) {
                     alterarVida(-enemigo.getDanio());
                     tiempoUltimoDaño = 0f;
@@ -234,7 +238,7 @@ public class Jugador extends SerVivo {
         }
     }
 
-    public List<Objeto> getInventario() {
+    public Array<Objeto> getInventario() {
         return inventario;
     }
 }

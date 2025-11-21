@@ -47,6 +47,7 @@ public class Assets {
         manager.load(PathManager.ENEMIGO_ATLAS, TextureAtlas.class);
         manager.load(PathManager.CLICK_ANIMATION, TextureAtlas.class);
 
+        manager.load(PathManager.CLICK_ANIMATION, TextureAtlas.class);
 
         manager.setLoader(TiledMap.class, new TmxMapLoader(new InternalFileHandleResolver()));
         manager.load(PathManager.MAPA_BOSQUE, TiledMap.class);

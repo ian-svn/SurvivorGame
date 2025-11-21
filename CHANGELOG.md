@@ -176,3 +176,13 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ### Added
 - `Gestor de animaciones` que centraliza codigo de animaciones de las entidades.
 - Animacion del `Invasor de la Luna`.
+
+[0.9.3] - 2025-11-20
+### Added
+- Sistema de ciclo día/noche con `GestorTiempo` y actualización dinámica de `brillo`.
+- `Interfaz UI` independiente con reloj y contador de días (fija en pantalla).
+- Interfaz `IMundoJuego` para mejorar la arquitectura y desacoplar entidades.
+- Tecla 'T' para acelerar el tiempo (Debug).
+
+### Added
+- Optimización de memoria en sistema de colisiones y vectores de movimiento.
