@@ -13,12 +13,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.utils.viewport.FitViewport; // Volvemos al FitViewport único
-
 import io.github.package_game_survival.algoritmos.ClickEffect;
 import io.github.package_game_survival.algoritmos.EstrategiaMoverAPunto;
 import io.github.package_game_survival.entidades.mapas.Escenario;
@@ -35,10 +31,7 @@ public class GameScreen implements Screen {
 
     private final MyGame game;
     private final FastMenuScreen fm;
-
-    private final Stage stageMundo;
-    private final Stage stageUI;
-
+    private final Stage stage;
     private final Jugador jugador;
     private final Escenario escenario;
     private final OrthographicCamera camara;
@@ -48,33 +41,21 @@ public class GameScreen implements Screen {
 
     private final Vector3 tempVec = new Vector3();
     private Animation<TextureRegion> clickAnimation;
-
-    private Image fondoOscuro;
-    private Table tablaGameOver;
     private LabelStandard labelFinJuego;
     private LabelStandard labelVolverMenu;
-
+    private Image fondoOscuro;
     private boolean juegoTerminado = false;
 
     public GameScreen(MyGame game) {
         this.game = game;
-
-        // 1. Mundo
-        this.stageMundo = new Stage(new FitViewport(ANCHO_MUNDO, ALTO_MUNDO));
-
-        // 2. UI (Ahora usa FitViewport también, igual que el mundo)
-        this.stageUI = new Stage(new FitViewport(ANCHO_MUNDO, ALTO_MUNDO));
-
-        Gdx.input.setInputProcessor(stageUI);
+        this.stage = new Stage(game.getViewport());
+        Gdx.input.setInputProcessor(stage);
 
         this.jugador = new Jugador("Ian", ANCHO_MUNDO/2, ALTO_MUNDO/2);
-        this.escenario = new Escenario(stageMundo, jugador);
-
-        this.escenario.setStageUI(stageUI);
-
+        this.escenario = new Escenario(stage, jugador);
         this.fm = new FastMenuScreen(game, this);
 
-        this.camara = (OrthographicCamera) stageMundo.getCamera();
+        this.camara = (OrthographicCamera) stage.getCamera();
         this.camara.zoom = 0.6f;
         this.camara.update();
 
@@ -84,57 +65,36 @@ public class GameScreen implements Screen {
 
     private void inicializarUI() {
         fondoOscuro = new Image(Assets.get(PathManager.GAME_BACKGROUND_TEXTURE, Texture.class));
-        fondoOscuro.setColor(0, 0, 0, 0.85f);
-        fondoOscuro.setFillParent(true); // Cubrirá todo el FitViewport
+        fondoOscuro.setColor(0, 0, 0, 0.6f);
+        fondoOscuro.setSize(ANCHO_MUNDO, ALTO_MUNDO);
         fondoOscuro.setVisible(false);
-
-        tablaGameOver = new Table();
-        tablaGameOver.setFillParent(true);
-        tablaGameOver.setVisible(false);
 
         labelFinJuego = new LabelStandard("");
         labelFinJuego.setColor(Color.RED);
-        labelFinJuego.setFontScale(2.0f);
-        labelFinJuego.setAlignment(Align.center);
+        labelFinJuego.setFontScale(3f);
+        labelFinJuego.setVisible(false);
 
         labelVolverMenu = new LabelStandard("Presione [ESC] para volver al menu");
         labelVolverMenu.setColor(Color.WHITE);
-        labelVolverMenu.setFontScale(0.8f);
-        labelVolverMenu.setAlignment(Align.center);
+        labelVolverMenu.setFontScale(0.6f);
+        labelVolverMenu.setVisible(false);
 
-        tablaGameOver.add(labelFinJuego).padBottom(20).row();
-        tablaGameOver.add(labelVolverMenu);
-
-        stageUI.addActor(fondoOscuro);
-        stageUI.addActor(tablaGameOver);
-    }
-
-    private void cargarEfectosVisuales() {
-        try {
-            TextureAtlas atlas = Assets.get(PathManager.CLICK_ANIMATION, TextureAtlas.class);
-            Array<TextureRegion> frames = new Array<>();
-            for (int i = 1; i <= 5; i++) {
-                TextureRegion frame = atlas.findRegion("click" + i);
-                if (frame != null) frames.add(frame);
-            }
-            if (frames.size > 0)
-                clickAnimation = new Animation<>(0.08f, frames, Animation.PlayMode.NORMAL);
-        } catch (Exception e) {
-            Gdx.app.error("GameScreen", "Error al cargar animacion de clic", e);
-        }
+        stage.addActor(fondoOscuro);
+        stage.addActor(labelFinJuego);
+        stage.addActor(labelVolverMenu);
     }
 
     @Override
     public void render(float delta) {
-        // Limpiamos la pantalla real (las bandas negras fuera del FitViewport)
         ScreenUtils.clear(0, 0, 0, 1);
+
         actualizarCamara();
+        escenario.renderMapa(camara);
 
-        escenario.renderConShader(camara, delta);
+        stage.act(delta);
+        stage.draw();
 
-        if (escenario.getGestorTiempo().isJuegoGanado()) {
-            terminarJuego("¡GANASTE!");
-        } else if (juegoTerminado) {
+        if (juegoTerminado) {
             jugador.setEstrategia(null);
         } else {
             gestionarClickMovimiento();
@@ -151,10 +111,14 @@ public class GameScreen implements Screen {
         float zoom = camara.zoom;
         float viewportAncho = camara.viewportWidth * zoom;
         float viewportAlto = camara.viewportHeight * zoom;
-        float camX = jugador.getX(); float camY = jugador.getY();
 
-        float minX = viewportAncho / 2f; float maxX = ANCHO_MUNDO - viewportAncho / 2f;
-        float minY = viewportAlto / 2f; float maxY = ALTO_MUNDO - viewportAlto / 2f;
+        float camX = jugador.getX();
+        float camY = jugador.getY();
+
+        float minX = viewportAncho / 2f;
+        float maxX = ANCHO_MUNDO - viewportAncho / 2f;
+        float minY = viewportAlto / 2f;
+        float maxY = ALTO_MUNDO - viewportAlto / 2f;
 
         camX = Math.max(minX, Math.min(camX, maxX));
         camY = Math.max(minY, Math.min(camY, maxY));
@@ -163,10 +127,11 @@ public class GameScreen implements Screen {
         camara.update();
     }
 
+
     private void verificarCondicionesFinJuego() {
         if (jugador.getVida() <= 0) {
             terminarJuego("PERDISTE");
-        } else if (jugador.getInventario().size >= 3) {
+        } else if (jugador.getInventario().size() >= 3) {
             terminarJuego("GANASTE");
         }
     }
@@ -176,47 +141,87 @@ public class GameScreen implements Screen {
             tempVec.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             camara.unproject(tempVec);
             Vector2 destino = new Vector2(tempVec.x, tempVec.y);
-            jugador.setEstrategia(new EstrategiaMoverAPunto(destino, escenario.getBloques()));
+            jugador.setEstrategia(new EstrategiaMoverAPunto(destino));
 
             if (clickAnimation != null)
-                stageMundo.addActor(new ClickEffect(clickAnimation, destino.x, destino.y));
+                stage.addActor(new ClickEffect(clickAnimation, destino.x, destino.y));
+        }
+    }
+
+    private void cargarEfectosVisuales() {
+        try {
+            TextureAtlas atlas = Assets.get(PathManager.CLICK_ANIMATION, TextureAtlas.class);
+            Array<TextureRegion> frames = new Array<>();
+            for (int i = 1; i <= 5; i++) {
+                TextureRegion frame = atlas.findRegion("click" + i);
+                if (frame != null)
+                    frames.add(frame);
+            }
+            if (frames.size > 0)
+                clickAnimation = new Animation<>(0.08f, frames, Animation.PlayMode.NORMAL);
+        } catch (Exception e) {
+            Gdx.app.error("GameScreen", "Error al cargar animacion de clic", e);
         }
     }
 
     private void terminarJuego(String mensaje) {
-        if (!juegoTerminado) {
-            for (Enemigo enemigo : escenario.getEnemigos()) enemigo.remove();
-            for (Objeto objeto : escenario.getObjetos()) objeto.remove();
-            for (Animal animal : escenario.getAnimales()) animal.remove();
-
-            juegoTerminado = true;
-
-            labelFinJuego.setText(mensaje);
-
-            fondoOscuro.setVisible(true);
-            tablaGameOver.setVisible(true);
-
-            fondoOscuro.toFront();
-            tablaGameOver.toFront();
+        for (Enemigo enemigo : escenario.getEnemigos()) {
+            enemigo.remove();
         }
+
+        for (Objeto objeto : escenario.getObjetos()) {
+            objeto.remove();
+        }
+
+        for (Animal animal : escenario.getAnimales()) {
+            animal.remove();
+        }
+
+        juegoTerminado = true;
+
+        fondoOscuro.setVisible(true);
+        fondoOscuro.toFront();
+
+        labelFinJuego.setText(mensaje);
+        labelFinJuego.setVisible(true);
+        labelFinJuego.toFront();
+
+        labelVolverMenu.setVisible(true);
+        labelVolverMenu.toFront();
+
+        centrarUI();
+    }
+
+    private void centrarUI() {
+        float camX = camara.position.x;
+        float camY = camara.position.y;
+
+        fondoOscuro.setPosition(camX - fondoOscuro.getWidth() / 2f,
+            camY - fondoOscuro.getHeight() / 2f);
+
+        labelFinJuego.setPosition(camX - labelFinJuego.getPrefWidth() / 2f,
+            camY + 30);
+
+        labelVolverMenu.setPosition(camX - labelVolverMenu.getPrefWidth() / 2f,
+            camY - labelFinJuego.getPrefHeight() - 40);
     }
 
     @Override
     public void resize(int width, int height) {
-        stageMundo.getViewport().update(width, height, true);
-        stageUI.getViewport().update(width, height, true);
+        stage.getViewport().update(width, height, true);
     }
 
     @Override
     public void dispose() {
-        stageMundo.dispose();
-        stageUI.dispose();
-        if(escenario != null) escenario.dispose();
+        stage.dispose();
         AudioManager.getControler().stopMusic();
     }
 
-    public OrthographicCamera getCamara() { return camara; }
-    @Override public void show() { Gdx.input.setInputProcessor(stageUI); }
+    public OrthographicCamera getCamara() {
+        return camara;
+    }
+
+    @Override public void show() { Gdx.input.setInputProcessor(stage); }
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}

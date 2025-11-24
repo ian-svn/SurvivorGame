@@ -9,7 +9,6 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.Audio.AudioManager;
-import io.github.package_game_survival.managers.BrilloManager;
 
 public class MyGame extends Game {
 
@@ -22,7 +21,7 @@ public class MyGame extends Game {
 
     @Override
     public void create () {
-        BrilloManager.inicializar();
+
         AudioManager.getControler().loadMusic("menuMusic","sounds/MenuTheme.mp3");
         AudioManager.getControler().playMusic("menuMusic",true);
         AudioManager.getControler().setVolume(20);

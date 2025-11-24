@@ -31,10 +31,10 @@ public class BloqueDestructible extends Bloque {
         //if (vida <= 0) destruir(jugador);
     }
 
-    //@Override
-    //public Rectangle getRectColision() {
-    //    return new Rectangle(getX(),getY(),getAncho(),getAlto());
-    //}
+    @Override
+    public Rectangle getRectColision() {
+        return new Rectangle(getX(),getY(),getAncho(),getAlto());
+    }
 
 //    private void destruir(Jugador jugador) {
 //        Item item = crearItemDrop();

@@ -1,59 +1,39 @@
 package io.github.package_game_survival.entidades;
 
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.utils.Disposable;
+import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.interfaces.Colisionable;
-import io.github.package_game_survival.interfaces.IMundoJuego;
 import io.github.package_game_survival.standards.TooltipStandard;
 
-public abstract class Entidad extends Actor implements Colisionable, Disposable {
+public abstract class Entidad extends Actor implements Colisionable {
 
-    // No es final para permitir Lazy Init (evita crash en constructores)
     private Rectangle hitbox;
     private TooltipStandard tooltip;
 
     public Entidad(String nombre, float x, float y, float ancho, float alto) {
         setName(nombre);
-        setBounds(x, y, ancho, alto);
+        setBounds(x,y,ancho,alto);
+        this.hitbox = getRectColision();
     }
 
     @Override
     public void act(float delta) {
         super.act(delta);
-        if (tooltip != null) {
-            tooltip.actualizarPosicion();
-        }
     }
 
-    /**
-     * Método abstracto obligado para que cada entidad sepa cómo conectarse al mundo
-     * (buscar al jugador, obtener bloques, agregarse a la UI, etc.)
-     */
-    public abstract void agregarAlMundo(IMundoJuego mundo);
+    public abstract void agregarAlEscenario(Escenario escenario);
 
-    @Override
-    public Rectangle getRectColision() {
-        // LAZY INITIALIZATION:
-        // Si la hitbox no existe (porque nos llamó el constructor del padre), la creamos.
-        if (hitbox == null) {
-            hitbox = new Rectangle(getX(), getY(), getWidth(), getHeight());
-        }
-
-        // Siempre actualizamos la posición antes de devolverla
-        hitbox.setPosition(getX(), getY());
-        return hitbox;
+    public String getNombre(){
+       return getName();
     }
 
-    public String getNombre() {
-        return getName();
-    }
-
-    public float getAncho() {
+    public float getAncho(){
         return getWidth();
     }
 
-    public float getAlto() {
+    public float getAlto(){
         return getHeight();
     }
 
@@ -62,12 +42,8 @@ public abstract class Entidad extends Actor implements Colisionable, Disposable 
     }
 
     public void instanciarTooltip(TooltipStandard tooltip) {
-        this.tooltip = tooltip;
-    }
-
-    @Override
-    public void dispose() {
-        // Implementación por defecto vacía.
-        // Las clases hijas sobrescriben esto si tienen texturas propias que liberar.
+        if(this.tooltip == null){
+            this.tooltip = tooltip;
+        }
     }
 }

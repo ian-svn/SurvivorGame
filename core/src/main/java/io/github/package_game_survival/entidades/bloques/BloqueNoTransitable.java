@@ -6,14 +6,11 @@ public class BloqueNoTransitable extends Bloque {
 
     public BloqueNoTransitable(float x, float y, String tipo) {
         super(x, y, tipo);
-        // CORRECCIÓN: Si es "NoTransitable", esto debería ser false
-        this.transitable = false;
+        this.transitable = true;
     }
 
-    // Ya no hace falta sobrescribir getRectColision aquí si el padre (Bloque)
-    // ya lo hace de forma optimizada, pero si quieres mantenerlo:
     @Override
     public Rectangle getRectColision() {
-        return super.getRectColision();
+        return new Rectangle(getX(),getY(),getAncho(),getAlto());
     }
 }

@@ -1,6 +1,9 @@
 package io.github.package_game_survival.entidades.seres.enemigos;
 
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.math.Vector2;
+import io.github.package_game_survival.algoritmos.EstrategiaMoverAPunto;
+import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.PathManager;
 
@@ -8,6 +11,8 @@ public class InvasorMago extends Enemigo {
 
     public InvasorMago(float x, float y) {
         super("Invasor Mago", x, y, 30, 40, 100,
-            100, 20, 20, Assets.get(PathManager.ENEMIGO_ATLAS, TextureAtlas.class));
+            100, 20, 20, Assets.get(PathManager.PLAYER_ATLAS, TextureAtlas.class),
+            null, null);
     }
 }
+
