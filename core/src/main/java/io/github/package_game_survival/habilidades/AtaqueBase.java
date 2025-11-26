@@ -13,16 +13,15 @@ public abstract class AtaqueBase implements IAtaque {
         ENFRIAMIENTO  // Cooldown
     }
 
-    protected float tiempoEnfriamiento; // Cooldown total
-    protected float tiempoCasteo;       // Tiempo de carga antes de pegar
+    protected float tiempoEnfriamiento;
+    protected float tiempoCasteo;
     protected float temporizador;
     protected EstadoHabilidad estado;
 
     protected int danio;
     protected float rango;
-    protected Class<? extends SerVivo> claseObjetivo; // A quién le pega (Jugador o Enemigo)
+    protected Class<? extends SerVivo> claseObjetivo;
 
-    // Referencias temporales para ejecutar el ataque al finalizar el casteo
     protected SerVivo atacanteRef;
     protected Vector2 destinoRef = new Vector2();
     protected IMundoJuego mundoRef;
@@ -44,13 +43,13 @@ public abstract class AtaqueBase implements IAtaque {
         temporizador -= delta;
 
         if (estado == EstadoHabilidad.CASTEANDO) {
-            // Si el atacante muere mientras carga, cancelamos
+            // --- CORRECCIÓN: CANCELAR SI EL DUEÑO MURIÓ ---
             if (atacanteRef != null && atacanteRef.getVida() <= 0) {
-                estado = EstadoHabilidad.LISTO;
-                return;
+                estado = EstadoHabilidad.LISTO; // Reseteamos
+                return; // Y salimos sin disparar
             }
 
-            // Terminó de cargar -> Ejecutar golpe
+            // Si termina el tiempo y sigue vivo, dispara
             if (temporizador <= 0) {
                 ejecutarEfecto(atacanteRef, destinoRef, mundoRef);
                 estado = EstadoHabilidad.ENFRIAMIENTO;
@@ -76,7 +75,6 @@ public abstract class AtaqueBase implements IAtaque {
             estado = EstadoHabilidad.CASTEANDO;
             temporizador = tiempoCasteo;
         } else {
-            // Ataque instantáneo
             ejecutarEfecto(atacante, destino, mundo);
             estado = EstadoHabilidad.ENFRIAMIENTO;
             temporizador = tiempoEnfriamiento;
@@ -89,6 +87,5 @@ public abstract class AtaqueBase implements IAtaque {
         return estado == EstadoHabilidad.CASTEANDO;
     }
 
-    // Método abstracto: Las clases hijas definirán QUÉ hace el ataque (arañazo, disparo, etc.)
     protected abstract void ejecutarEfecto(SerVivo atacante, Vector2 destino, IMundoJuego mundo);
 }

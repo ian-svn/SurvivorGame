@@ -27,6 +27,7 @@ public abstract class SerVivo extends Entidad {
     private TextureAtlas atlas;
     private GestorAnimacion visual;
 
+    // Sistema de Daño
     private float tiempoHurt = 0f;
     private boolean isHurt = false;
     private final float DURACION_ROJO = 0.15f;
@@ -48,14 +49,15 @@ public abstract class SerVivo extends Entidad {
         this.atlas = atlas;
 
         this.visual = new GestorAnimacion();
-        visual.inicializarAtlas(atlas);
+        if (atlas != null) {
+            visual.inicializarAtlas(atlas);
+        }
     }
 
     public void recibirEmpuje(float fuerzaX, float fuerzaY) {
         float oldX = getX();
         moveBy(fuerzaX, 0);
         if (colisionaConMundo()) setX(oldX);
-
         float oldY = getY();
         moveBy(0, fuerzaY);
         if (colisionaConMundo()) setY(oldY);
@@ -79,19 +81,21 @@ public abstract class SerVivo extends Entidad {
             isHurt = true;
             tiempoHurt = DURACION_ROJO;
         }
-
         if (this.vida < vidaMinima) this.vida = vidaMinima;
         else if (this.vida > vidaMaxima) this.vida = vidaMaxima;
 
-        // --- CORRECCIÓN: Usamos delete() para asegurar limpieza completa ---
-        if (vida <= vidaMinima) {
-            delete();
-        }
+        if (vida <= vidaMinima) delete();
     }
 
     @Override
     public void act(float delta) {
         super.act(delta);
+
+        // --- CORRECCIÓN CRÍTICA: GUARDIA DE MUERTE ---
+        // Si está muerto, no actualizamos la habilidad (evita que dispare post-mortem)
+        // ni la animación.
+        if (vida <= 0) return;
+
         if (habilidadPrincipal != null) habilidadPrincipal.update(delta);
         if (visual != null) visual.update(delta);
 
@@ -107,12 +111,14 @@ public abstract class SerVivo extends Entidad {
     public void atacar(Vector2 destino, IMundoJuego mundo) {
         if (habilidadPrincipal != null) habilidadPrincipal.intentarAtacar(this, destino, mundo);
     }
+
     public boolean estaAtacando() { return habilidadPrincipal != null && habilidadPrincipal.estaCasteando(); }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
         TextureRegion currentFrame = this.visual.getFrame();
         if (currentFrame == null) return;
+
         Color color = getColor();
         batch.setColor(color.r, color.g, color.b, color.a * parentAlpha);
         batch.draw(currentFrame, getX(), getY(), getWidth(), getHeight());
@@ -120,19 +126,15 @@ public abstract class SerVivo extends Entidad {
     }
 
     protected void actualizarAnimacion(float oldX, float oldY) {
-        // ... (Tu código de animación anterior) ...
-        // Mantener igual que antes
+        if (atlas == null) return;
         float dx = getX() - oldX;
         float dy = getY() - oldY;
         if (Math.abs(dx) < 0.01f && Math.abs(dy) < 0.01f) {
-            // IDLE logic
             switch (ultimaDireccion) {
                 case DOWN: visual.setEstado(EstadoAnimacion.IDLE_DOWN); break;
-                // ... resto de casos
                 default: visual.setEstado(EstadoAnimacion.IDLE_DOWN); break;
             }
         } else {
-            // Walk logic
             if (Math.abs(dx) > Math.abs(dy)) {
                 if (dx > 0) { visual.setEstado(EstadoAnimacion.WALK_RIGHT); ultimaDireccion = Direccion.RIGHT; }
                 else { visual.setEstado(EstadoAnimacion.WALK_LEFT); ultimaDireccion = Direccion.LEFT; }

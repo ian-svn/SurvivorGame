@@ -233,3 +233,8 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ## [0.11.2] - 2025-11-26
 ### Fixed
 - El `menu` del final del juego se arreglo.
+
+
+## [0.11.3] - 2025-11-26
+### Fixed
+- Se soluciona el error en donde los enemigos ya derrotados siguen pudiendo interactuar con el `Jugador`.
