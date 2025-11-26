@@ -1,49 +1,55 @@
 package io.github.package_game_survival.entidades.mapas;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.FrameBuffer;
+import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.maps.MapLayer;
-import com.badlogic.gdx.maps.MapObject;
-import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Disposable;
 import io.github.package_game_survival.entidades.bloques.*;
-import io.github.package_game_survival.entidades.objetos.Objeto;
-import io.github.package_game_survival.entidades.objetos.PocionDeAmatista;
-import io.github.package_game_survival.entidades.seres.animales.Animal;
-import io.github.package_game_survival.entidades.seres.animales.Jabali;
-import io.github.package_game_survival.entidades.seres.animales.Vaca;
-import io.github.package_game_survival.entidades.seres.enemigos.Enemigo;
-import io.github.package_game_survival.entidades.seres.enemigos.InvasorArquero;
-import io.github.package_game_survival.entidades.seres.enemigos.InvasorDeLaLuna;
-import io.github.package_game_survival.entidades.seres.enemigos.InvasorMago;
+import io.github.package_game_survival.entidades.objetos.*;
+import io.github.package_game_survival.entidades.seres.animales.*;
+import io.github.package_game_survival.entidades.seres.enemigos.*;
 import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
-import io.github.package_game_survival.managers.Assets;
-import io.github.package_game_survival.managers.PathManager;
+import io.github.package_game_survival.interfaces.IMundoJuego;
+import io.github.package_game_survival.managers.BrilloManager;
+import io.github.package_game_survival.managers.GestorTiempo;
 
-import java.util.ArrayList;
-import java.util.List;
+public class Escenario implements IMundoJuego, Disposable {
 
-public class Escenario {
-
-    private final Stage stage;
+    private final Stage stageMundo;
+    private Stage stageUI;
     private final Jugador jugador;
-    private final ArrayList<Bloque> bloques;
-    private final ArrayList<Enemigo> enemigos;
-    private final ArrayList<Animal> animales;
-    private final ArrayList<Objeto> objetos;
+
+    private final GestorTiempo gestorTiempo;
+
+    private final Array<Bloque> bloques;
+    private final Array<Enemigo> enemigos;
+    private final Array<Animal> animales;
+    private final Array<Objeto> objetos;
     private final Mapa mapa;
+    private final Array<Rectangle> cacheRectangulosColision;
 
-    public Escenario(Stage stage, Jugador jugador) {
-        this.stage = stage;
+    public Escenario(Stage stageMundo, Jugador jugador) {
+        this.stageMundo = stageMundo;
         this.jugador = jugador;
-        this.bloques = new ArrayList<>();
-        this.animales = new ArrayList<>();
-        this.objetos = new ArrayList<>();
-        this.enemigos = new ArrayList<>();
 
-        mapa = new Mapa();
+        this.bloques = new Array<>();
+        this.animales = new Array<>();
+        this.objetos = new Array<>();
+        this.enemigos = new Array<>();
+        this.cacheRectangulosColision = new Array<>();
+
+        this.mapa = new Mapa();
+        this.gestorTiempo = new GestorTiempo();
 
         inicializarEnemigos();
         inicializarAnimales();
@@ -52,48 +58,119 @@ public class Escenario {
         agregarEntidadesAlStage();
     }
 
+    public void renderConShader(OrthographicCamera camara, float delta) {
+        // 1. Actualizamos lógica de tiempo
+        gestorTiempo.update(delta);
+
+        // 2. Actualizamos el brillo global basado en la hora
+        float brilloActual = gestorTiempo.getFactorBrillo();
+        BrilloManager.setBrillo(brilloActual);
+
+        FrameBuffer fbo = BrilloManager.getFBO();
+        SpriteBatch batchShader = BrilloManager.getBatchShader();
+        ShaderProgram shader = BrilloManager.getShader();
+
+        // --- Render al FBO ---
+        fbo.begin();
+        Gdx.gl.glClearColor(0, 0, 0, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        mapa.render(camara);
+
+        stageMundo.getViewport().apply();
+        stageMundo.getBatch().setProjectionMatrix(camara.combined);
+        stageMundo.getBatch().setColor(1, 1, 1, 1);
+
+        stageMundo.act(delta);
+        stageMundo.draw();
+
+        fbo.end();
+
+        // --- Render con Shader ---
+        Texture tex = fbo.getColorBufferTexture();
+
+        // ✅ CRÍTICO: Usar matriz de proyección ortográfica simple para pantalla completa
+        batchShader.getProjectionMatrix().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        batchShader.setShader(shader);
+        batchShader.begin();
+
+        // Pasamos el brillo actualizado al shader
+        shader.setUniformf("u_brightness", BrilloManager.getBrillo());
+
+        batchShader.setColor(1, 1, 1, 1);
+
+        // ✅ CRÍTICO: Dibujar en coordenadas de PANTALLA para cubrir toda la ventana
+        batchShader.draw(tex, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0, 0, 1, 1);
+
+        batchShader.end();
+
+        // --- UI ---
+        if (stageUI != null) {
+            stageUI.getViewport().apply();
+            stageUI.act(delta);
+            stageUI.draw();
+        }
+    }
+
+    @Override public Array<Bloque> getBloques() { return bloques; }
+    @Override public Array<Enemigo> getEnemigos() { return enemigos; }
+    @Override public Array<Objeto> getObjetos() { return objetos; }
+    @Override public Jugador getJugador() { return jugador; }
+    @Override public void agregarActor(Actor actor) { stageMundo.addActor(actor); }
+
+    @Override
+    public void agregarActorUI(Actor actor) {
+        if (stageUI != null) stageUI.addActor(actor);
+        else stageMundo.addActor(actor);
+    }
+
+    @Override
+    public Array<Rectangle> getRectangulosNoTransitables() {
+        cacheRectangulosColision.clear();
+        for (Bloque bloque : bloques) {
+            if (!bloque.isTransitable()) {
+                cacheRectangulosColision.add(bloque.getRectColision());
+            }
+        }
+        return cacheRectangulosColision;
+    }
+
     private void inicializarObjetos() {
-        objetos.add(new PocionDeAmatista(200,600));
-        objetos.add(new PocionDeAmatista(400,400));
-        objetos.add(new PocionDeAmatista(600,200));
+        objetos.add(new PocionDeAmatista(150, 1000));
+        objetos.add(new PocionDeAmatista(300, 700));
+        objetos.add(new PocionDeAmatista(360, 400));
     }
 
     private void inicializarAnimales() {
-        animales.add(new Vaca(400,300));
-        animales.add(new Jabali(20,100));
-        animales.add(new Vaca(350,500));
+        animales.add(new Vaca(300, 300));
+        animales.add(new Jabali(900, 300));
+        animales.add(new Vaca(750, 500));
     }
 
     private void inicializarEnemigos() {
-        enemigos.add(new InvasorArquero(200,500));
-        enemigos.add(new InvasorMago(50,100));
-        enemigos.add(new InvasorDeLaLuna(280,100));
+        enemigos.add(new InvasorArquero(250, 500));
+        enemigos.add(new InvasorMago(20, 10));
+        enemigos.add(new InvasorDeLaLuna(380, 100));
     }
 
     private void inicializarBloquesDesdeMapa() {
         TiledMap tiledMap = mapa.getMapa();
-
         for (MapLayer layer : tiledMap.getLayers()) {
             if (!(layer instanceof com.badlogic.gdx.maps.tiled.TiledMapTileLayer tileLayer)) continue;
-
             for (int x = 0; x < tileLayer.getWidth(); x++) {
                 for (int y = 0; y < tileLayer.getHeight(); y++) {
                     var cell = tileLayer.getCell(x, y);
                     if (cell == null || cell.getTile() == null) continue;
-
                     var tile = cell.getTile();
                     var props = tile.getProperties();
-
                     boolean transitable = props.get("transitable", true, Boolean.class);
                     if (!transitable) {
                         String tipo = props.get("tipo", "bloque", String.class);
                         boolean destructible = props.get("destructible", false, Boolean.class);
                         String objetoTirado = props.get("objetoTirado", null, String.class);
-
                         Bloque bloque = destructible
                             ? new BloqueDestructible(x * 32, y * 32, tipo, objetoTirado)
                             : new BloqueNoTransitable(x * 32, y * 32, tipo);
-
                         bloques.add(bloque);
                     }
                 }
@@ -101,63 +178,40 @@ public class Escenario {
         }
     }
 
-
-    public List<Rectangle> getRectangulosBloquesNoTransitables() {
-        List<Rectangle> rectangulos = new ArrayList<>();
-        for (Bloque bloque : bloques) {
-            if (!bloque.isTransitable()) {
-                rectangulos.add(bloque.getRectColision());
-            }
-        }
-        return rectangulos;
-    }
-
-
     private void agregarEntidadesAlStage() {
-        for (Bloque bloque : bloques)
-            bloque.agregarAlEscenario(this);
-        for (Enemigo enemigo : enemigos)
-            enemigo.agregarAlEscenario(this);
-        for (Animal animal : animales)
-            animal.agregarAlEscenario(this);
-        for (Objeto objeto : objetos)
-            objeto.agregarAlEscenario(this);
-        jugador.agregarAlEscenario(this);
+        for (Bloque bloque : bloques) bloque.agregarAlMundo(this);
+        for (Enemigo enemigo : enemigos) enemigo.agregarAlMundo(this);
+        for (Animal animal : animales) animal.agregarAlMundo(this);
+        for (Objeto objeto : objetos) objeto.agregarAlMundo(this);
+        jugador.agregarAlMundo(this);
     }
 
-    public void renderMapa(OrthographicCamera camara) {
-        mapa.render(camara);
+    public OrthographicCamera getCamara() { return (OrthographicCamera) stageMundo.getCamera(); }
+    public GestorTiempo getGestorTiempo() { return gestorTiempo; }
+
+    public void setStageUI(Stage stageUI) {
+        this.stageUI = stageUI;
+        if (gestorTiempo != null) {
+            gestorTiempo.agregarAlStage(stageUI);
+        }
     }
 
+    public Stage getStageUI() { return stageUI; }
+
+    @Override
     public void dispose() {
-        mapa.dispose();
+        if (mapa != null) {}
+        jugador.dispose();
+        for(Enemigo e : enemigos) e.dispose();
+        for(Objeto o : objetos) o.dispose();
+        bloques.clear();
+        enemigos.clear();
+        animales.clear();
+        objetos.clear();
+        cacheRectangulosColision.clear();
     }
 
-    public void agregar(Actor actor) {
-        stage.addActor(actor);
-    }
-
-    public ArrayList<Bloque> getBloques() {
-        return bloques;
-    }
-
-    public OrthographicCamera getCamara(){
-        return (OrthographicCamera) this.stage.getCamera();
-    }
-
-    public Jugador getJugador() {
-        return jugador;
-    }
-
-    public ArrayList<Enemigo> getEnemigos() {
-        return enemigos;
-    }
-
-    public ArrayList<Objeto> getObjetos() {
-        return objetos;
-    }
-
-    public ArrayList<Animal> getAnimales() {
-        return animales;
+    public Array<Animal> getAnimales() {
+        return this.animales;
     }
 }

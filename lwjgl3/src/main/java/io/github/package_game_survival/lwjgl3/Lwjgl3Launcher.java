@@ -22,7 +22,7 @@ public class Lwjgl3Launcher {
         configuration.useVsync(true);
         configuration.setForegroundFPS(Lwjgl3ApplicationConfiguration.getDisplayMode().refreshRate + 1);
 
-        configuration.setWindowedMode(1280, 720);
+        configuration.setWindowedMode(1280, 768);
         configuration.setWindowIcon("SurvivalGameLogo.png");
 
         return configuration;

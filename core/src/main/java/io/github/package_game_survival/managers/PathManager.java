@@ -16,7 +16,6 @@ public final class PathManager {
     public static final String MENU_MUSIC = "sounds/MenuTheme.mp3";
 
     public static final String PLAYER_TEXTURE = "sprites/jugador.png";
-    public static final String VACA_TEXTURE = "sprites/vaca.png";
     public static final String BLOCK_TEXTURE = "sprites/block.png";
     public static final String POCION_TEXTURE = "sprites/pocionAmatista.png";
     public static final String ENEMIGO_TEXTURE = "sprites/enemigo.png";
@@ -26,6 +25,8 @@ public final class PathManager {
     public static final String PALO_TEXTURE = "sprites/palo.png";
     public static final String AGUA_TEXTURE = "sprites/agua.png";
     public static final String PIEDRA_TEXTURE = "sprites/piedra.png";
+    public static final String VACA_TEXTURE = "sprites/vaca.png";
+    public static final String JABALI_TEXTURE = "sprites/jabali.png";
 
     public static final String BACKGROUND = "skins/background.json";
     public static final String LABEL = "skins/label.json";
@@ -37,8 +38,16 @@ public final class PathManager {
 
     public static final String PROGRESS_BAR_ATLAS = "skins/progressBar.atlas";
     public static final String PLAYER_ATLAS = "sprites/jugador.atlas";
+    public static final String ENEMIGO_ATLAS = "sprites/enemigo.atlas";
     public static final String CLICK_ANIMATION = "atlas/click.atlas";
+    public static final String ARANAZO_ANIMATION = "atlas/aranazo.atlas";
 
-    public static final String MAPA_BOSQUE = "mapas/bosque/tilemap_bosque.tmx";
+    public static final String VACA_TEXTURE_ATLAS = "sprites/vaca.png";
+    public static final String JABALI_TEXTURE_ATLAS = "sprites/jabali.png";
+
+    public static final String MAPA_BOSQUE = "mapas/bosque/tilemap_bosqueGrande.tmx";
+
+    public static final String BRILLO_FRAG = "shaders/brillo.frag";
+    public static final String BRILLO_VERT = "shaders/brillo.vert";
 
 }

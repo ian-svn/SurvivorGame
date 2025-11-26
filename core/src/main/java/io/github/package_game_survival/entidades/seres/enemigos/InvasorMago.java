@@ -1,18 +1,25 @@
 package io.github.package_game_survival.entidades.seres.enemigos;
 
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.math.Vector2;
-import io.github.package_game_survival.algoritmos.EstrategiaMoverAPunto;
-import io.github.package_game_survival.entidades.mapas.Escenario;
+import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
+import io.github.package_game_survival.habilidades.AtaqueAranazo;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.PathManager;
 
 public class InvasorMago extends Enemigo {
 
     public InvasorMago(float x, float y) {
-        super("Invasor Mago", x, y, 30, 40, 100,
-            100, 20, 20, Assets.get(PathManager.PLAYER_ATLAS, TextureAtlas.class),
-            null, null);
+        super("Invasor Mago", x, y, 30, 40, 80, // 80 de vida (menos vida)
+            100, 20, 20, Assets.get(PathManager.ENEMIGO_ATLAS, TextureAtlas.class));
+
+        // AJUSTE DE IA: Ataca desde lejos
+        this.rangoAtaque = 180f;
+
+        // AJUSTE DE ARMA:
+        // Cooldown: 2s
+        // Casteo: 0.2s (Muy rápido)
+        // Daño: 6 (Poco daño)
+        // Rango: 180f (Largo alcance)
+        this.habilidadPrincipal = new AtaqueAranazo(2.0f, 0.2f, 6, 180f, 30f, Jugador.class);
     }
 }
-

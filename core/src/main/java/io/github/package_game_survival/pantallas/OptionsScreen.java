@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.ButtonGroup;
 import io.github.package_game_survival.managers.Assets;
+import io.github.package_game_survival.managers.BrilloManager;
 import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.CheckBoxStandard;
 import io.github.package_game_survival.standards.LabelStandard;
@@ -45,7 +46,7 @@ public class OptionsScreen implements Screen {
         stage.addActor(table);
 
         TextButtonStandard volverButton = new TextButtonStandard("Volver al Menu");
-        volverButton.setClickListener(()-> game.setScreen(new MenuScreen(game)));
+        volverButton.setClickListener(() -> game.setScreen(new MenuScreen(game)));
 
         boxPantallaCompleta = new CheckBoxStandard();
         boxModoVentana = new CheckBoxStandard();
@@ -64,7 +65,6 @@ public class OptionsScreen implements Screen {
             boxModoVentana.setChecked(true);
             boxModoVentana.setDisabled(true);
             boxPantallaCompleta.setDisabled(false);
-
             Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
         }
 
@@ -74,6 +74,12 @@ public class OptionsScreen implements Screen {
                 Gdx.graphics.setFullscreenMode(displayMode);
                 boxPantallaCompleta.setDisabled(true);
                 boxModoVentana.setDisabled(false);
+
+                // ✅ Forzar actualización del viewport y FBO
+                game.getViewport().update(displayMode.width, displayMode.height, true);
+                BrilloManager.redimensionar(displayMode.width, displayMode.height);
+
+                Gdx.app.log("OptionsScreen", "Pantalla completa activada: " + displayMode.width + "x" + displayMode.height);
             }
         });
 
@@ -83,6 +89,12 @@ public class OptionsScreen implements Screen {
                 Gdx.graphics.setWindowedMode(1280, 720);
                 boxModoVentana.setDisabled(true);
                 boxPantallaCompleta.setDisabled(false);
+
+                // ✅ Forzar actualización del viewport y FBO
+                game.getViewport().update(1280, 720, true);
+                BrilloManager.redimensionar(1280, 720);
+
+                Gdx.app.log("OptionsScreen", "Modo ventana activado: 1280x720");
             }
         });
 
@@ -107,6 +119,8 @@ public class OptionsScreen implements Screen {
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
+        // ✅ También redimensionar el FBO aquí por si acaso
+        BrilloManager.redimensionar(width, height);
     }
 
     @Override

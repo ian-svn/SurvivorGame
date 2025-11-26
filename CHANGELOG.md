@@ -161,3 +161,66 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 - Sin más `Puntos` al agarrar objetos.
 - `Barra de vida` con distinto diseño.
 
+ ## [0.9.1] - 2025-11-11
+
+ ### Added
+ - `Shaders` para controlar el brillo de los elementos del escenario y conseguir el efecto de día y noche
+ -  El `Jugador` ahora puede moverse tanto con el click secundario del ratón como con las teclas 'WASD' del teclado
+
+### Observaciones
+- Se produce un bug con los sprites al moverse en diagonal
+- Error con los shaders y la barra de vida
+
+## [0.9.2] - 2025-11-18
+
+### Added
+- `Gestor de animaciones` que centraliza codigo de animaciones de las entidades.
+- Animacion del `Invasor de la Luna`.
+
+[0.9.3] - 2025-11-20
+### Added
+- Sistema de ciclo día/noche con `GestorTiempo` y actualización dinámica de `brillo`.
+- `Interfaz UI` independiente con reloj y contador de días (fija en pantalla).
+- Interfaz `IMundoJuego` para mejorar la arquitectura y desacoplar entidades.
+- Tecla 'T' para acelerar el tiempo (Debug).
+
+### Added
+- Optimización de memoria en sistema de colisiones y vectores de movimiento.
+
+[0.10.0] - 2025-11-20
+### Added
+- Sistema de ciclo día/noche con `GestorTiempo` y actualización dinámica de `brillo`.
+- `Interfaz UI` independiente con reloj y contador de días (fija en pantalla).
+- Interfaz `IMundoJuego` para mejorar la arquitectura y desacoplar entidades.
+- Tecla 'T' para acelerar el tiempo (Debug).
+- Optimización de memoria en sistema de colisiones y vectores de movimiento.
+
+### Added
+- Optimización de memoria en sistema de colisiones y vectores de movimiento.
+
+## [0.10.1] - 2025-11-21
+
+### Fixed
+- Error de pantalla de juego terminado.
+
+## [0.10.2] - 2025-11-24
+### Changed
+- Implementación de la clase `Hud` para gestionar la interfaz de usuario en una capa superior independiente.
+- La interfaz (barra de vida y reloj) ahora se renderiza después del shader de luz, evitando que se oscurezca durante la noche.
+- Reubicación de la barra de vida a la esquina superior derecha de la pantalla.
+- Refactorización de la clase `Jugador`: eliminada toda lógica interna de renderizado de UI.
+
+## [0.11.0] - 2025-11-26
+### Added
+- Sistema de combate modular (`IAtaque`) con mecánicas de casteo y cooldown.
+- Clase `EfectoVisual` para animaciones temporales y feedback de daño (color rojo).
+- Soporte para texturas .png en Animal con rotación automática (flip) sin necesidad de Atlas.
+- El `jugador` ahora ataca con la tecla Q hacia la posición del mouse.
+
+### Changed
+- Implementación de `Safe Knockback` en SerVivo para evitar atravesar paredes al recibir empuje.
+- Rebalanceo de enemigos (`Mago`, `Arquero`, `Luna`) con rangos de detección de IA dinámicos.
+
+### Fixed
+- Solucionado el bug de "enemigos fantasma" que seguían atacando tras morir.
+- Corregido NullPointerException en el `Jugador` al intentar acceder al Stage después de morir.
