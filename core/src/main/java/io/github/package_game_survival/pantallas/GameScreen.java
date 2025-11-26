@@ -171,9 +171,8 @@ public class GameScreen implements Screen {
     private void verificarCondicionesFinJuego() {
         if (jugador.getVida() <= 0) {
             terminarJuego("PERDISTE");
-        } else if (jugador.getInventario().size >= 3) {
-            terminarJuego("GANASTE");
         }
+        // else if (jugador.getInventario().size >= 3) { terminarJuego("GANASTE");}
     }
 
     private void gestionarClickMovimiento() {

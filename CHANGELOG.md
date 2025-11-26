@@ -238,3 +238,9 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ## [0.11.3] - 2025-11-26
 ### Fixed
 - Se soluciona el error en donde los enemigos ya derrotados siguen pudiendo interactuar con el `Jugador`.
+
+## [0.12.0] - 2025-11-26
+### Added
+- Sistema de inventario para consumibles implementado en el `HUD` y el consumo de los mismos.
+- Ahora las `Vacas` y `Jabalis` tiran carne en el piso para recoger al igual que las `Pociones`.
+- `Carne Podrida` que saca vida al comer y la tiran los enemigos.

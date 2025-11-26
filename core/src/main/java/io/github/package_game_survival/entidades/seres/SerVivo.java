@@ -32,6 +32,9 @@ public abstract class SerVivo extends Entidad {
     private boolean isHurt = false;
     private final float DURACION_ROJO = 0.15f;
 
+    // --- NUEVO: Bandera para evitar muerte múltiple ---
+    private boolean muerto = false;
+
     private final Rectangle rectAux = new Rectangle();
 
     private enum Direccion {
@@ -55,6 +58,9 @@ public abstract class SerVivo extends Entidad {
     }
 
     public void recibirEmpuje(float fuerzaX, float fuerzaY) {
+        // Si está muerto, no debería empujarse (opcional, pero queda mejor)
+        if (muerto) return;
+
         float oldX = getX();
         moveBy(fuerzaX, 0);
         if (colisionaConMundo()) setX(oldX);
@@ -75,26 +81,36 @@ public abstract class SerVivo extends Entidad {
     public void setMundo(IMundoJuego mundo) { this.mundo = mundo; }
 
     public void alterarVida(int cantidad) {
+        // --- CORRECCIÓN PRINCIPAL ---
+        // Si ya está muerto, ignoramos cualquier daño extra.
+        // Esto evita que suelte items infinitos o se procese la muerte dos veces.
+        if (muerto) return;
+
         this.vida += cantidad;
+
         if (cantidad < 0) {
             setColor(Color.RED);
             isHurt = true;
             tiempoHurt = DURACION_ROJO;
         }
+
         if (this.vida < vidaMinima) this.vida = vidaMinima;
         else if (this.vida > vidaMaxima) this.vida = vidaMaxima;
 
-        if (vida <= vidaMinima) delete();
+        if (vida <= vidaMinima) {
+            muerto = true; // Marcamos como muerto
+            delete();      // Ejecutamos la limpieza (drops, etc.) UNA SOLA VEZ
+        }
     }
+
+    public boolean isMuerto() { return muerto; }
 
     @Override
     public void act(float delta) {
         super.act(delta);
 
-        // --- CORRECCIÓN CRÍTICA: GUARDIA DE MUERTE ---
-        // Si está muerto, no actualizamos la habilidad (evita que dispare post-mortem)
-        // ni la animación.
-        if (vida <= 0) return;
+        // Si está muerto, cortamos lógica inmediatamente
+        if (muerto) return;
 
         if (habilidadPrincipal != null) habilidadPrincipal.update(delta);
         if (visual != null) visual.update(delta);
@@ -109,7 +125,7 @@ public abstract class SerVivo extends Entidad {
     }
 
     public void atacar(Vector2 destino, IMundoJuego mundo) {
-        if (habilidadPrincipal != null) habilidadPrincipal.intentarAtacar(this, destino, mundo);
+        if (!muerto && habilidadPrincipal != null) habilidadPrincipal.intentarAtacar(this, destino, mundo);
     }
 
     public boolean estaAtacando() { return habilidadPrincipal != null && habilidadPrincipal.estaCasteando(); }

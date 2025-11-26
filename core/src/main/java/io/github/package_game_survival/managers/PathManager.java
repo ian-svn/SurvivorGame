@@ -22,6 +22,7 @@ public final class PathManager {
     public static final String GAME_BACKGROUND_TEXTURE = "sprites/fondoJuego.png";
     public static final String MENU_BACKGROUND_TEXTURE = "sprites/background.png";
     public static final String CARNE_TEXTURE = "sprites/carne.png";
+    public static final String CARNE_PODRIDA_TEXTURE = "sprites/carnePodrida.png";
     public static final String PALO_TEXTURE = "sprites/palo.png";
     public static final String AGUA_TEXTURE = "sprites/agua.png";
     public static final String PIEDRA_TEXTURE = "sprites/piedra.png";

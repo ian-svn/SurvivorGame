@@ -26,6 +26,9 @@ public class Jugador extends SerVivo {
     private final Array<Objeto> inventario = new Array<>();
     private final Rectangle hitbox;
 
+    // --- NUEVO: Slot seleccionado del inventario (0 al 8) ---
+    private int slotSeleccionado = 0;
+
     private float tiempoUltimoDañoContacto = 0f;
     private static final float COOLDOWN_DANO_CONTACTO = 1.0f;
 
@@ -40,8 +43,6 @@ public class Jugador extends SerVivo {
             Assets.get(PathManager.PLAYER_ATLAS, TextureAtlas.class));
 
         this.hitbox = new Rectangle(x, y, 1, 1);
-
-        // Configuramos ataque
         this.habilidadPrincipal = new AtaqueAranazo(0.5f, 0.1f, 25, 60f, 40f, SerVivo.class);
     }
 
@@ -56,16 +57,13 @@ public class Jugador extends SerVivo {
 
     @Override
     public void act(float delta) {
-        super.act(delta); // Aquí puede ocurrir la muerte y el remove()
-
-        // --- CORRECCIÓN CRÍTICA ---
-        // Si después de super.act() el jugador fue removido (murió), getStage() será null.
-        // Cortamos la ejecución aquí para evitar el crash.
+        super.act(delta);
         if (getStage() == null) return;
 
-        Camera cam = getStage().getCamera(); // Ahora es seguro llamar a esto
+        Camera cam = getStage().getCamera();
 
         gestionarCombate(cam);
+        gestionarInventario(); // NUEVO: Control de teclas 1-9 y E
         moverse(delta, cam);
 
         revisarRecoleccionObjetos();
@@ -79,9 +77,44 @@ public class Jugador extends SerVivo {
             tempVecInput.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             cam.unproject(tempVecInput);
             Vector2 destinoMouse = new Vector2(tempVecInput.x, tempVecInput.y);
+            if (mundo != null) atacar(destinoMouse, mundo);
+        }
+    }
 
-            if (mundo != null) {
-                atacar(destinoMouse, mundo);
+    // --- NUEVO MÉTODO: GESTIÓN TIPO MINECRAFT ---
+    private void gestionarInventario() {
+        // Selección de Slots (1 al 9)
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) slotSeleccionado = 0;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) slotSeleccionado = 1;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) slotSeleccionado = 2;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_4)) slotSeleccionado = 3;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_5)) slotSeleccionado = 4;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_6)) slotSeleccionado = 5;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_7)) slotSeleccionado = 6;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_8)) slotSeleccionado = 7;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_9)) slotSeleccionado = 8;
+
+        // Usar objeto con 'E'
+        if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+            usarObjetoSeleccionado();
+        }
+    }
+
+    private void usarObjetoSeleccionado() {
+        // Verificamos si el slot es válido (si tenemos un objeto ahí)
+        if (slotSeleccionado < inventario.size) {
+            Objeto objeto = inventario.get(slotSeleccionado);
+
+            if (objeto instanceof ObjetoConsumible) {
+                // 1. Consumir efecto (curar)
+                ((ObjetoConsumible) objeto).consumir(this);
+
+                // 2. Eliminar del inventario
+                inventario.removeIndex(slotSeleccionado);
+
+                Gdx.app.log("INVENTARIO", "Consumido: " + objeto.getName());
+            } else {
+                Gdx.app.log("INVENTARIO", "Este objeto no se puede comer: " + objeto.getName());
             }
         }
     }
@@ -141,17 +174,16 @@ public class Jugador extends SerVivo {
     }
     @Override public Rectangle getRectColision() { return hitbox; }
 
+    // --- CORRECCIÓN: RECOLECCIÓN ESTILO MINECRAFT ---
     public void adquirirObjeto(Objeto objeto) {
+        // Ahora TODO va al inventario primero.
+        // Ya no consumimos automáticamente.
+        inventario.add(objeto);
 
-        if (objeto instanceof ObjetoConsumible) {
-            ((ObjetoConsumible) objeto).consumir(this);
-        }
-        else {
-            inventario.add(objeto);
-            objeto.adquirir();
-        }
+        // Lo quitamos del suelo (del Stage)
+        objeto.adquirir();
 
-        io.github.package_game_survival.managers.Audio.AudioManager.getControler().playSound("agarrarObjeto");
+        AudioManager.getControler().playSound("agarrarObjeto");
     }
 
     private void revisarRecoleccionObjetos() {
@@ -170,6 +202,7 @@ public class Jugador extends SerVivo {
         tiempoUltimoDañoContacto += delta;
         if (mundo == null) return;
         for (Enemigo enemigo : mundo.getEnemigos()) {
+            if (enemigo.getVida() <= 0) continue;
             if (enemigo.getRectColision().overlaps(getRectColision())) {
                 if (tiempoUltimoDañoContacto >= COOLDOWN_DANO_CONTACTO) {
                     alterarVida(-enemigo.getDanio());
@@ -181,4 +214,5 @@ public class Jugador extends SerVivo {
     }
 
     public Array<Objeto> getInventario() { return inventario; }
+    public int getSlotSeleccionado() { return slotSeleccionado; }
 }

@@ -1,6 +1,9 @@
 package io.github.package_game_survival.entidades.seres.enemigos;
 
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import io.github.package_game_survival.entidades.objetos.Carne;
+import io.github.package_game_survival.entidades.objetos.CarnePodrida;
+import io.github.package_game_survival.entidades.objetos.PocionDeAmatista;
 import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
 import io.github.package_game_survival.habilidades.AtaqueAranazo;
 import io.github.package_game_survival.managers.Assets;
@@ -14,12 +17,8 @@ public class InvasorMago extends Enemigo {
 
         // AJUSTE DE IA: Ataca desde lejos
         this.rangoAtaque = 180f;
-
-        // AJUSTE DE ARMA:
-        // Cooldown: 2s
-        // Casteo: 0.2s (Muy rápido)
-        // Daño: 6 (Poco daño)
-        // Rango: 180f (Largo alcance)
         this.habilidadPrincipal = new AtaqueAranazo(2.0f, 0.2f, 6, 180f, 30f, Jugador.class);
+
+        this.agregarDrop(PocionDeAmatista.class, 1f);
     }
 }

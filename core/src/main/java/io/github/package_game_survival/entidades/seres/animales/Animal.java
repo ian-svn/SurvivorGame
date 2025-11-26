@@ -1,18 +1,20 @@
 package io.github.package_game_survival.entidades.seres.animales;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Array;
 import io.github.package_game_survival.algoritmos.EstrategiaMoverAleatorio;
 import io.github.package_game_survival.entidades.mapas.Escenario;
+import io.github.package_game_survival.entidades.objetos.Objeto;
 import io.github.package_game_survival.entidades.seres.SerVivo;
 import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
 import io.github.package_game_survival.interfaces.IMundoJuego;
-import io.github.package_game_survival.managers.Assets;
-import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.TooltipStandard;
 
 public abstract class Animal extends SerVivo {
@@ -21,45 +23,62 @@ public abstract class Animal extends SerVivo {
     protected EstrategiaMoverAleatorio estrategia;
     private Rectangle hitbox;
 
-    // Variables para controlar el FLIP (Espejado)
-    private Texture texturaSimple; // Guardamos la textura aquí
-    private float lastX; // Para saber hacia dónde se movió
-    private boolean mirandoDerecha = false; // Estado del flip
+    // Control visual
+    private Texture texturaSimple;
+    private float lastX;
+    private boolean mirandoDerecha = false;
 
-    // Constructor 1: Para Atlas completo (si usas uno real)
+    // --- SISTEMA DE DROPS ---
+    // Lista de CLASES de objetos que puede soltar (ej: Carne.class, Piedra.class)
+    protected Array<Class<? extends Objeto>> posiblesDrops;
+
     public Animal(String nombre, float x, float y, float ancho, float alto,
                   int vidaInicial, int vidaMaxima, int velocidad, int danio, TextureAtlas atlas) {
         super(nombre, x, y, ancho, alto, vidaInicial, vidaMaxima, velocidad, danio, atlas);
-        this.estrategia = null;
-        this.texturaSimple = null;
+        inicializarComunes(x);
     }
 
-    // Constructor 2: Para Textura simple (PNG) - Este es el que usas
     public Animal(String nombre, float x, float y, float ancho, float alto,
                   int vidaInicial, int vidaMaxima, int velocidad, int danio, Texture texture) {
-        // Pasamos el atlas falso al padre para que no crashee la lógica interna
-        super(nombre, x, y, ancho, alto, vidaInicial, vidaMaxima, velocidad, danio, crearAtlasDesdeTextura(texture));
-
+        super(nombre, x, y, ancho, alto, vidaInicial, vidaMaxima, velocidad, danio, (TextureAtlas) null); // null al padre
         this.texturaSimple = texture;
-        this.estrategia = null;
-        this.lastX = x;
+        inicializarComunes(x);
     }
 
-    /**
-     * Mantenemos esto SOLO para satisfacer al constructor de SerVivo.
-     * Ya no dependemos de esto para dibujar el flip, lo haremos manualmente en draw().
-     */
-    private static TextureAtlas crearAtlasDesdeTextura(Texture texture) {
-        TextureAtlas atlas = new TextureAtlas();
-        TextureRegion region = new TextureRegion(texture);
-        String[] claves = {
-            "Der1", "der2", "der3", "arriba", "arriba1", "abajo1", "abajo2",
-            "diagnalDer2", "diagnalDer3", "abajoIdle", "DerIdle", "diagonalDerIdle"
-        };
-        for (String clave : claves) {
-            atlas.addRegion(clave, region);
+    private void inicializarComunes(float x) {
+        this.estrategia = null;
+        this.lastX = x;
+        this.posiblesDrops = new Array<>();
+    }
+
+    // --- MÉTODO PARA SOLTAR ITEM AL MORIR ---
+    @Override
+    public void delete() {
+        super.delete(); // Se borra del mundo visual
+
+        if (mundo != null && posiblesDrops.notEmpty()) {
+            try {
+                // 1. Elegir un objeto random de la lista
+                Class<? extends Objeto> claseElegida = posiblesDrops.random();
+
+                // 2. Crear una NUEVA instancia de ese objeto en la posición del animal
+                // Asumimos que los objetos tienen constructor (float x, float y)
+                Objeto loot = claseElegida.getConstructor(float.class, float.class)
+                    .newInstance(getX(), getY());
+
+                // 3. Agregarlo al mundo
+                loot.agregarAlMundo(mundo);
+                if (mundo instanceof Escenario) {
+                    ((Escenario) mundo).getObjetos().add(loot);
+                }
+
+                Gdx.app.log("ANIMAL", "Dropeado: " + loot.getName());
+
+            } catch (Exception e) {
+                Gdx.app.error("ANIMAL", "Error al generar loot: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
-        return atlas;
     }
 
     @Override
@@ -77,60 +96,37 @@ public abstract class Animal extends SerVivo {
     @Override
     public void act(float delta) {
         super.act(delta);
-
-        // --- LÓGICA DE DETECCIÓN DE GIRO ---
         float diff = getX() - lastX;
+        if (diff > 0) mirandoDerecha = true;
+        else if (diff < 0) mirandoDerecha = false;
+        lastX = getX();
 
-        // Si se mueve a la derecha (diferencia positiva), activamos el flip
-        if (diff > 0) {
-            mirandoDerecha = true;
-        }
-        // Si se mueve a la izquierda (diferencia negativa), desactivamos el flip
-        else if (diff < 0) {
-            mirandoDerecha = false;
-        }
-
-        lastX = getX(); // Guardamos posición para el siguiente frame
-
-        if (estrategia != null) {
-            estrategia.actualizar(this, delta);
-        }
+        if (estrategia != null) estrategia.actualizar(this, delta);
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        // SI tenemos una textura simple (Vaca/Jabalí), dibujamos manualmente con Flip
         if (texturaSimple != null) {
             Color color = getColor();
             batch.setColor(color.r, color.g, color.b, color.a * parentAlpha);
-
-            // batch.draw con todos los argumentos para poder usar flipX
-            batch.draw(
-                texturaSimple,
-                getX(), getY(),
-                getOriginX(), getOriginY(),
-                getWidth(), getHeight(),
-                getScaleX(), getScaleY(),
-                getRotation(),
-                0, 0,
-                texturaSimple.getWidth(), texturaSimple.getHeight(),
-                mirandoDerecha, // flipX: true invierte la imagen (mira a la derecha)
-                false           // flipY
-            );
-
-            batch.setColor(Color.WHITE); // Restaurar color
+            batch.draw(texturaSimple, getX(), getY(), getOriginX(), getOriginY(),
+                getWidth(), getHeight(), getScaleX(), getScaleY(), getRotation(),
+                0, 0, texturaSimple.getWidth(), texturaSimple.getHeight(), mirandoDerecha, false);
+            batch.setColor(Color.WHITE);
         } else {
-            // Si es un animal con Atlas completo, usamos el dibujo normal del padre
             super.draw(batch, parentAlpha);
         }
     }
 
     @Override
     public Rectangle getRectColision() {
-        if (hitbox == null) {
-            hitbox = new Rectangle(getX(), getY(), getAncho(), getAlto()/2);
-        }
+        if (hitbox == null) hitbox = new Rectangle(getX(), getY(), getAncho(), getAlto()/2);
         hitbox.setPosition(getX(), getY());
         return hitbox;
+    }
+
+    // Método para que las hijas agreguen sus drops
+    protected void agregarDrop(Class<? extends Objeto> claseObjeto) {
+        this.posiblesDrops.add(claseObjeto);
     }
 }

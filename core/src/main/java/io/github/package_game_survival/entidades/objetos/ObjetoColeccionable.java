@@ -2,10 +2,7 @@ package io.github.package_game_survival.entidades.objetos;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.interfaces.IMundoJuego;
-import io.github.package_game_survival.managers.Assets;
-import io.github.package_game_survival.managers.PathManager;
 
 public class ObjetoColeccionable extends Objeto {
 
@@ -20,16 +17,14 @@ public class ObjetoColeccionable extends Objeto {
         if (getTooltip() != null) getTooltip().actualizarPosicion();
     }
 
+    // CORRECCIÓN: Usamos el draw del padre para que se vea la textura correcta (Palo, Piedra).
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        // Si quieres usar la textura del padre (GestorAnimacion), llama a super.draw(batch, parentAlpha)
-        // Si quieres forzar la poción:
-        batch.draw(Assets.get(PathManager.POCION_TEXTURE, Texture.class), getX(), getY(), getWidth(), getHeight());
+        super.draw(batch, parentAlpha);
     }
 
     @Override
     public void agregarAlMundo(IMundoJuego mundo) {
         mundo.agregarActor(this);
-        // Aquí podrías agregar tooltip si quisieras
     }
 }

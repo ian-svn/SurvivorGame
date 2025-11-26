@@ -23,6 +23,7 @@ public class Assets {
         manager.load(PathManager.PALO_TEXTURE, Texture.class);
         manager.load(PathManager.AGUA_TEXTURE, Texture.class);
         manager.load(PathManager.CARNE_TEXTURE, Texture.class);
+        manager.load(PathManager.CARNE_PODRIDA_TEXTURE, Texture.class);
         manager.load(PathManager.PIEDRA_TEXTURE, Texture.class);
 
         manager.load(PathManager.MENU_MUSIC, Music.class);

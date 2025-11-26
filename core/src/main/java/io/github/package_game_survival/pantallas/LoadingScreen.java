@@ -16,9 +16,9 @@ import io.github.package_game_survival.managers.PathManager;
 public class LoadingScreen implements Screen {
 
     private final MyGame game;
-    private SpriteBatch batch;
+private SpriteBatch batch;
     private Stage stage;
-    private Label label; // Actor de Scene2D
+    private Label label;
     private ShapeRenderer shapeRenderer;
     private ProgressBar progressBar;
 
