@@ -24,60 +24,65 @@ public class AtaqueAranazo extends AtaqueBase {
 
     @Override
     protected void ejecutarEfecto(SerVivo atacante, Vector2 destino, IMundoJuego mundo) {
-        // ... (Cálculo de vectores y spawn de EfectoVisual igual que antes) ...
         Vector2 centroAtacante = new Vector2(atacante.getCentroX(), atacante.getY() + atacante.getAlto()/2);
         Vector2 direccion = new Vector2(destino).sub(centroAtacante).nor();
         float angulo = direccion.angleDeg();
-        Vector2 posEfecto = new Vector2(centroAtacante).mulAdd(direccion, this.rango * 0.6f);
 
-        TextureAtlas atlas = Assets.get(PathManager.ARANAZO_ANIMATION, TextureAtlas.class);
-        if (atlas != null) {
-            EfectoVisual efecto = new EfectoVisual(atlas, "aranazo", posEfecto.x - 16, posEfecto.y - 16, 0.05f, angulo);
-            mundo.agregarActor(efecto);
-        }
-
+        // Creamos la Hitbox primero
         Polygon areaAtaque = new Polygon(new float[]{0, 0, rango, 0, rango, anchoArea, 0, anchoArea});
         areaAtaque.setOrigin(0, anchoArea / 2);
         areaAtaque.setPosition(centroAtacante.x, centroAtacante.y - (anchoArea/2));
         areaAtaque.setRotation(angulo);
 
-        // --- LÓGICA DE BÚSQUEDA ACTUALIZADA ---
+        // Preparamos la lista de objetivos
         Array<SerVivo> posiblesObjetivos = new Array<>();
-
         if (claseObjetivo.getSimpleName().equals("Jugador")) {
-            // Si el objetivo es matar al jugador
             if (mundo.getJugador() != null) posiblesObjetivos.add(mundo.getJugador());
-        }
-        else {
-            // Si el objetivo es SerVivo (General) o Enemigo
-            // 1. Agregamos Enemigos
-            if (mundo.getEnemigos() != null) {
-                posiblesObjetivos.addAll(mundo.getEnemigos());
-            }
-
-            // 2. Si la clase objetivo incluye animales (SerVivo o Animal), los agregamos
+        } else {
+            if (mundo.getEnemigos() != null) posiblesObjetivos.addAll(mundo.getEnemigos());
             if (claseObjetivo.isAssignableFrom(Animal.class) && mundo.getAnimales() != null) {
                 posiblesObjetivos.addAll(mundo.getAnimales());
             }
         }
 
-        // Procesar colisiones
-        for (SerVivo victima : posiblesObjetivos) {
-            if (victima == null) continue;
+        // --- LÓGICA DE POSICIONAMIENTO VISUAL ---
+        boolean huboImpacto = false; // Bandera para saber si le dimos a alguien
 
-            // Evitar que el jugador se pegue a sí mismo si usamos SerVivo.class
-            if (victima == atacante) continue;
+        for (SerVivo victima : posiblesObjetivos) {
+            if (victima == null || victima == atacante) continue;
 
             Polygon hitBoxVictima = new Polygon(new float[]{0,0, victima.getAncho(), 0, victima.getAncho(), victima.getAlto(), 0, victima.getAlto()});
             hitBoxVictima.setPosition(victima.getX(), victima.getY());
 
             if (Intersector.overlapConvexPolygons(areaAtaque, hitBoxVictima)) {
+                // 1. Aplicar daño y empuje
                 victima.alterarVida(-danio);
+                victima.recibirEmpuje(direccion.x * FUERZA_EMPUJE, direccion.y * FUERZA_EMPUJE);
 
-                float pushX = direccion.x * FUERZA_EMPUJE;
-                float pushY = direccion.y * FUERZA_EMPUJE;
-                victima.recibirEmpuje(pushX, pushY);
+                // 2. Dibujar el efecto SOBRE LA VÍCTIMA (solo el primero para no saturar)
+                if (!huboImpacto) {
+                    Vector2 posImpacto = new Vector2(victima.getCentroX(), victima.getY() + victima.getAlto()/2);
+                    spawnearEfectoVisual(mundo, posImpacto, angulo);
+                    huboImpacto = true;
+                }
             }
+        }
+
+        // 3. Si fallamos (Miss), dibujamos el efecto en el aire cerca del atacante
+        if (!huboImpacto) {
+            // Distancia fija corta (30px) para simular el "swing" al aire
+            Vector2 posMiss = new Vector2(centroAtacante).mulAdd(direccion, 30f);
+            spawnearEfectoVisual(mundo, posMiss, angulo);
+        }
+    }
+
+    // Método privado auxiliar para no repetir código de spawn
+    private void spawnearEfectoVisual(IMundoJuego mundo, Vector2 posicion, float angulo) {
+        TextureAtlas atlas = Assets.get(PathManager.ARANAZO_ANIMATION, TextureAtlas.class);
+        if (atlas != null) {
+            // Ajustamos -16 en X e Y para centrar la animación (asumiendo que es de 32x32)
+            EfectoVisual efecto = new EfectoVisual(atlas, "aranazo", posicion.x - 16, posicion.y - 16, 0.05f, angulo);
+            mundo.agregarActor(efecto);
         }
     }
 }

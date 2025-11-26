@@ -224,3 +224,8 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ### Fixed
 - Solucionado el bug de "enemigos fantasma" que seguían atacando tras morir.
 - Corregido NullPointerException en el `Jugador` al intentar acceder al Stage después de morir.
+
+## [0.11.1] - 2025-11-26
+### Changed
+- Las `pociones` curan inmediatamente al recogerlas.
+- La animación de `ataque` ahora aparece sobre el enemigo si acierta, o cerca del `jugador` si falla.

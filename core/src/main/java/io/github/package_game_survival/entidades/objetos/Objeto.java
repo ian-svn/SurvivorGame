@@ -12,17 +12,14 @@ public abstract class Objeto extends Entidad {
 
     private GestorAnimacion visual;
     private int puntos = 5;
-
-    // Optimización de memoria
     private Rectangle hitbox;
 
     public Objeto(String nombre, float x, float y, Texture texture){
         super(nombre, x, y, 32, 32);
-        // Ojo: Asegurate que texture no sea null
         if (texture != null) {
             this.visual = new GestorAnimacion(new TextureRegion(texture));
         } else {
-            this.visual = new GestorAnimacion(); // Constructor vacío o manejo de error
+            this.visual = new GestorAnimacion();
         }
     }
 
@@ -39,13 +36,11 @@ public abstract class Objeto extends Entidad {
     }
 
     public void adquirir() {
-        // FIX: Remover visualmente del stage al ser adquirido
         remove();
     }
 
     @Override
     public Rectangle getRectColision() {
-        // Lazy Init para no crear basura cada frame
         if (hitbox == null) {
             hitbox = new Rectangle(getX(), getY(), getAncho(), getAlto());
         }
@@ -53,7 +48,6 @@ public abstract class Objeto extends Entidad {
         return hitbox;
     }
 
-    // Obligamos a los hijos a implementar esto, o hacemos una base
     @Override
     public abstract void agregarAlMundo(IMundoJuego mundo);
 }

@@ -11,6 +11,7 @@ import com.badlogic.gdx.utils.Array;
 import io.github.package_game_survival.algoritmos.EstrategiaMoverAPunto;
 import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.entidades.objetos.Objeto;
+import io.github.package_game_survival.entidades.objetos.ObjetoConsumible;
 import io.github.package_game_survival.entidades.seres.SerVivo;
 import io.github.package_game_survival.entidades.seres.enemigos.Enemigo;
 import io.github.package_game_survival.habilidades.AtaqueAranazo;
@@ -141,9 +142,16 @@ public class Jugador extends SerVivo {
     @Override public Rectangle getRectColision() { return hitbox; }
 
     public void adquirirObjeto(Objeto objeto) {
-        inventario.add(objeto);
-        objeto.adquirir();
-        AudioManager.getControler().playSound("agarrarObjeto");
+
+        if (objeto instanceof ObjetoConsumible) {
+            ((ObjetoConsumible) objeto).consumir(this);
+        }
+        else {
+            inventario.add(objeto);
+            objeto.adquirir();
+        }
+
+        io.github.package_game_survival.managers.Audio.AudioManager.getControler().playSound("agarrarObjeto");
     }
 
     private void revisarRecoleccionObjetos() {
