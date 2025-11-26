@@ -229,3 +229,7 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ### Changed
 - Las `pociones` curan inmediatamente al recogerlas.
 - La animación de `ataque` ahora aparece sobre el enemigo si acierta, o cerca del `jugador` si falla.
+
+## [0.11.2] - 2025-11-26
+### Fixed
+- El `menu` del final del juego se arreglo.

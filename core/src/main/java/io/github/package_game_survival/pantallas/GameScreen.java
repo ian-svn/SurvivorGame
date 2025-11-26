@@ -29,6 +29,7 @@ import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.BrilloManager;
 import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.LabelStandard;
+
 public class GameScreen implements Screen {
 
     private final MyGame game;
@@ -133,7 +134,8 @@ public class GameScreen implements Screen {
         stageUI.draw();
 
         if (escenario.getGestorTiempo().isJuegoGanado()) {
-            terminarJuego("¡GANASTE!");
+            // CORREGIDO: Texto simple sin símbolos
+            terminarJuego("GANASTE");
         } else if (juegoTerminado) {
             jugador.setEstrategia(null);
         } else {
@@ -187,24 +189,41 @@ public class GameScreen implements Screen {
     }
 
     private void terminarJuego(String mensaje) {
+        // Limpiamos entidades del escenario
         for (Enemigo enemigo : escenario.getEnemigos()) enemigo.remove();
         for (Objeto objeto : escenario.getObjetos()) objeto.remove();
         for (Animal animal : escenario.getAnimales()) animal.remove();
+
         juegoTerminado = true;
+
         fondoOscuro.setVisible(true);
         fondoOscuro.toFront();
+
         labelFinJuego.setText(mensaje);
         labelFinJuego.setVisible(true);
         labelFinJuego.toFront();
+
         labelVolverMenu.setVisible(true);
         labelVolverMenu.toFront();
+
         centrarUI();
     }
 
     private void centrarUI() {
         fondoOscuro.setPosition(0, 0);
-        labelFinJuego.setPosition(ANCHO_MUNDO/2f - labelFinJuego.getPrefWidth()/2f, ALTO_MUNDO/2f);
-        labelVolverMenu.setPosition(ANCHO_MUNDO/2f - labelVolverMenu.getPrefWidth()/2f, ALTO_MUNDO/2f - 60);
+
+        // CORREGIDO: Mayor separación entre textos
+        // Subimos el texto de GANASTE/PERDISTE (+50px)
+        labelFinJuego.setPosition(
+            ANCHO_MUNDO/2f - labelFinJuego.getPrefWidth()/2f,
+            ALTO_MUNDO/2f + 50
+        );
+
+        // Bajamos el texto de instrucciones (-100px)
+        labelVolverMenu.setPosition(
+            ANCHO_MUNDO/2f - labelVolverMenu.getPrefWidth()/2f,
+            ALTO_MUNDO/2f - 100
+        );
     }
 
     @Override
@@ -224,7 +243,7 @@ public class GameScreen implements Screen {
     public void dispose() {
         stageMundo.dispose();
         stageUI.dispose();
-        if(hud != null) hud.dispose(); // Liberar HUD
+        if(hud != null) hud.dispose();
         if(escenario != null) escenario.dispose();
         AudioManager.getControler().stopMusic();
     }
