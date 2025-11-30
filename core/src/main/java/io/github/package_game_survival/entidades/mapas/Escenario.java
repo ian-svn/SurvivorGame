@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer; // Importante
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
@@ -22,6 +23,8 @@ import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
 import io.github.package_game_survival.interfaces.IMundoJuego;
 import io.github.package_game_survival.managers.BrilloManager;
 import io.github.package_game_survival.managers.GestorTiempo;
+import io.github.package_game_survival.managers.GestorSpawneo;
+import java.util.Comparator;
 
 public class Escenario implements IMundoJuego, Disposable {
 
@@ -30,6 +33,7 @@ public class Escenario implements IMundoJuego, Disposable {
     private final Jugador jugador;
 
     private final GestorTiempo gestorTiempo;
+    private final GestorSpawneo gestorSpawneo;
 
     private final Array<Bloque> bloques;
     private final Array<Enemigo> enemigos;
@@ -37,6 +41,12 @@ public class Escenario implements IMundoJuego, Disposable {
     private final Array<Objeto> objetos;
     private final Mapa mapa;
     private final Array<Rectangle> cacheRectangulosColision;
+
+    private final Comparator<Actor> comparadorProfundidad;
+
+    // Dimensiones reales del mundo
+    private float anchoMundo;
+    private float altoMundo;
 
     public Escenario(Stage stageMundo, Jugador jugador) {
         this.stageMundo = stageMundo;
@@ -49,20 +59,57 @@ public class Escenario implements IMundoJuego, Disposable {
         this.cacheRectangulosColision = new Array<>();
 
         this.mapa = new Mapa();
+
+        // --- CALCULAR TAMAÑO REAL DEL MAPA ---
+        calcularDimensionesMapa();
+
         this.gestorTiempo = new GestorTiempo();
 
-        inicializarEnemigos();
-        inicializarAnimales();
-        inicializarObjetos();
+        this.comparadorProfundidad = new Comparator<Actor>() {
+            @Override
+            public int compare(Actor a1, Actor a2) {
+                return Float.compare(a2.getY(), a1.getY());
+            }
+        };
+
+        inicializarObjetosFijos();
         inicializarBloquesDesdeMapa();
+
         agregarEntidadesAlStage();
+
+        // Le pasamos el tamaño real al GestorSpawneo
+        this.gestorSpawneo = new GestorSpawneo(this, anchoMundo, altoMundo);
+    }
+
+    private void calcularDimensionesMapa() {
+        TiledMap tiledMap = mapa.getMapa();
+        // Obtenemos la primera capa (suelo) para saber el tamaño
+        TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get(0);
+
+        // Ancho = Cantidad de Tiles * Tamaño del Tile (ej: 50 * 32 = 1600)
+        this.anchoMundo = layer.getWidth() * layer.getTileWidth();
+        this.altoMundo = layer.getHeight() * layer.getTileHeight();
+
+        //Gdx.app.log("ESCENARIO", "Mapa cargado: " + anchoMundo + "x" + altoMundo);
+    }
+
+    @Override
+    public GestorTiempo getGestorTiempo() {
+        return this.gestorTiempo;
     }
 
     public void renderConShader(OrthographicCamera camara, float delta) {
-        // 1. Actualizamos lógica de tiempo
         gestorTiempo.update(delta);
+        gestorSpawneo.update(delta);
 
-        // 2. Actualizamos el brillo global basado en la hora
+        // Limpieza de objetos expirados
+        for (int i = objetos.size - 1; i >= 0; i--) {
+            Objeto obj = objetos.get(i);
+            if (obj.isMarcadoParaBorrar()) {
+                objetos.removeIndex(i);
+            }
+        }
+
         float brilloActual = gestorTiempo.getFactorBrillo();
         BrilloManager.setBrillo(brilloActual);
 
@@ -70,7 +117,6 @@ public class Escenario implements IMundoJuego, Disposable {
         SpriteBatch batchShader = BrilloManager.getBatchShader();
         ShaderProgram shader = BrilloManager.getShader();
 
-        // --- Render al FBO ---
         fbo.begin();
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
@@ -82,29 +128,20 @@ public class Escenario implements IMundoJuego, Disposable {
         stageMundo.getBatch().setColor(1, 1, 1, 1);
 
         stageMundo.act(delta);
+        stageMundo.getActors().sort(comparadorProfundidad);
         stageMundo.draw();
 
         fbo.end();
 
-        // --- Render con Shader ---
         Texture tex = fbo.getColorBufferTexture();
-
-        // ✅ CRÍTICO: Usar matriz de proyección ortográfica simple para pantalla completa
         batchShader.getProjectionMatrix().setToOrtho2D(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         batchShader.setShader(shader);
         batchShader.begin();
-
-        // Pasamos el brillo actualizado al shader
         shader.setUniformf("u_brightness", BrilloManager.getBrillo());
-
         batchShader.setColor(1, 1, 1, 1);
-
-        // ✅ CRÍTICO: Dibujar en coordenadas de PANTALLA para cubrir toda la ventana
         batchShader.draw(tex, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight(), 0, 0, 1, 1);
-
         batchShader.end();
 
-        // --- UI ---
         if (stageUI != null) {
             stageUI.getViewport().apply();
             stageUI.act(delta);
@@ -135,22 +172,9 @@ public class Escenario implements IMundoJuego, Disposable {
         return cacheRectangulosColision;
     }
 
-    private void inicializarObjetos() {
-        objetos.add(new PocionDeAmatista(150, 1000));
-        objetos.add(new PocionDeAmatista(300, 700));
-        objetos.add(new PocionDeAmatista(360, 400));
-    }
-
-    private void inicializarAnimales() {
-        animales.add(new Vaca(300, 300));
-        animales.add(new Jabali(900, 300));
-        animales.add(new Vaca(750, 500));
-    }
-
-    private void inicializarEnemigos() {
-        enemigos.add(new InvasorArquero(250, 500));
-        enemigos.add(new InvasorMago(20, 10));
-        enemigos.add(new InvasorDeLaLuna(380, 100));
+    private void inicializarObjetosFijos() {
+        Cama cama = new Cama(400, 300);
+        objetos.add(cama);
     }
 
     private void inicializarBloquesDesdeMapa() {
@@ -180,14 +204,11 @@ public class Escenario implements IMundoJuego, Disposable {
 
     private void agregarEntidadesAlStage() {
         for (Bloque bloque : bloques) bloque.agregarAlMundo(this);
-        for (Enemigo enemigo : enemigos) enemigo.agregarAlMundo(this);
-        for (Animal animal : animales) animal.agregarAlMundo(this);
         for (Objeto objeto : objetos) objeto.agregarAlMundo(this);
         jugador.agregarAlMundo(this);
     }
 
     public OrthographicCamera getCamara() { return (OrthographicCamera) stageMundo.getCamera(); }
-    public GestorTiempo getGestorTiempo() { return gestorTiempo; }
 
     public void setStageUI(Stage stageUI) {
         this.stageUI = stageUI;

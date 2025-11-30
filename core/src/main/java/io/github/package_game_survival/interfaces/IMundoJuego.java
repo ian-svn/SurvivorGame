@@ -5,10 +5,11 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import io.github.package_game_survival.entidades.bloques.Bloque;
 import io.github.package_game_survival.entidades.objetos.Objeto;
-// IMPORTANTE: Importar Animal
 import io.github.package_game_survival.entidades.seres.animales.Animal;
 import io.github.package_game_survival.entidades.seres.enemigos.Enemigo;
 import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
+// IMPORTANTE:
+import io.github.package_game_survival.managers.GestorTiempo;
 
 public interface IMundoJuego {
     void agregarActor(Actor actor);
@@ -20,4 +21,5 @@ public interface IMundoJuego {
     Array<Objeto> getObjetos();
     Array<Rectangle> getRectangulosNoTransitables();
     Array<Animal> getAnimales();
+    GestorTiempo getGestorTiempo();
 }

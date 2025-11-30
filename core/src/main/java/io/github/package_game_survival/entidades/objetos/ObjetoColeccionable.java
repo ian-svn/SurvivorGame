@@ -7,7 +7,7 @@ import io.github.package_game_survival.interfaces.IMundoJuego;
 public class ObjetoColeccionable extends Objeto {
 
     public ObjetoColeccionable(String nombre, float x, float y, Texture texture) {
-        super(nombre, x, y, texture);
+        super(nombre, x, y, 32, 32, texture);
         setName(nombre);
     }
 
@@ -17,7 +17,6 @@ public class ObjetoColeccionable extends Objeto {
         if (getTooltip() != null) getTooltip().actualizarPosicion();
     }
 
-    // CORRECCIÓN: Usamos el draw del padre para que se vea la textura correcta (Palo, Piedra).
     @Override
     public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
@@ -26,5 +25,8 @@ public class ObjetoColeccionable extends Objeto {
     @Override
     public void agregarAlMundo(IMundoJuego mundo) {
         mundo.agregarActor(this);
+
+        // --- CAMBIO CLAVE ---
+        this.toBack();
     }
 }

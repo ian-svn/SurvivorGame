@@ -16,9 +16,14 @@ import io.github.package_game_survival.managers.GestorAnimacion;
 public abstract class SerVivo extends Entidad {
 
     private int vida;
-    private int vidaMinima = 0, vidaMaxima = 100;
+    private int vidaMinima = 0;
+    private int vidaMaxima = 100;
     private int velocidad;
     private int danio;
+
+    // --- NUEVO: LÍMITES (CAPS) ---
+    private final int LIMITE_DANIO = 60;
+    private final int LIMITE_VELOCIDAD = 150;
 
     protected IEstrategiaMovimiento estrategia;
     protected IAtaque habilidadPrincipal;
@@ -27,12 +32,10 @@ public abstract class SerVivo extends Entidad {
     private TextureAtlas atlas;
     private GestorAnimacion visual;
 
-    // Sistema de Daño
     private float tiempoHurt = 0f;
     private boolean isHurt = false;
     private final float DURACION_ROJO = 0.15f;
 
-    // --- NUEVO: Bandera para evitar muerte múltiple ---
     private boolean muerto = false;
 
     private final Rectangle rectAux = new Rectangle();
@@ -57,10 +60,30 @@ public abstract class SerVivo extends Entidad {
         }
     }
 
-    public void recibirEmpuje(float fuerzaX, float fuerzaY) {
-        // Si está muerto, no debería empujarse (opcional, pero queda mejor)
-        if (muerto) return;
+    // --- MÉTODOS MODIFICADOS CON LÍMITES ---
 
+    public void alterarDanio(int cantidad) {
+        this.danio += cantidad;
+        // Si baja de 0, queda en 0. Si supera 60, se queda en 60.
+        if (this.danio < 0) this.danio = 0;
+        if (this.danio > LIMITE_DANIO) this.danio = LIMITE_DANIO;
+    }
+
+    public void alterarVelocidad(int cantidad) {
+        this.velocidad += cantidad;
+        // Si baja de 0, queda en 0. Si supera 150, se queda en 150.
+        if (this.velocidad < 0) this.velocidad = 0;
+        if (this.velocidad > LIMITE_VELOCIDAD) this.velocidad = LIMITE_VELOCIDAD;
+    }
+
+    public void aumentarVidaMaxima(int cantidad) {
+        this.vidaMaxima += cantidad;
+        this.vida += cantidad;
+    }
+    // ----------------------------------------
+
+    public void recibirEmpuje(float fuerzaX, float fuerzaY) {
+        if (muerto) return;
         float oldX = getX();
         moveBy(fuerzaX, 0);
         if (colisionaConMundo()) setX(oldX);
@@ -71,7 +94,11 @@ public abstract class SerVivo extends Entidad {
 
     private boolean colisionaConMundo() {
         if (mundo == null) return false;
-        rectAux.set(getX(), getY(), getWidth(), getHeight());
+        float w = getWidth() * 0.6f;
+        float h = getHeight() * 0.4f;
+        float x = getX() + (getWidth() - w) / 2f;
+        float y = getY();
+        rectAux.set(x, y, w, h);
         for (Rectangle bloque : mundo.getRectangulosNoTransitables()) {
             if (rectAux.overlaps(bloque)) return true;
         }
@@ -81,25 +108,18 @@ public abstract class SerVivo extends Entidad {
     public void setMundo(IMundoJuego mundo) { this.mundo = mundo; }
 
     public void alterarVida(int cantidad) {
-        // --- CORRECCIÓN PRINCIPAL ---
-        // Si ya está muerto, ignoramos cualquier daño extra.
-        // Esto evita que suelte items infinitos o se procese la muerte dos veces.
         if (muerto) return;
-
         this.vida += cantidad;
-
         if (cantidad < 0) {
             setColor(Color.RED);
             isHurt = true;
             tiempoHurt = DURACION_ROJO;
         }
-
         if (this.vida < vidaMinima) this.vida = vidaMinima;
         else if (this.vida > vidaMaxima) this.vida = vidaMaxima;
-
         if (vida <= vidaMinima) {
-            muerto = true; // Marcamos como muerto
-            delete();      // Ejecutamos la limpieza (drops, etc.) UNA SOLA VEZ
+            muerto = true;
+            delete();
         }
     }
 
@@ -108,8 +128,6 @@ public abstract class SerVivo extends Entidad {
     @Override
     public void act(float delta) {
         super.act(delta);
-
-        // Si está muerto, cortamos lógica inmediatamente
         if (muerto) return;
 
         if (habilidadPrincipal != null) habilidadPrincipal.update(delta);
@@ -134,7 +152,6 @@ public abstract class SerVivo extends Entidad {
     public void draw(Batch batch, float parentAlpha) {
         TextureRegion currentFrame = this.visual.getFrame();
         if (currentFrame == null) return;
-
         Color color = getColor();
         batch.setColor(color.r, color.g, color.b, color.a * parentAlpha);
         batch.draw(currentFrame, getX(), getY(), getWidth(), getHeight());
@@ -161,8 +178,8 @@ public abstract class SerVivo extends Entidad {
         }
     }
 
-    // Getters y Setters
     public int getVida() { return vida; }
+    public int getVidaMaxima() { return vidaMaxima; }
     public float getCentroX() { return getX() + getWidth() / 2f; }
     public int getVelocidad() { return velocidad; }
     public void setVelocidad(int velocidad) { this.velocidad = velocidad; }

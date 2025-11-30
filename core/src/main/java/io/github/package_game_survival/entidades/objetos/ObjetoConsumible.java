@@ -12,14 +12,24 @@ public abstract class ObjetoConsumible extends Objeto implements Consumible {
     private int vidaCurada;
     private int hambreSaciada;
     private int sedSaciada;
+
+    // Bonificadores
+    private int bonoDanio;
+    private int bonoVelocidad;
+    private int bonoVidaMaxima; // NUEVO
+
     private boolean consumido;
 
     public ObjetoConsumible(String nombre, float x, float y, Texture texture,
-                            int vidaCurada, int hambreSaciada, int sedSaciada) {
-        super(nombre, x, y, texture);
+                            int vidaCurada, int hambreSaciada, int sedSaciada,
+                            int bonoDanio, int bonoVelocidad, int bonoVidaMaxima) { // NUEVO PARÁMETRO
+        super(nombre, x, y, 32, 32, texture);
         this.vidaCurada = vidaCurada;
         this.hambreSaciada = hambreSaciada;
         this.sedSaciada = sedSaciada;
+        this.bonoDanio = bonoDanio;
+        this.bonoVelocidad = bonoVelocidad;
+        this.bonoVidaMaxima = bonoVidaMaxima;
         this.consumido = false;
         setName(nombre);
     }
@@ -30,7 +40,6 @@ public abstract class ObjetoConsumible extends Objeto implements Consumible {
         if (getTooltip() != null) getTooltip().actualizarPosicion();
     }
 
-    // CORRECCIÓN: Usamos el draw del padre para que se vea la textura correcta (Carne, Agua), no siempre Poción.
     @Override
     public void draw(Batch batch, float parentAlpha) {
         super.draw(batch, parentAlpha);
@@ -40,6 +49,11 @@ public abstract class ObjetoConsumible extends Objeto implements Consumible {
     public void consumir(Jugador jugador) {
         if(!consumido) {
             jugador.alterarVida(vidaCurada);
+
+            if (bonoDanio != 0) jugador.alterarDanio(bonoDanio);
+            if (bonoVelocidad != 0) jugador.alterarVelocidad(bonoVelocidad);
+            if (bonoVidaMaxima != 0) jugador.aumentarVidaMaxima(bonoVidaMaxima);
+
             consumido = true;
             adquirir();
         }
@@ -48,10 +62,14 @@ public abstract class ObjetoConsumible extends Objeto implements Consumible {
     @Override
     public void agregarAlMundo(IMundoJuego mundo) {
         mundo.agregarActor(this);
+        this.toBack();
         if (mundo instanceof Escenario) {
-            instanciarTooltip(new TooltipStandard(getName() + "\n" +
-                "HP: " + this.vidaCurada + " | Hambre: " + this.hambreSaciada,
-                this, (Escenario) mundo));
+            String info = getName() + "\nHP: " + vidaCurada;
+            if (bonoVidaMaxima != 0) info += " | MaxHP: +" + bonoVidaMaxima;
+            if (bonoDanio != 0) info += " | Dmg: +" + bonoDanio;
+            if (bonoVelocidad != 0) info += " | Spd: +" + bonoVelocidad;
+
+            instanciarTooltip(new TooltipStandard(info, this, (Escenario) mundo));
         }
     }
 }

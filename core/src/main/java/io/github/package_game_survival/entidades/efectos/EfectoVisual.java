@@ -38,7 +38,7 @@ public class EfectoVisual extends Entidad {
         }
 
         if (regions.isEmpty()) {
-            Gdx.app.error("EFECTO_VISUAL", "¡ERROR! No se encontró la textura: " + regionName);
+            //Gdx.app.error("EFECTO_VISUAL", "¡ERROR! No se encontró la textura: " + regionName);
             this.animacion = null;
         } else {
             this.animacion = new Animation<>(frameDuration, regions, Animation.PlayMode.NORMAL);

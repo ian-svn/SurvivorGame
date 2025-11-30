@@ -45,6 +45,7 @@ public final class PathManager {
 
     public static final String VACA_TEXTURE_ATLAS = "sprites/vaca.png";
     public static final String JABALI_TEXTURE_ATLAS = "sprites/jabali.png";
+    public static final String CAMA_TEXTURE = "sprites/cama.png";
 
     public static final String MAPA_BOSQUE = "mapas/bosque/tilemap_bosqueGrande.tmx";
 

@@ -72,10 +72,10 @@ public abstract class Animal extends SerVivo {
                     ((Escenario) mundo).getObjetos().add(loot);
                 }
 
-                Gdx.app.log("ANIMAL", "Dropeado: " + loot.getName());
+                //Gdx.app.log("ANIMAL", "Dropeado: " + loot.getName());
 
             } catch (Exception e) {
-                Gdx.app.error("ANIMAL", "Error al generar loot: " + e.getMessage());
+                //Gdx.app.error("ANIMAL", "Error al generar loot: " + e.getMessage());
                 e.printStackTrace();
             }
         }

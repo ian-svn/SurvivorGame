@@ -79,7 +79,7 @@ public class OptionsScreen implements Screen {
                 game.getViewport().update(displayMode.width, displayMode.height, true);
                 BrilloManager.redimensionar(displayMode.width, displayMode.height);
 
-                Gdx.app.log("OptionsScreen", "Pantalla completa activada: " + displayMode.width + "x" + displayMode.height);
+                //Gdx.app.log("OptionsScreen", "Pantalla completa activada: " + displayMode.width + "x" + displayMode.height);
             }
         });
 
@@ -94,7 +94,7 @@ public class OptionsScreen implements Screen {
                 game.getViewport().update(1280, 720, true);
                 BrilloManager.redimensionar(1280, 720);
 
-                Gdx.app.log("OptionsScreen", "Modo ventana activado: 1280x720");
+                //Gdx.app.log("OptionsScreen", "Modo ventana activado: 1280x720");
             }
         });
 

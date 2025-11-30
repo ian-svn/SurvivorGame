@@ -11,15 +11,15 @@ import io.github.package_game_survival.managers.PathManager;
 public class InvasorDeLaLuna extends Enemigo {
 
     public InvasorDeLaLuna(float x, float y) {
-        super("Invasor De La Luna", x, y, 30, 40, 120,
-            100, 45, 20,
+        super("Invasor De La Luna", x, y, 30, 40, 140,
+            140, 45, 20,
             Assets.get(PathManager.ENEMIGO_ATLAS, TextureAtlas.class)
         );
 
         this.rangoAtaque = 45f;
-        this.habilidadPrincipal = new AtaqueAranazo(1.5f, 0.5f, 12, 45f, 40f, Jugador.class);
+        this.habilidadPrincipal = new AtaqueAranazo(1.5f, 1f, 12, 45f, 40f, Jugador.class);
 
-        this.agregarDrop(CarnePodrida.class, 0.2f);
-        this.agregarDrop(Carne.class, 1f);
+        this.agregarDrop(CarnePodrida.class, 0.75f);
+        this.agregarDrop(Carne.class, 0.25f);
     }
 }

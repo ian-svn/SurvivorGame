@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import io.github.package_game_survival.algoritmos.EstrategiaMoverAPunto;
 import io.github.package_game_survival.entidades.mapas.Escenario;
+import io.github.package_game_survival.entidades.objetos.Cama;
 import io.github.package_game_survival.entidades.objetos.Objeto;
 import io.github.package_game_survival.entidades.objetos.ObjetoConsumible;
 import io.github.package_game_survival.entidades.seres.SerVivo;
@@ -18,6 +19,7 @@ import io.github.package_game_survival.habilidades.AtaqueAranazo;
 import io.github.package_game_survival.interfaces.IMundoJuego;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.Audio.AudioManager;
+import io.github.package_game_survival.managers.GestorTiempo;
 import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.TooltipStandard;
 
@@ -26,20 +28,20 @@ public class Jugador extends SerVivo {
     private final Array<Objeto> inventario = new Array<>();
     private final Rectangle hitbox;
 
-    // --- NUEVO: Slot seleccionado del inventario (0 al 8) ---
     private int slotSeleccionado = 0;
-
     private float tiempoUltimoDañoContacto = 0f;
     private static final float COOLDOWN_DANO_CONTACTO = 1.0f;
 
     private final Vector3 tempVecInput = new Vector3();
     private final Vector2 tempDirMovimiento = new Vector2();
     private final Vector2 tempDestino = new Vector2();
+    private final Rectangle rectDrop = new Rectangle();
 
-    private static final float VELOCIDAD_MOVIMIENTO = 120f;
+    // (Eliminada la constante VELOCIDAD_MOVIMIENTO fija)
 
     public Jugador(String nombre, float x, float y) {
-        super(nombre, x, y, 24, 40, 100, 100, 80, 20,
+        // CAMBIO: Pasamos 120 como velocidad base (antes era 80)
+        super(nombre, x, y, 24, 40, 100, 100, 120, 20,
             Assets.get(PathManager.PLAYER_ATLAS, TextureAtlas.class));
 
         this.hitbox = new Rectangle(x, y, 1, 1);
@@ -63,17 +65,20 @@ public class Jugador extends SerVivo {
         Camera cam = getStage().getCamera();
 
         gestionarCombate(cam);
-        gestionarInventario(); // NUEVO: Control de teclas 1-9 y E
-        moverse(delta, cam);
 
-        revisarRecoleccionObjetos();
+        boolean interactuoConMundo = revisarRecoleccionObjetos();
+        if (!interactuoConMundo) {
+            gestionarInventario(cam);
+        }
+
+        moverse(delta, cam);
         revisarChoqueEnemigo(delta);
 
         if (getTooltip() != null) getTooltip().actualizarPosicion();
     }
 
     private void gestionarCombate(Camera cam) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
             tempVecInput.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             cam.unproject(tempVecInput);
             Vector2 destinoMouse = new Vector2(tempVecInput.x, tempVecInput.y);
@@ -81,9 +86,7 @@ public class Jugador extends SerVivo {
         }
     }
 
-    // --- NUEVO MÉTODO: GESTIÓN TIPO MINECRAFT ---
-    private void gestionarInventario() {
-        // Selección de Slots (1 al 9)
+    private void gestionarInventario(Camera cam) {
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) slotSeleccionado = 0;
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) slotSeleccionado = 1;
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) slotSeleccionado = 2;
@@ -94,27 +97,59 @@ public class Jugador extends SerVivo {
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_8)) slotSeleccionado = 7;
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_9)) slotSeleccionado = 8;
 
-        // Usar objeto con 'E'
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
             usarObjetoSeleccionado();
         }
+
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+            tirarObjetoSeleccionado(cam);
+        }
     }
 
-    private void usarObjetoSeleccionado() {
-        // Verificamos si el slot es válido (si tenemos un objeto ahí)
+    private void tirarObjetoSeleccionado(Camera cam) {
         if (slotSeleccionado < inventario.size) {
             Objeto objeto = inventario.get(slotSeleccionado);
 
-            if (objeto instanceof ObjetoConsumible) {
-                // 1. Consumir efecto (curar)
-                ((ObjetoConsumible) objeto).consumir(this);
+            tempVecInput.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+            cam.unproject(tempVecInput);
 
-                // 2. Eliminar del inventario
-                inventario.removeIndex(slotSeleccionado);
+            Vector2 mousePos = new Vector2(tempVecInput.x, tempVecInput.y);
+            Vector2 miPos = new Vector2(getX() + getWidth()/2, getY() + getHeight()/2);
 
-                Gdx.app.log("INVENTARIO", "Consumido: " + objeto.getName());
+            Vector2 direccion = mousePos.sub(miPos).nor();
+            Vector2 destinoDrop = new Vector2(miPos).mulAdd(direccion, 50f);
+
+            if (esPosicionValidaParaDrop(destinoDrop.x, destinoDrop.y, objeto.getWidth(), objeto.getHeight())) {
+                objeto.setPosition(destinoDrop.x, destinoDrop.y);
             } else {
-                Gdx.app.log("INVENTARIO", "Este objeto no se puede comer: " + objeto.getName());
+                objeto.setPosition(getX(), getY());
+            }
+
+            objeto.reiniciarTiempoVida();
+            objeto.agregarAlMundo(mundo);
+            mundo.getObjetos().add(objeto);
+
+            inventario.removeIndex(slotSeleccionado);
+        }
+    }
+
+    private boolean esPosicionValidaParaDrop(float x, float y, float w, float h) {
+        rectDrop.set(x, y, w, h);
+        for (Rectangle bloque : mundo.getRectangulosNoTransitables()) {
+            if (rectDrop.overlaps(bloque)) return false;
+        }
+        return true;
+    }
+
+    private void usarObjetoSeleccionado() {
+        if (slotSeleccionado < inventario.size) {
+            Objeto objeto = inventario.get(slotSeleccionado);
+            if (objeto instanceof ObjetoConsumible) {
+                ((ObjetoConsumible) objeto).consumir(this);
+                inventario.removeIndex(slotSeleccionado);
+                //Gdx.app.log("INVENTARIO", "Consumido: " + objeto.getName());
+            } else {
+                //Gdx.app.log("INVENTARIO", "Este objeto no se puede comer: " + objeto.getName());
             }
         }
     }
@@ -139,7 +174,11 @@ public class Jugador extends SerVivo {
 
         if (dx != 0 || dy != 0) {
             estrategia = null;
-            tempDirMovimiento.set(dx, dy).nor().scl(VELOCIDAD_MOVIMIENTO * delta);
+
+            // --- CAMBIO CLAVE: USAMOS getVelocidad() ---
+            // Esto permite que las pociones afecten la velocidad real de movimiento
+            tempDirMovimiento.set(dx, dy).nor().scl(getVelocidad() * delta);
+
             moveBy(tempDirMovimiento.x, tempDirMovimiento.y);
             if (mundo != null && colisionaConBloqueNoTransitable()) setPosition(oldX, oldY);
         } else if (estrategia != null) {
@@ -155,8 +194,14 @@ public class Jugador extends SerVivo {
 
     private boolean colisionaConBloqueNoTransitable() {
         if (mundo == null) return false;
-        float centerX = getX() + (getWidth() / 2) - (hitbox.width / 2);
-        hitbox.setPosition(centerX, getY());
+
+        float w = getWidth() * 0.4f;
+        float h = getHeight() * 0.2f;
+        float x = getX() + (getWidth() - w) / 2f;
+        float y = getY();
+
+        hitbox.set(x, y, w, h);
+
         for (Rectangle bloque : mundo.getRectangulosNoTransitables()) {
             if (hitbox.overlaps(bloque)) return true;
         }
@@ -165,37 +210,51 @@ public class Jugador extends SerVivo {
 
     @Override public void setPosition(float x, float y) {
         super.setPosition(x, y);
-        float centerX = getX() + (getWidth() / 2) - (hitbox.width / 2);
-        hitbox.setPosition(centerX, getY());
     }
     @Override public void moveBy(float x, float y) {
         super.moveBy(x, y);
-        hitbox.x += x; hitbox.y += y;
     }
-    @Override public Rectangle getRectColision() { return hitbox; }
 
-    // --- CORRECCIÓN: RECOLECCIÓN ESTILO MINECRAFT ---
+    @Override public Rectangle getRectColision() {
+        hitbox.set(getX() + getWidth()*0.1f, getY(), getWidth()*0.8f, getHeight()*0.8f);
+        return hitbox;
+    }
+
     public void adquirirObjeto(Objeto objeto) {
-        // Ahora TODO va al inventario primero.
-        // Ya no consumimos automáticamente.
         inventario.add(objeto);
-
-        // Lo quitamos del suelo (del Stage)
         objeto.adquirir();
-
         AudioManager.getControler().playSound("agarrarObjeto");
     }
 
-    private void revisarRecoleccionObjetos() {
-        if (mundo == null) return;
+    private boolean revisarRecoleccionObjetos() {
+        if (mundo == null) return false;
         Array<Objeto> objetosMundo = mundo.getObjetos();
+        boolean accionRealizada = false;
+
         for (int i = objetosMundo.size - 1; i >= 0; i--) {
             Objeto objeto = objetosMundo.get(i);
+
             if (getRectColision().overlaps(objeto.getRectColision())) {
+
+                if (objeto instanceof Cama) {
+                    if (Gdx.input.isKeyJustPressed(Input.Keys.E)) {
+                        GestorTiempo tiempo = mundo.getGestorTiempo();
+                        if (tiempo.esDeNoche()) {
+                            Gdx.app.log("CAMA", "Ya es de noche, no puedes dormir.");
+                        } else {
+                            tiempo.hacerDeNoche();
+                            Gdx.app.log("CAMA", "Durmiendo... Zzz...");
+                            accionRealizada = true;
+                        }
+                    }
+                    continue;
+                }
+
                 adquirirObjeto(objeto);
                 objetosMundo.removeIndex(i);
             }
         }
+        return accionRealizada;
     }
 
     private void revisarChoqueEnemigo(float delta) {

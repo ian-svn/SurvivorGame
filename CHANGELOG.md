@@ -244,3 +244,27 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 - Sistema de inventario para consumibles implementado en el `HUD` y el consumo de los mismos.
 - Ahora las `Vacas` y `Jabalis` tiran carne en el piso para recoger al igual que las `Pociones`.
 - `Carne Podrida` que saca vida al comer y la tiran los enemigos.
+
+## [0.13.0] - 2025-11-30
+### Added
+- Sistema de `estadísticas` dinámicas para el `Jugador` (Daño y Velocidad) con límites máximos.
+- Tabla de `estadísticas` en el `HUD` visible manteniendo la tecla TAB.
+- Progresión de dificultad: los `Enemigos` ganan +20 de Vida Máxima por cada día que pasa.
+- Mecánica de la `Cama`: permite saltar a la noche (20:00) si se interactúa con E, pero solo si es de día.
+- Despawn de `objetos`: los ítems en el suelo desaparecen a los 60 segundos (titilan los últimos 10s).
+
+### Changed
+- Balanceo del ciclo de tiempo: el `Día` dura 1 minuto real y la `Noche` 2 minutos reales.
+- Reducción de la hitbox de movimiento del `Jugador` a solo los pies para evitar trabarse en bloques.
+- Los `Enemigos` ahora se queman al amanecer hasta morir y no sueltan loot si mueren por el sol.
+- Ajuste de probabilidad de drops: 50% nada, 37.5% `CarnePodrida`, 12.5% Carne.
+- Los `consumibles` ahora otorgan bonificaciones de estadísticas (+Daño, +Velocidad, +VidaMáxima).
+- Ciclo Día/Noche Ajustado:
+    Día: 1 minuto real.
+    Noche: 2 minutos reales (mayor duración de combate).
+    Sistema de Oleadas: Los enemigos aparecen en 5 oleadas distribuidas equitativamente durante la noche.
+
+### Fixed
+- Implementación de `Z-Sorting` para que los `actores` se dibujen correctamente según su profundidad (eje Y).
+- Spawn seguro: el juego inicia el Día 1 sin `enemigos`, solo con `animales` y recursos cercanos.
+- Corrección de spawneo: `enemigos` y `objetos` ya no aparecen fuera del mapa ni sobre bloques sólidos.

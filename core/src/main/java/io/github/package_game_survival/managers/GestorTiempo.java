@@ -20,10 +20,26 @@ public class GestorTiempo {
     private Table tablaUI;
 
     private boolean juegoGanado = false;
-    private final int DIA_FINAL = 4;
+
+    // --- CAMBIO: AHORA SON 5 DÍAS JUGABLES (Ganas al llegar al día 6) ---
+    private final int DIA_FINAL = 6;
 
     private static final float BRILLO_MAXIMO = 1.0f;
-    private static final float BRILLO_MINIMO = 0.2f;
+    private static final float BRILLO_MINIMO = 0.5f;
+
+    // Horarios
+    private static final int HORA_AMANECER = 5;
+    private static final int HORA_ANOCHECER = 20;
+
+    // Tiempos reales
+    private static final float DURACION_REAL_DIA = 60f;   // 1 minuto
+    private static final float DURACION_REAL_NOCHE = 120f; // 2 minutos
+
+    private static final int MINUTOS_JUEGO_DIA = (HORA_ANOCHECER - HORA_AMANECER) * 60;
+    private static final int MINUTOS_JUEGO_NOCHE = (24 - (HORA_ANOCHECER - HORA_AMANECER)) * 60;
+
+    private static final float SEG_POR_MIN_DIA = DURACION_REAL_DIA / MINUTOS_JUEGO_DIA;
+    private static final float SEG_POR_MIN_NOCHE = DURACION_REAL_NOCHE / MINUTOS_JUEGO_NOCHE;
 
     private static final float HORA_AMANECER_INICIO = 5f;
     private static final float HORA_AMANECER_FIN = 9f;
@@ -51,7 +67,6 @@ public class GestorTiempo {
 
         tablaUI = new Table();
         tablaUI.setFillParent(true);
-
         tablaUI.top().left();
 
         tablaUI.add(labelReloj).padTop(10).padLeft(20).row();
@@ -65,15 +80,17 @@ public class GestorTiempo {
     public void update(float delta) {
         if (juegoGanado) return;
 
-        float velocidad = 1.0f;
+        float multiplicadorVelocidad = 1.0f;
         if (Gdx.input.isKeyPressed(Input.Keys.T)) {
-            velocidad = 200.0f;
+            multiplicadorVelocidad = 50.0f;
         }
 
-        acumuladorTiempo += delta * velocidad;
+        acumuladorTiempo += delta * multiplicadorVelocidad;
 
-        while (acumuladorTiempo >= 1.0f) {
-            acumuladorTiempo -= 1.0f;
+        float umbralMinuto = esDeNoche() ? SEG_POR_MIN_NOCHE : SEG_POR_MIN_DIA;
+
+        while (acumuladorTiempo >= umbralMinuto) {
+            acumuladorTiempo -= umbralMinuto;
             avanzarMinuto();
         }
     }
@@ -89,6 +106,16 @@ public class GestorTiempo {
                 verificarFinJuego();
             }
         }
+        actualizarTextoLabels();
+    }
+
+    public boolean esDeNoche() {
+        return hora >= HORA_ANOCHECER || hora < HORA_AMANECER;
+    }
+
+    public void hacerDeNoche() {
+        this.hora = 20;
+        this.minuto = 0;
         actualizarTextoLabels();
     }
 
@@ -124,4 +151,5 @@ public class GestorTiempo {
 
     public boolean isJuegoGanado() { return juegoGanado; }
     public int getHora() { return hora; }
+    public int getDia() { return dia; }
 }

@@ -24,8 +24,6 @@ public class MyGame extends Game {
     public void create() {
         BrilloManager.inicializar();
 
-
-
         AudioManager.getControler().loadMusic("menuMusic","sounds/MenuTheme.mp3");
         AudioManager.getControler().playMusic("menuMusic",true);
         AudioManager.getControler().setVolume(20);

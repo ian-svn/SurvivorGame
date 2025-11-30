@@ -116,7 +116,7 @@ public class GameScreen implements Screen {
             if (frames.size > 0)
                 clickAnimation = new Animation<>(0.08f, frames, Animation.PlayMode.NORMAL);
         } catch (Exception e) {
-            Gdx.app.error("GameScreen", "Error al cargar animacion de clic", e);
+            //Gdx.app.error("GameScreen", "Error al cargar animacion de clic", e);
         }
     }
 
@@ -235,7 +235,7 @@ public class GameScreen implements Screen {
         BrilloManager.redimensionar(width, height);
 
         camara.update();
-        Gdx.app.log("GameScreen", "Redimensionado a: " + width + "x" + height);
+        //Gdx.app.log("GameScreen", "Redimensionado a: " + width + "x" + height);
     }
 
     @Override

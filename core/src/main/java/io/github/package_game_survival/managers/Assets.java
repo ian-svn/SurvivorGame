@@ -25,6 +25,8 @@ public class Assets {
         manager.load(PathManager.CARNE_TEXTURE, Texture.class);
         manager.load(PathManager.CARNE_PODRIDA_TEXTURE, Texture.class);
         manager.load(PathManager.PIEDRA_TEXTURE, Texture.class);
+        manager.load(PathManager.PIEDRA_TEXTURE, Texture.class);
+        manager.load(PathManager.CAMA_TEXTURE, Texture.class);
 
         manager.load(PathManager.MENU_MUSIC, Music.class);
         manager.load(PathManager.GAME_MUSIC, Music.class);
