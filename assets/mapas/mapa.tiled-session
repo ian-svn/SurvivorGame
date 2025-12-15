@@ -3,11 +3,11 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "bosque/tileset_bosque.tsx",
+    "activeFile": "bosque/tilemap_bosque.tmx",
     "expandedProjectPaths": [
         "desierto",
-        "bosque",
         ".",
+        "bosque",
         "nieve"
     ],
     "fileStates": {
@@ -15,8 +15,8 @@
             "scale": 1.056875,
             "selectedLayer": 1,
             "viewCenter": {
-                "x": 934.8314606741574,
-                "y": 511.886457717327
+                "x": 418.214074512123,
+                "y": 297.10230632761676
             }
         },
         "bosque/tileset_bosque.tsx": {
@@ -89,7 +89,8 @@
     "map.lastUsedExportFilter": "Todos los archivos (*)",
     "map.lastUsedFormat": "tmx",
     "openFiles": [
-        "bosque/tileset_bosque.tsx"
+        "bosque/tileset_bosque.tsx",
+        "bosque/tilemap_bosque.tmx"
     ],
     "project": "mapa.tiled-project",
     "property.type": "int",

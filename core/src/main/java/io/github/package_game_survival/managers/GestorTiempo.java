@@ -13,15 +13,13 @@ public class GestorTiempo {
     private int dia;
     private int hora;
     private int minuto;
-    private float acumuladorTiempo;
+    private float acumuladorTiempo; // Cuenta cuánto falta para el siguiente minuto de juego
 
-    private LabelStandard labelReloj;
+    private LabelStandard labelReloj; // Ahora mostrará la cuenta regresiva
     private LabelStandard labelDia;
     private Table tablaUI;
 
     private boolean juegoGanado = false;
-
-    // --- CAMBIO: AHORA SON 5 DÍAS JUGABLES (Ganas al llegar al día 6) ---
     private final int DIA_FINAL = 6;
 
     private static final float BRILLO_MAXIMO = 1.0f;
@@ -38,9 +36,11 @@ public class GestorTiempo {
     private static final int MINUTOS_JUEGO_DIA = (HORA_ANOCHECER - HORA_AMANECER) * 60;
     private static final int MINUTOS_JUEGO_NOCHE = (24 - (HORA_ANOCHECER - HORA_AMANECER)) * 60;
 
+    // Cuántos segundos reales dura 1 minuto del juego
     private static final float SEG_POR_MIN_DIA = DURACION_REAL_DIA / MINUTOS_JUEGO_DIA;
     private static final float SEG_POR_MIN_NOCHE = DURACION_REAL_NOCHE / MINUTOS_JUEGO_NOCHE;
 
+    // Transiciones visuales (Shader)
     private static final float HORA_AMANECER_INICIO = 5f;
     private static final float HORA_AMANECER_FIN = 9f;
     private static final float HORA_ATARDECER_INICIO = 18f;
@@ -53,16 +53,17 @@ public class GestorTiempo {
         this.acumuladorTiempo = 0f;
 
         inicializarUI();
+        actualizarTextoLabels(); // Actualizar texto inicial
     }
 
     private void inicializarUI() {
-        labelReloj = new LabelStandard("12:00");
+        labelReloj = new LabelStandard(""); // Se llena dinámicamente
         labelDia = new LabelStandard("Dia 1");
 
         labelReloj.setAlignment(Align.left);
         labelDia.setAlignment(Align.left);
 
-        labelReloj.setFontScale(1f);
+        labelReloj.setFontScale(0.9f); // Un poco más chico para que entre el texto largo
         labelDia.setFontScale(1f);
 
         tablaUI = new Table();
@@ -93,6 +94,10 @@ public class GestorTiempo {
             acumuladorTiempo -= umbralMinuto;
             avanzarMinuto();
         }
+
+        // Llamamos a actualizar texto en cada frame para que los segundos bajen fluidos
+        // aunque no haya cambiado el minuto del juego.
+        actualizarTextoLabels();
     }
 
     private void avanzarMinuto() {
@@ -106,7 +111,55 @@ public class GestorTiempo {
                 verificarFinJuego();
             }
         }
-        actualizarTextoLabels();
+    }
+
+    // --- CAMBIO PRINCIPAL: LÓGICA DE VISUALIZACIÓN ---
+    private void actualizarTextoLabels() {
+        float segundosRealesRestantes;
+        String estado;
+
+        int minutosActualesEnJuego = hora * 60 + minuto;
+
+        if (esDeNoche()) {
+            // Objetivo: AMANECER (05:00) -> Minuto 300
+            int minutosObjetivo = HORA_AMANECER * 60;
+            int minutosFaltantesJuego;
+
+            if (hora >= HORA_ANOCHECER) {
+                // Caso: Estamos entre 20:00 y 23:59.
+                // Faltan lo que queda hasta las 24:00 + las 5 horas de la madrugada
+                minutosFaltantesJuego = (24 * 60 - minutosActualesEnJuego) + minutosObjetivo;
+            } else {
+                // Caso: Estamos entre 00:00 y 05:00.
+                minutosFaltantesJuego = minutosObjetivo - minutosActualesEnJuego;
+            }
+
+            // Convertimos minutos de juego a segundos reales
+            // Restamos 'acumuladorTiempo' para que el segundero sea suave y no salte
+            segundosRealesRestantes = (minutosFaltantesJuego * SEG_POR_MIN_NOCHE) - acumuladorTiempo;
+            estado = "Amanecer en: ";
+            labelReloj.setColor(com.badlogic.gdx.graphics.Color.CYAN); // Color azulado para noche
+
+        } else {
+            // Objetivo: ANOCHECER (20:00) -> Minuto 1200
+            int minutosObjetivo = HORA_ANOCHECER * 60;
+            int minutosFaltantesJuego = minutosObjetivo - minutosActualesEnJuego;
+
+            // Convertimos minutos de juego a segundos reales
+            segundosRealesRestantes = (minutosFaltantesJuego * SEG_POR_MIN_DIA) - acumuladorTiempo;
+            estado = "Noche en: ";
+            labelReloj.setColor(com.badlogic.gdx.graphics.Color.YELLOW); // Color amarillo para día
+        }
+
+        // Formatear a MM:SS
+        if (segundosRealesRestantes < 0) segundosRealesRestantes = 0; // Evitar negativos en transición
+        int minDisplay = (int) (segundosRealesRestantes / 60);
+        int segDisplay = (int) (segundosRealesRestantes % 60);
+
+        String textoFinal = estado + String.format("%02d:%02d", minDisplay, segDisplay);
+
+        labelReloj.setText(textoFinal);
+        labelDia.setText("Dia " + dia);
     }
 
     public boolean esDeNoche() {
@@ -116,6 +169,7 @@ public class GestorTiempo {
     public void hacerDeNoche() {
         this.hora = 20;
         this.minuto = 0;
+        this.acumuladorTiempo = 0; // Resetear acumulador para evitar saltos raros
         actualizarTextoLabels();
     }
 
@@ -139,14 +193,6 @@ public class GestorTiempo {
         if (dia >= DIA_FINAL) {
             juegoGanado = true;
         }
-    }
-
-    private void actualizarTextoLabels() {
-        String textoReloj = String.format("%02d:%02d", hora, minuto);
-        String textoDia = "Dia " + dia;
-
-        labelReloj.setText(textoReloj);
-        labelDia.setText(textoDia);
     }
 
     public boolean isJuegoGanado() { return juegoGanado; }

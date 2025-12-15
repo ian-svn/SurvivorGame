@@ -27,6 +27,8 @@ public class Assets {
         manager.load(PathManager.PIEDRA_TEXTURE, Texture.class);
         manager.load(PathManager.PIEDRA_TEXTURE, Texture.class);
         manager.load(PathManager.CAMA_TEXTURE, Texture.class);
+        manager.load(PathManager.HOGUERA_TEXTURE, Texture.class);
+
 
         manager.load(PathManager.MENU_MUSIC, Music.class);
         manager.load(PathManager.GAME_MUSIC, Music.class);
@@ -47,13 +49,17 @@ public class Assets {
         manager.load(PathManager.PROGRESS_BAR_ATLAS, TextureAtlas.class);
         manager.load(PathManager.PLAYER_ATLAS, TextureAtlas.class);
         manager.load(PathManager.ENEMIGO_ATLAS, TextureAtlas.class);
+        manager.load(PathManager.ENEMIGO_MAGO_ATLAS, TextureAtlas.class);
+        manager.load(PathManager.ENEMIGO_ARQUERO_ATLAS, TextureAtlas.class);
         manager.load(PathManager.CLICK_ANIMATION, TextureAtlas.class);
 
         manager.load(PathManager.VACA_TEXTURE_ATLAS, Texture.class);
         manager.load(PathManager.JABALI_TEXTURE_ATLAS, Texture.class);
+        manager.load(PathManager.OBEJA_TEXTURE_ATLAS, Texture.class);
 
         manager.load(PathManager.CLICK_ANIMATION, TextureAtlas.class);
         manager.load(PathManager.ARANAZO_ANIMATION, TextureAtlas.class);
+        manager.load(PathManager.HOGUERA_ATLAS, TextureAtlas.class);
 
         manager.setLoader(TiledMap.class, new TmxMapLoader(new InternalFileHandleResolver()));
         manager.load(PathManager.MAPA_BOSQUE, TiledMap.class);

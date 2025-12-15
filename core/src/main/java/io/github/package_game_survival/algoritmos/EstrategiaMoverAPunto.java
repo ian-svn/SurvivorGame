@@ -2,7 +2,7 @@ package io.github.package_game_survival.algoritmos;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.utils.Array; // Usamos Array de LibGDX
+import com.badlogic.gdx.utils.Array;
 import io.github.package_game_survival.entidades.bloques.Bloque;
 import io.github.package_game_survival.entidades.seres.SerVivo;
 import io.github.package_game_survival.interfaces.IEstrategiaMovimiento;
@@ -10,21 +10,16 @@ import io.github.package_game_survival.interfaces.IEstrategiaMovimiento;
 public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
 
     private final Vector2 destino = new Vector2();
-    private final Array<Bloque> obstaculos; // Referencia a la lista optimizada
+    private final Array<Bloque> obstaculos;
     private boolean terminado = false;
 
-    // --- Variables Temporales para evitar Garbage Collection (Punto 3) ---
+    // --- Variables Temporales para evitar Garbage Collection ---
     private final Vector2 tempPos = new Vector2();
     private final Vector2 tempDir = new Vector2();
-    private final Vector2 tempDesviada = new Vector2();
     private final Rectangle tempRect = new Rectangle();
 
-    /**
-     * @param destino Coordenada a la que ir.
-     * @param obstaculos Lista de bloques (se debe pasar desde el Escenario o Jugador) para evitar iterar todo el stage.
-     */
     public EstrategiaMoverAPunto(Vector2 destino, Array<Bloque> obstaculos) {
-        this.destino.set(destino); // Copiamos valores, no referencias
+        this.destino.set(destino);
         this.obstaculos = obstaculos;
     }
 
@@ -32,73 +27,70 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
     public void actualizar(SerVivo serVivo, float delta) {
         if (terminado) return;
 
-        // 1. Usamos vectores temporales en lugar de 'new Vector2'
-        tempPos.set(serVivo.getCentroX(), serVivo.getY());
+        tempPos.set(serVivo.getX(), serVivo.getY());
 
-        // Calculamos dirección: Destino - Posición
-        tempDir.set(destino).sub(tempPos);
+        // Calculamos vector dirección hacia el destino
+        // Usamos el centro del SerVivo para calcular mejor la trayectoria
+        float centroX = serVivo.getX() + serVivo.getAncho() / 2;
+        float centroY = serVivo.getY() + serVivo.getAlto() / 2;
+
+        tempDir.set(destino.x - centroX, destino.y - centroY);
 
         float distancia = tempDir.len();
 
-        if (distancia < 3f) {
+        // Si está muy cerca, terminamos (reducido a 2.5f para mayor precisión)
+        if (distancia < 2.5f) {
             terminado = true;
             return;
         }
 
-        tempDir.nor(); // Normalizamos el vector reutilizado
+        tempDir.nor(); // Normalizar
         float distanciaMovimiento = serVivo.getVelocidad() * delta;
 
-        // Calculamos siguiente posición teórica
-        float nextX = serVivo.getX() + tempDir.x * distanciaMovimiento;
-        float nextY = serVivo.getY() + tempDir.y * distanciaMovimiento;
+        // Calculamos el movimiento deseado total
+        float moveX = tempDir.x * distanciaMovimiento;
+        float moveY = tempDir.y * distanciaMovimiento;
 
-        // 2. Verificación de colisión optimizada
-        if (hayColision(nextX, nextY, serVivo)) {
-            boolean esquivado = false;
+        float nextX = serVivo.getX() + moveX;
+        float nextY = serVivo.getY() + moveY;
 
-            // Algoritmo de evasión simple
-            for (int angulo = -90; angulo <= 90; angulo += 15) {
-                if (angulo == 0) continue; // Ya probamos 0 grados arriba
+        // --- LÓGICA DE DESLIZAMIENTO (SLIDING) ---
 
-                // Reutilizamos tempDesviada en lugar de crear copias
-                tempDesviada.set(tempDir).rotateDeg(angulo);
-
-                float desX = serVivo.getX() + tempDesviada.x * distanciaMovimiento;
-                float desY = serVivo.getY() + tempDesviada.y * distanciaMovimiento;
-
-                if (!hayColision(desX, desY, serVivo)) {
-                    serVivo.setPosition(desX, desY);
-                    esquivado = true;
-                    break;
-                }
-            }
-            if (!esquivado) {
-                // Si no puede moverse ni esquivar, a veces es mejor terminar o esperar
-                // Por ahora, simplemente no se mueve.
-            }
-        } else {
+        // 1. Intentar movimiento completo (Diagonal)
+        if (!hayColision(nextX, nextY, serVivo)) {
             serVivo.setPosition(nextX, nextY);
+        }
+        else {
+            // 2. Si falla, intentar solo eje X (Deslizar horizontalmente)
+            boolean posibleX = !hayColision(nextX, serVivo.getY(), serVivo);
+
+            // 3. Si falla, intentar solo eje Y (Deslizar verticalmente)
+            boolean posibleY = !hayColision(serVivo.getX(), nextY, serVivo);
+
+            if (posibleX) {
+                serVivo.setPosition(nextX, serVivo.getY());
+            } else if (posibleY) {
+                serVivo.setPosition(serVivo.getX(), nextY);
+            } else {
+                // Si está totalmente bloqueado, no se mueve, pero no vibra.
+                // Opcional: Podrías marcar 'terminado = true' si se queda atascado mucho tiempo
+            }
         }
     }
 
-    /**
-     * Comprueba colisión iterando SOLO sobre los obstáculos (Punto 4).
-     * Reutiliza tempRect para no generar basura en memoria (Punto 3).
-     */
     private boolean hayColision(float nextX, float nextY, SerVivo serVivo) {
         if (obstaculos == null || obstaculos.isEmpty()) return false;
 
-        // Actualizamos el rectángulo temporal con las dimensiones del ser vivo y la nueva posición
-        tempRect.set(nextX, nextY, serVivo.getAncho(), serVivo.getAlto() / 2); // Asumiendo hitbox de mitad de altura como tenías
+        // Actualizamos el rectángulo temporal en la posición futura
+        // Nota: Es importante usar el mismo tamaño de hitbox que usa el personaje
+        tempRect.set(nextX, nextY, serVivo.getAncho(), serVivo.getAlto() / 2);
 
-        // Iteración optimizada sobre Array de LibGDX
+        // Iteración optimizada
         for (int i = 0; i < obstaculos.size; i++) {
             Bloque bloque = obstaculos.get(i);
 
-            // Check rápido: si es transitable, saltar
             if (bloque.isTransitable()) continue;
 
-            // Check de superposición
             if (tempRect.overlaps(bloque.getRectColision())) {
                 return true;
             }
@@ -111,18 +103,13 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
         return terminado;
     }
 
-    // ... código existente ...
-
-    // Método original (mantenlo si quieres)
-    public void setDestino(Vector2 nuevoDestino) {
-        this.destino.set(nuevoDestino);
+    public void setDestino(float x, float y) {
+        this.destino.set(x, y);
         this.terminado = false;
     }
 
-    // --- AGREGA ESTE MÉTODO NUEVO ---
-    // Permite actualizar el destino sin crear un 'new Vector2()'
-    public void setDestino(float x, float y) {
-        this.destino.set(x, y);
+    public void setDestino(Vector2 nuevoDestino) {
+        this.destino.set(nuevoDestino);
         this.terminado = false;
     }
 }

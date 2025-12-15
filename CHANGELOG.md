@@ -268,3 +268,20 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 - Implementación de `Z-Sorting` para que los `actores` se dibujen correctamente según su profundidad (eje Y).
 - Spawn seguro: el juego inicia el Día 1 sin `enemigos`, solo con `animales` y recursos cercanos.
 - Corrección de spawneo: `enemigos` y `objetos` ya no aparecen fuera del mapa ni sobre bloques sólidos.
+
+## [0.14.0] - 2025-12-14
+### Added
+- Sistema de Calor: Implementada lógica de proximidad en `Hoguera`. El jugador ahora detecta si está dentro de un radio de 4 bloques (128px).
+- UI de Estado: Agregado icono de fuego en la interfaz (arriba a la derecha) que se activa/desactiva según el estado `sintiendoCalor` del jugador.
+- Parser de Tiled: Agregado método estático `verificarCreacion` en `BloqueAnimado` para instanciar automáticamente la clase `Hoguera` al leer el mapa.
+- Assets: Generado archivo `tornado.atlas` para futura implementación de la animación de viento/tornado.
+
+### Changed
+- Hoguera: Ahora aplica daño por segundo (DPS) en lugar de daño por frame, y utiliza `Animation.PlayMode.LOOP`.
+- BloqueAnimado: Modificado el método `draw` para forzar el escalado del sprite a las dimensiones del actor (32x32), solucionando el problema de texturas gigantes.
+- Escenario: Implementada lógica "Reset & Set" para el estado de calor antes del `act()`, solucionando el parpadeo del icono de la UI al moverse.
+- Jugador: Eliminado el reinicio interno de variables de estado en `act()` para delegar el control al `Escenario` (estabilidad del render).
+
+### Fixed
+- Core: Agregada la llamada a `stage.act(delta)` en el render loop de `Escenario` (las animaciones no se reproducían).
+- Renderizado: Corrección de orden de dibujado y visibilidad de actores animados sobre el mapa estático.

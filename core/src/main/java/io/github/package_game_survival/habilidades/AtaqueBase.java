@@ -43,10 +43,10 @@ public abstract class AtaqueBase implements IAtaque {
         temporizador -= delta;
 
         if (estado == EstadoHabilidad.CASTEANDO) {
-            // --- CORRECCIÓN: CANCELAR SI EL DUEÑO MURIÓ ---
+            // Cancelar si el dueño murió
             if (atacanteRef != null && atacanteRef.getVida() <= 0) {
-                estado = EstadoHabilidad.LISTO; // Reseteamos
-                return; // Y salimos sin disparar
+                estado = EstadoHabilidad.LISTO;
+                return;
             }
 
             // Si termina el tiempo y sigue vivo, dispara

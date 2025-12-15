@@ -12,7 +12,6 @@ import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.entidades.objetos.Objeto;
 import io.github.package_game_survival.entidades.seres.SerVivo;
 import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
-import io.github.package_game_survival.habilidades.AtaqueAranazo;
 import io.github.package_game_survival.interfaces.IMundoJuego;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.PathManager;
@@ -46,10 +45,8 @@ public abstract class Enemigo extends SerVivo {
 
     public Enemigo(String nombre, float x, float y, float ancho, float alto,
                    int vidaInicial, int vidaMaxima, int velocidad, int danio, TextureAtlas atlas) {
-        super(nombre, x, y, ancho, alto, vidaInicial, vidaMaxima, velocidad, danio,
-            Assets.get(PathManager.ENEMIGO_ATLAS, TextureAtlas.class));
-
-        this.habilidadPrincipal = new AtaqueAranazo(5.0f, 0.5f, 10, 40f, 30f, Jugador.class);
+        // CORREGIDO: Se pasa el parámetro 'atlas' directamente
+        super(nombre, x, y, ancho, alto, vidaInicial, vidaMaxima, velocidad, danio, atlas);
         this.listaDrops = new Array<>();
     }
 

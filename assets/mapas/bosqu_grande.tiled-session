@@ -1,0 +1,57 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "bosque/tilemap_bosqueGrande.tmx",
+    "expandedProjectPaths": [
+        "bosque",
+        "."
+    ],
+    "fileStates": {
+        "bosque/tilemap_bosque.tmx": {
+            "scale": 1.0707291666666667,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 480.04669714952814,
+                "y": 320.3424457632065
+            }
+        },
+        "bosque/tilemap_bosqueGrande.tmx": {
+            "scale": 0.8030468749999999,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 606.4403152057595,
+                "y": 364.8603949800565
+            }
+        },
+        "bosque/tileset_bosque.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "hoguera.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "nieve/nieve.tsx": {
+            "scaleInDock": 1
+        }
+    },
+    "last.imagePath": "C:/Users/iansa/OneDrive/Escritorio/Proyects/SurvivalGame/assets/mapas",
+    "map.height": 24,
+    "map.lastUsedFormat": "tmx",
+    "map.width": 40,
+    "openFiles": [
+        "bosque/tilemap_bosqueGrande.tmx",
+        "bosque/tilemap_bosque.tmx",
+        "bosque/tileset_bosque.tsx"
+    ],
+    "project": "bosqu_grande.tiled-project",
+    "recentFiles": [
+        "hoguera.tsx",
+        "bosque/tileset_bosque.tsx",
+        "bosque/tilemap_bosque.tmx",
+        "bosque/tilemap_bosqueGrande.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx"
+}

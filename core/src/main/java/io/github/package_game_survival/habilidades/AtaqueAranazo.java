@@ -1,6 +1,6 @@
 package io.github.package_game_survival.habilidades;
 
-import com.badlogic.gdx.Gdx; // Importar para logs
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Polygon;
@@ -18,9 +18,14 @@ public class AtaqueAranazo extends AtaqueBase {
     private final float anchoArea;
     private final float FUERZA_EMPUJE = 15f;
 
-    public AtaqueAranazo(float cooldown, float tiempoCasteo, int danio, float rango, float anchoArea, Class<? extends SerVivo> claseObjetivo) {
+    // Guardamos el color que elegiste en el constructor
+    private final Color colorVisual;
+
+    // CONSTRUCTOR MODIFICADO: Ahora pide "Color color" al final
+    public AtaqueAranazo(float cooldown, float tiempoCasteo, int danio, float rango, float anchoArea, Class<? extends SerVivo> claseObjetivo, Color color) {
         super(cooldown, tiempoCasteo, danio, rango, claseObjetivo);
         this.anchoArea = anchoArea;
+        this.colorVisual = color; // Guardamos el color
     }
 
     @Override
@@ -29,15 +34,23 @@ public class AtaqueAranazo extends AtaqueBase {
         Vector2 direccion = new Vector2(destino).sub(centroAtacante).nor();
         float angulo = direccion.angleDeg();
 
-        // Visual
+        // 1. VISUAL (Usando this.colorVisual)
         TextureAtlas atlas = Assets.get(PathManager.ARANAZO_ANIMATION, TextureAtlas.class);
         if (atlas != null) {
-            Vector2 posEfecto = new Vector2(centroAtacante).mulAdd(direccion, this.rango * 0.6f);
-            EfectoVisual efecto = new EfectoVisual(atlas, "aranazo", posEfecto.x - 16, posEfecto.y - 16, 0.05f, angulo);
+            EfectoVisual efecto = new EfectoVisual(atlas, "aranazo", centroAtacante.x, centroAtacante.y - (anchoArea / 2f), 0.05f, angulo);
+
+            // Ajuste de hitbox visual (lo que pediste antes)
+            efecto.setSize(this.rango, this.anchoArea);
+            efecto.setOrigin(0, this.anchoArea / 2f);
+            efecto.setRotation(angulo);
+
+            // APLICAMOS EL COLOR ELEGIDO EN EL CONSTRUCTOR
+            efecto.setColor(this.colorVisual);
+
             mundo.agregarActor(efecto);
         }
 
-        // Física
+        // 2. FÍSICA (Hitbox)
         Polygon areaAtaque = new Polygon(new float[]{0, 0, rango, 0, rango, anchoArea, 0, anchoArea});
         areaAtaque.setOrigin(0, anchoArea / 2);
         areaAtaque.setPosition(centroAtacante.x, centroAtacante.y - (anchoArea/2));
@@ -63,38 +76,14 @@ public class AtaqueAranazo extends AtaqueBase {
             hitBoxVictima.setPosition(victima.getX(), victima.getY());
 
             if (Intersector.overlapConvexPolygons(areaAtaque, hitBoxVictima)) {
-
-                // --- CORRECCIÓN DE DAÑO ---
-                // Sumamos el daño base del ataque (this.danio) + el daño del personaje (atacante.getDanio())
                 int danioTotal = this.danio + atacante.getDanio();
-
                 victima.alterarVida(-danioTotal);
                 victima.recibirEmpuje(direccion.x * FUERZA_EMPUJE, direccion.y * FUERZA_EMPUJE);
 
-//                // Debug para verificar en consola
-//                if (atacante.getNombre().equals("Ian")) { // Asumiendo que tu jugador se llama Ian o usa getName()
-//                    Gdx.app.log("COMBATE", "Golpeaste por " + danioTotal + " de daño (Base: " + this.danio + " + Bonus: " + atacante.getDanio() + ")");
-//                }
-
                 if (!huboImpacto) {
-                    Vector2 posImpacto = new Vector2(victima.getCentroX(), victima.getY() + victima.getAlto()/2);
-                    spawnearEfectoVisual(mundo, posImpacto, angulo);
                     huboImpacto = true;
                 }
             }
-        }
-
-        if (!huboImpacto) {
-            Vector2 posMiss = new Vector2(centroAtacante).mulAdd(direccion, 30f);
-            spawnearEfectoVisual(mundo, posMiss, angulo);
-        }
-    }
-
-    private void spawnearEfectoVisual(IMundoJuego mundo, Vector2 posicion, float angulo) {
-        TextureAtlas atlas = Assets.get(PathManager.PLAYER_ATLAS, TextureAtlas.class);
-        if (atlas != null) {
-            EfectoVisual efecto = new EfectoVisual(atlas, "aranazo", posicion.x - 16, posicion.y - 16, 0.05f, angulo);
-            mundo.agregarActor(efecto);
         }
     }
 }

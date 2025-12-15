@@ -9,21 +9,26 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer;
 import com.badlogic.gdx.graphics.glutils.ShaderProgram;
 import com.badlogic.gdx.maps.MapLayer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
-import com.badlogic.gdx.maps.tiled.TiledMapTileLayer; // Importante
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 import io.github.package_game_survival.entidades.bloques.*;
+import io.github.package_game_survival.entidades.efectos.EfectoVisual;
 import io.github.package_game_survival.entidades.objetos.*;
 import io.github.package_game_survival.entidades.seres.animales.*;
 import io.github.package_game_survival.entidades.seres.enemigos.*;
 import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
 import io.github.package_game_survival.interfaces.IMundoJuego;
+import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.BrilloManager;
 import io.github.package_game_survival.managers.GestorTiempo;
 import io.github.package_game_survival.managers.GestorSpawneo;
+import io.github.package_game_survival.managers.PathManager;
+
 import java.util.Comparator;
 
 public class Escenario implements IMundoJuego, Disposable {
@@ -44,7 +49,6 @@ public class Escenario implements IMundoJuego, Disposable {
 
     private final Comparator<Actor> comparadorProfundidad;
 
-    // Dimensiones reales del mundo
     private float anchoMundo;
     private float altoMundo;
 
@@ -59,8 +63,6 @@ public class Escenario implements IMundoJuego, Disposable {
         this.cacheRectangulosColision = new Array<>();
 
         this.mapa = new Mapa();
-
-        // --- CALCULAR TAMAÑO REAL DEL MAPA ---
         calcularDimensionesMapa();
 
         this.gestorTiempo = new GestorTiempo();
@@ -68,50 +70,45 @@ public class Escenario implements IMundoJuego, Disposable {
         this.comparadorProfundidad = new Comparator<Actor>() {
             @Override
             public int compare(Actor a1, Actor a2) {
+                boolean a1EsEfecto = a1 instanceof EfectoVisual;
+                boolean a2EsEfecto = a2 instanceof EfectoVisual;
+
+                if (a1EsEfecto && !a2EsEfecto) return 1;
+                if (!a1EsEfecto && a2EsEfecto) return -1;
+
                 return Float.compare(a2.getY(), a1.getY());
             }
         };
 
         inicializarObjetosFijos();
         inicializarBloquesDesdeMapa();
-
         agregarEntidadesAlStage();
-
-        // Le pasamos el tamaño real al GestorSpawneo
         this.gestorSpawneo = new GestorSpawneo(this, anchoMundo, altoMundo);
     }
 
     private void calcularDimensionesMapa() {
         TiledMap tiledMap = mapa.getMapa();
-        // Obtenemos la primera capa (suelo) para saber el tamaño
-        TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get(0);
-
-        // Ancho = Cantidad de Tiles * Tamaño del Tile (ej: 50 * 32 = 1600)
-        this.anchoMundo = layer.getWidth() * layer.getTileWidth();
-        this.altoMundo = layer.getHeight() * layer.getTileHeight();
-
-        //Gdx.app.log("ESCENARIO", "Mapa cargado: " + anchoMundo + "x" + altoMundo);
+        if (tiledMap.getLayers().getCount() > 0) {
+            TiledMapTileLayer layer = (TiledMapTileLayer) tiledMap.getLayers().get(0);
+            this.anchoMundo = layer.getWidth() * layer.getTileWidth();
+            this.altoMundo = layer.getHeight() * layer.getTileHeight();
+        }
     }
 
-    @Override
-    public GestorTiempo getGestorTiempo() {
-        return this.gestorTiempo;
-    }
+    @Override public float getAncho() { return anchoMundo; }
+    @Override public float getAlto() { return altoMundo; }
+    @Override public GestorTiempo getGestorTiempo() { return this.gestorTiempo; }
 
     public void renderConShader(OrthographicCamera camara, float delta) {
         gestorTiempo.update(delta);
         gestorSpawneo.update(delta);
 
-        // Limpieza de objetos expirados
         for (int i = objetos.size - 1; i >= 0; i--) {
             Objeto obj = objetos.get(i);
-            if (obj.isMarcadoParaBorrar()) {
-                objetos.removeIndex(i);
-            }
+            if (obj.isMarcadoParaBorrar()) objetos.removeIndex(i);
         }
 
-        float brilloActual = gestorTiempo.getFactorBrillo();
-        BrilloManager.setBrillo(brilloActual);
+        BrilloManager.setBrillo(gestorTiempo.getFactorBrillo());
 
         FrameBuffer fbo = BrilloManager.getFBO();
         SpriteBatch batchShader = BrilloManager.getBatchShader();
@@ -123,11 +120,18 @@ public class Escenario implements IMundoJuego, Disposable {
 
         mapa.render(camara);
 
-        stageMundo.getViewport().apply();
         stageMundo.getBatch().setProjectionMatrix(camara.combined);
         stageMundo.getBatch().setColor(1, 1, 1, 1);
 
+        // --- CORRECCIÓN DE ESTABILIDAD DEL FUEGO ---
+        // 1. Reiniciamos el estado a false ANTES de procesar los actores.
+        if (jugador != null) {
+            jugador.setSintiendoCalor(false);
+        }
+
+        // 2. Ejecutamos los actores. Aquí las Hogueras pondrán true si estás cerca.
         stageMundo.act(delta);
+
         stageMundo.getActors().sort(comparadorProfundidad);
         stageMundo.draw();
 
@@ -180,21 +184,39 @@ public class Escenario implements IMundoJuego, Disposable {
     private void inicializarBloquesDesdeMapa() {
         TiledMap tiledMap = mapa.getMapa();
         for (MapLayer layer : tiledMap.getLayers()) {
-            if (!(layer instanceof com.badlogic.gdx.maps.tiled.TiledMapTileLayer tileLayer)) continue;
+            if (!(layer instanceof TiledMapTileLayer)) continue;
+
+            TiledMapTileLayer tileLayer = (TiledMapTileLayer) layer;
+
             for (int x = 0; x < tileLayer.getWidth(); x++) {
                 for (int y = 0; y < tileLayer.getHeight(); y++) {
-                    var cell = tileLayer.getCell(x, y);
+                    TiledMapTileLayer.Cell cell = tileLayer.getCell(x, y);
                     if (cell == null || cell.getTile() == null) continue;
+
                     var tile = cell.getTile();
+                    float worldX = x * 32;
+                    float worldY = y * 32;
+
+                    BloqueAnimado bloqueAnimado = BloqueAnimado.verificarCreacion(tile, worldX, worldY);
+
+                    if (bloqueAnimado != null) {
+                        bloques.add(bloqueAnimado);
+                        cell.setTile(null);
+                        continue;
+                    }
+
                     var props = tile.getProperties();
                     boolean transitable = props.get("transitable", true, Boolean.class);
+
                     if (!transitable) {
                         String tipo = props.get("tipo", "bloque", String.class);
                         boolean destructible = props.get("destructible", false, Boolean.class);
                         String objetoTirado = props.get("objetoTirado", null, String.class);
+
                         Bloque bloque = destructible
-                            ? new BloqueDestructible(x * 32, y * 32, tipo, objetoTirado)
-                            : new BloqueNoTransitable(x * 32, y * 32, tipo);
+                            ? new BloqueDestructible(worldX, worldY, tipo, objetoTirado)
+                            : new BloqueNoTransitable(worldX, worldY, tipo);
+
                         bloques.add(bloque);
                     }
                 }
@@ -212,17 +234,41 @@ public class Escenario implements IMundoJuego, Disposable {
 
     public void setStageUI(Stage stageUI) {
         this.stageUI = stageUI;
-        if (gestorTiempo != null) {
-            gestorTiempo.agregarAlStage(stageUI);
-        }
+        if (gestorTiempo != null) gestorTiempo.agregarAlStage(stageUI);
+        agregarIconoCalor();
+    }
+
+    private void agregarIconoCalor() {
+        if (stageUI == null) return;
+
+            Texture texturaFuego = Assets.get(PathManager.HOGUERA_TEXTURE, Texture.class);
+
+            Image iconoFuego = new Image(texturaFuego) {
+                @Override
+                public void act(float delta) {
+                    super.act(delta);
+                    if (jugador != null) {
+                        setVisible(jugador.isSintiendoCalor());
+                    }
+                }
+            };
+
+            // Posición: Arriba a la derecha
+            float posicionX = Gdx.graphics.getWidth() - 220;
+            float posicionY = Gdx.graphics.getHeight() - 50;
+
+            iconoFuego.setPosition(posicionX, posicionY);
+            iconoFuego.setSize(32, 32);
+            iconoFuego.setVisible(false);
+
+            stageUI.addActor(iconoFuego);
+
     }
 
     public Stage getStageUI() { return stageUI; }
 
-    @Override
-    public void dispose() {
-        if (mapa != null) {}
-        jugador.dispose();
+    @Override public void dispose() {
+        if(jugador != null) jugador.dispose();
         for(Enemigo e : enemigos) e.dispose();
         for(Objeto o : objetos) o.dispose();
         bloques.clear();
@@ -230,9 +276,8 @@ public class Escenario implements IMundoJuego, Disposable {
         animales.clear();
         objetos.clear();
         cacheRectangulosColision.clear();
+        if(mapa != null) mapa.dispose();
     }
 
-    public Array<Animal> getAnimales() {
-        return this.animales;
-    }
+    public Array<Animal> getAnimales() { return this.animales; }
 }

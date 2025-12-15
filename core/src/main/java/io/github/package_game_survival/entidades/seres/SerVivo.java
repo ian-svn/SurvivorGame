@@ -21,7 +21,7 @@ public abstract class SerVivo extends Entidad {
     private int velocidad;
     private int danio;
 
-    // --- NUEVO: LÍMITES (CAPS) ---
+    // Límites de estadísticas
     private final int LIMITE_DANIO = 60;
     private final int LIMITE_VELOCIDAD = 150;
 
@@ -60,18 +60,14 @@ public abstract class SerVivo extends Entidad {
         }
     }
 
-    // --- MÉTODOS MODIFICADOS CON LÍMITES ---
-
     public void alterarDanio(int cantidad) {
         this.danio += cantidad;
-        // Si baja de 0, queda en 0. Si supera 60, se queda en 60.
         if (this.danio < 0) this.danio = 0;
         if (this.danio > LIMITE_DANIO) this.danio = LIMITE_DANIO;
     }
 
     public void alterarVelocidad(int cantidad) {
         this.velocidad += cantidad;
-        // Si baja de 0, queda en 0. Si supera 150, se queda en 150.
         if (this.velocidad < 0) this.velocidad = 0;
         if (this.velocidad > LIMITE_VELOCIDAD) this.velocidad = LIMITE_VELOCIDAD;
     }
@@ -80,7 +76,6 @@ public abstract class SerVivo extends Entidad {
         this.vidaMaxima += cantidad;
         this.vida += cantidad;
     }
-    // ----------------------------------------
 
     public void recibirEmpuje(float fuerzaX, float fuerzaY) {
         if (muerto) return;
@@ -94,6 +89,14 @@ public abstract class SerVivo extends Entidad {
 
     private boolean colisionaConMundo() {
         if (mundo == null) return false;
+
+        // 1. CHEQUEO DE BORDES DEL MAPA (Nuevo)
+        if (getX() < 0) return true;
+        if (getY() < 0) return true;
+        if (getX() + getWidth() > mundo.getAncho()) return true;
+        if (getY() + getHeight() > mundo.getAlto()) return true;
+
+        // 2. CHEQUEO DE BLOQUES
         float w = getWidth() * 0.6f;
         float h = getHeight() * 0.4f;
         float x = getX() + (getWidth() - w) / 2f;
