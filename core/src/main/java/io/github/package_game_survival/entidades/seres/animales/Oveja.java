@@ -1,18 +1,18 @@
 package io.github.package_game_survival.entidades.seres.animales;
 
 import com.badlogic.gdx.graphics.Texture;
-import io.github.package_game_survival.entidades.objetos.Carne; // Importante
+import io.github.package_game_survival.entidades.objetos.Lana;
 import io.github.package_game_survival.interfaces.IMundoJuego;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.PathManager;
 
-public class Obeja extends Animal {
+public class Oveja extends Animal {
 
-    public Obeja(float x, float y) {
-        super("Vaca", x, y, 32, 32, 125, 125, 10, 0,
-            Assets.get(PathManager.OBEJA_TEXTURE_ATLAS, Texture.class));
+    public Oveja(float x, float y) {
+        super("Oveja", x, y, 42, 32, 100, 100, 10, 0,
+            Assets.get(PathManager.OVEJA_TEXTURE_ATLAS, Texture.class));
 
-        this.agregarDrop(Carne.class);
+        this.agregarDrop(Lana.class);
     }
 
     @Override

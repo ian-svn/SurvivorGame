@@ -15,17 +15,29 @@ import io.github.package_game_survival.managers.PathManager;
 
 public class AtaqueAranazo extends AtaqueBase {
 
-    private final float anchoArea;
+    // CAMBIO 1: Quitamos 'final' para poder modificarlo dinámicamente
+    private float anchoArea;
     private final float FUERZA_EMPUJE = 15f;
 
-    // Guardamos el color que elegiste en el constructor
     private final Color colorVisual;
 
-    // CONSTRUCTOR MODIFICADO: Ahora pide "Color color" al final
     public AtaqueAranazo(float cooldown, float tiempoCasteo, int danio, float rango, float anchoArea, Class<? extends SerVivo> claseObjetivo, Color color) {
         super(cooldown, tiempoCasteo, danio, rango, claseObjetivo);
         this.anchoArea = anchoArea;
-        this.colorVisual = color; // Guardamos el color
+        this.colorVisual = color;
+    }
+
+    // CAMBIO 2: Métodos necesarios para la mejora de la Lana
+    public void aumentarRango(float cantidad) {
+        this.rango += cantidad;
+        // Opcional: Límite para que no pegue en todo el mapa
+        if (this.rango > 300) this.rango = 300;
+    }
+
+    public void aumentarArea(float cantidad) {
+        this.anchoArea += cantidad;
+        // Opcional: Límite de ancho
+        if (this.anchoArea > 200) this.anchoArea = 200;
     }
 
     @Override
@@ -34,23 +46,21 @@ public class AtaqueAranazo extends AtaqueBase {
         Vector2 direccion = new Vector2(destino).sub(centroAtacante).nor();
         float angulo = direccion.angleDeg();
 
-        // 1. VISUAL (Usando this.colorVisual)
+        // 1. VISUAL
         TextureAtlas atlas = Assets.get(PathManager.ARANAZO_ANIMATION, TextureAtlas.class);
         if (atlas != null) {
             EfectoVisual efecto = new EfectoVisual(atlas, "aranazo", centroAtacante.x, centroAtacante.y - (anchoArea / 2f), 0.05f, angulo);
 
-            // Ajuste de hitbox visual (lo que pediste antes)
+            // Usa 'this.rango' y 'this.anchoArea' que ahora pueden cambiar
             efecto.setSize(this.rango, this.anchoArea);
             efecto.setOrigin(0, this.anchoArea / 2f);
             efecto.setRotation(angulo);
-
-            // APLICAMOS EL COLOR ELEGIDO EN EL CONSTRUCTOR
             efecto.setColor(this.colorVisual);
 
             mundo.agregarActor(efecto);
         }
 
-        // 2. FÍSICA (Hitbox)
+        // 2. FÍSICA
         Polygon areaAtaque = new Polygon(new float[]{0, 0, rango, 0, rango, anchoArea, 0, anchoArea});
         areaAtaque.setOrigin(0, anchoArea / 2);
         areaAtaque.setPosition(centroAtacante.x, centroAtacante.y - (anchoArea/2));

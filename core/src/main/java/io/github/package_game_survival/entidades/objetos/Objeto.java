@@ -17,9 +17,8 @@ public abstract class Objeto extends Entidad {
     private Rectangle hitbox;
 
     private float tiempoVida = 0f;
-    // --- CAMBIOS DE TIEMPO ---
-    private final float TIEMPO_MAXIMO = 60f; // 1 Minuto
-    private final float INICIO_PARPADEO = 50f; // Parpadea los últimos 10s
+    private final float TIEMPO_MAXIMO = 60f;
+    private final float INICIO_PARPADEO = 50f;
     private boolean marcadoParaBorrar = false;
 
     protected boolean desaparecible = true;

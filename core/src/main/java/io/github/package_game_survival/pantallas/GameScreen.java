@@ -34,24 +34,18 @@ public class GameScreen implements Screen {
 
     private final MyGame game;
     private final FastMenuScreen fm;
-
     private final Stage stageMundo;
     private final Stage stageUI;
     private final FitViewport viewportUI;
-
     private final Hud hud;
-
     private final Jugador jugador;
     private final Escenario escenario;
     private final OrthographicCamera camara;
-
     private final Vector3 tempVec = new Vector3();
     private Animation<TextureRegion> clickAnimation;
-    private LabelStandard labelFinJuego;
-    private LabelStandard labelVolverMenu;
+    private LabelStandard labelFinJuego, labelVolverMenu;
     private Image fondoOscuro;
     private boolean juegoTerminado = false;
-
     private static float ANCHO_MUNDO;
     private static float ALTO_MUNDO;
 
@@ -61,21 +55,20 @@ public class GameScreen implements Screen {
         ALTO_MUNDO = game.ALTO_PANTALLA;
 
         this.stageMundo = new Stage(game.getViewport());
-
         this.viewportUI = new FitViewport(ANCHO_MUNDO, ALTO_MUNDO);
         this.stageUI = new Stage(viewportUI);
-
         Gdx.input.setInputProcessor(stageUI);
 
         this.jugador = new Jugador("Ian", ANCHO_MUNDO/2, ALTO_MUNDO/2);
-        this.escenario = new Escenario(stageMundo, jugador);
 
+        // 1. Crear HUD sin tiempo
+        this.hud = new Hud(game.batch, jugador, null);
+
+        // 2. Crear Escenario con HUD
+        this.escenario = new Escenario(stageMundo, jugador, hud);
         this.escenario.setStageUI(stageUI);
 
-        this.hud = new Hud(game.batch, jugador, escenario.getGestorTiempo());
-
         this.fm = new FastMenuScreen(game, this);
-
         this.camara = (OrthographicCamera) stageMundo.getCamera();
         this.camara.zoom = 0.6f;
         this.camara.update();
@@ -89,17 +82,14 @@ public class GameScreen implements Screen {
         fondoOscuro.setColor(0, 0, 0, 0.6f);
         fondoOscuro.setSize(ANCHO_MUNDO, ALTO_MUNDO);
         fondoOscuro.setVisible(false);
-
         labelFinJuego = new LabelStandard("");
         labelFinJuego.setColor(Color.RED);
         labelFinJuego.setFontScale(3f);
         labelFinJuego.setVisible(false);
-
         labelVolverMenu = new LabelStandard("Presione [ESC] para volver al menu");
         labelVolverMenu.setColor(Color.WHITE);
         labelVolverMenu.setFontScale(0.6f);
         labelVolverMenu.setVisible(false);
-
         stageUI.addActor(fondoOscuro);
         stageUI.addActor(labelFinJuego);
         stageUI.addActor(labelVolverMenu);
@@ -109,38 +99,38 @@ public class GameScreen implements Screen {
         try {
             TextureAtlas atlas = Assets.get(PathManager.CLICK_ANIMATION, TextureAtlas.class);
             Array<TextureRegion> frames = new Array<>();
-            for (int i = 1; i <= 5; i++) {
-                TextureRegion frame = atlas.findRegion("click" + i);
-                if (frame != null) frames.add(frame);
-            }
-            if (frames.size > 0)
-                clickAnimation = new Animation<>(0.08f, frames, Animation.PlayMode.NORMAL);
-        } catch (Exception e) {
-            //Gdx.app.error("GameScreen", "Error al cargar animacion de clic", e);
-        }
+            for (int i = 1; i <= 5; i++) frames.add(atlas.findRegion("click" + i));
+            clickAnimation = new Animation<>(0.08f, frames, Animation.PlayMode.NORMAL);
+        } catch (Exception e) {}
     }
 
     @Override
     public void render(float delta) {
         ScreenUtils.clear(0, 0, 0, 1);
         actualizarCamara();
-
         escenario.renderConShader(camara, delta);
 
-        hud.update(delta);
-        hud.draw();
+        if (!juegoTerminado) {
+            hud.update(delta);
+            hud.draw();
+        }
 
         stageUI.act(delta);
         stageUI.draw();
 
         if (escenario.getGestorTiempo().isJuegoGanado()) {
-            // CORREGIDO: Texto simple sin símbolos
-            terminarJuego("GANASTE");
+            if (!juegoTerminado) terminarJuego("GANASTE");
         } else if (juegoTerminado) {
             jugador.setEstrategia(null);
         } else {
-            gestionarClickMovimiento();
-            verificarCondicionesFinJuego();
+            if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
+                tempVec.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+                camara.unproject(tempVec);
+                Vector2 dest = new Vector2(tempVec.x, tempVec.y);
+                jugador.setEstrategia(new EstrategiaMoverAPunto(dest, escenario.getBloques()));
+                if(clickAnimation!=null) stageMundo.addActor(new ClickEffect(clickAnimation, dest.x, dest.y));
+            }
+            if(jugador.getVida() <= 0) terminarJuego("PERDISTE");
         }
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
@@ -151,110 +141,45 @@ public class GameScreen implements Screen {
 
     private void actualizarCamara() {
         float zoom = camara.zoom;
-        float viewportAncho = camara.viewportWidth * zoom;
-        float viewportAlto = camara.viewportHeight * zoom;
-        float camX = jugador.getX();
-        float camY = jugador.getY();
-
-        float minX = viewportAncho / 2f;
-        float maxX = ANCHO_MUNDO - viewportAncho / 2f;
-        float minY = viewportAlto / 2f;
-        float maxY = ALTO_MUNDO - viewportAlto / 2f;
-
-        camX = Math.max(minX, Math.min(camX, maxX));
-        camY = Math.max(minY, Math.min(camY, maxY));
-
-        camara.position.set(camX, camY, 0);
+        float vw = camara.viewportWidth * zoom;
+        float vh = camara.viewportHeight * zoom;
+        float x = Math.max(vw/2, Math.min(jugador.getX(), ANCHO_MUNDO - vw/2));
+        float y = Math.max(vh/2, Math.min(jugador.getY(), ALTO_MUNDO - vh/2));
+        camara.position.set(x, y, 0);
         camara.update();
     }
 
-    private void verificarCondicionesFinJuego() {
-        if (jugador.getVida() <= 0) {
-            terminarJuego("PERDISTE");
-        }
-        // else if (jugador.getInventario().size >= 3) { terminarJuego("GANASTE");}
-    }
-
-    private void gestionarClickMovimiento() {
-        if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
-            tempVec.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-            camara.unproject(tempVec);
-            Vector2 destino = new Vector2(tempVec.x, tempVec.y);
-            jugador.setEstrategia(new EstrategiaMoverAPunto(destino, escenario.getBloques()));
-
-            if (clickAnimation != null)
-                stageMundo.addActor(new ClickEffect(clickAnimation, destino.x, destino.y));
-        }
-    }
-
-    private void terminarJuego(String mensaje) {
-        // Limpiamos entidades del escenario
-        for (Enemigo enemigo : escenario.getEnemigos()) enemigo.remove();
-        for (Objeto objeto : escenario.getObjetos()) objeto.remove();
-        for (Animal animal : escenario.getAnimales()) animal.remove();
-
+    private void terminarJuego(String msg) {
+        for(Enemigo e : escenario.getEnemigos()) e.remove();
+        for(Objeto o : escenario.getObjetos()) o.remove();
+        for(Animal a : escenario.getAnimales()) a.remove();
         juegoTerminado = true;
-
-        fondoOscuro.setVisible(true);
-        fondoOscuro.toFront();
-
-        labelFinJuego.setText(mensaje);
-        labelFinJuego.setVisible(true);
-        labelFinJuego.toFront();
-
-        labelVolverMenu.setVisible(true);
-        labelVolverMenu.toFront();
-
-        centrarUI();
+        fondoOscuro.setVisible(true); fondoOscuro.toFront();
+        labelFinJuego.setText(msg); labelFinJuego.setVisible(true); labelFinJuego.toFront();
+        labelVolverMenu.setVisible(true); labelVolverMenu.toFront();
+        labelFinJuego.setPosition(ANCHO_MUNDO/2f - labelFinJuego.getPrefWidth()/2f, ALTO_MUNDO/2f + 50);
+        labelVolverMenu.setPosition(ANCHO_MUNDO/2f - labelVolverMenu.getPrefWidth()/2f, ALTO_MUNDO/2f - 100);
     }
 
-    private void centrarUI() {
-        fondoOscuro.setPosition(0, 0);
-
-        // CORREGIDO: Mayor separación entre textos
-        // Subimos el texto de GANASTE/PERDISTE (+50px)
-        labelFinJuego.setPosition(
-            ANCHO_MUNDO/2f - labelFinJuego.getPrefWidth()/2f,
-            ALTO_MUNDO/2f + 50
-        );
-
-        // Bajamos el texto de instrucciones (-100px)
-        labelVolverMenu.setPosition(
-            ANCHO_MUNDO/2f - labelVolverMenu.getPrefWidth()/2f,
-            ALTO_MUNDO/2f - 100
-        );
-    }
-
-    @Override
-    public void resize(int width, int height) {
-        stageMundo.getViewport().update(width, height, true);
-        viewportUI.update(width, height, true);
-
-        hud.resize(width, height);
-
-        BrilloManager.redimensionar(width, height);
-
+    @Override public void resize(int w, int h) {
+        stageMundo.getViewport().update(w, h, true);
+        viewportUI.update(w, h, true);
+        hud.resize(w, h);
+        BrilloManager.redimensionar(w, h);
         camara.update();
-        //Gdx.app.log("GameScreen", "Redimensionado a: " + width + "x" + height);
     }
 
-    @Override
-    public void dispose() {
-        stageMundo.dispose();
-        stageUI.dispose();
-        if(hud != null) hud.dispose();
-        if(escenario != null) escenario.dispose();
+    @Override public void dispose() {
+        stageMundo.dispose(); stageUI.dispose();
+        if(hud!=null) hud.dispose();
+        if(escenario!=null) escenario.dispose();
         AudioManager.getControler().stopMusic();
     }
 
+    // MÉTODO QUE FALTABA Y CAUSABA ERROR EN FASTMENUSCREEN
     public OrthographicCamera getCamara() { return camara; }
 
-    @Override
-    public void show() {
-        Gdx.input.setInputProcessor(stageUI);
-        BrilloManager.redimensionar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-    }
-
+    @Override public void show() { Gdx.input.setInputProcessor(stageUI); BrilloManager.redimensionar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()); }
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}

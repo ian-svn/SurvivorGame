@@ -48,11 +48,11 @@ public final class PathManager {
     public static final String CLICK_ANIMATION = "atlas/click.atlas";
     public static final String ARANAZO_ANIMATION = "atlas/aranazo.atlas";
     public static final String HOGUERA_ATLAS = "atlas/hoguera.atlas";
+    public static final String TORNADO_ATLAS = "atlas/tornado.atlas";
 
     public static final String VACA_TEXTURE_ATLAS = "sprites/vaca.png";
     public static final String JABALI_TEXTURE_ATLAS = "sprites/jabali.png";
-    public static final String OBEJA_TEXTURE_ATLAS = "sprites/obeja.png";
-
+    public static final String OVEJA_TEXTURE_ATLAS = "sprites/oveja.png";
     public static final String CAMA_TEXTURE = "sprites/cama.png";
 
     public static final String MAPA_BOSQUE = "mapas/bosque/tilemap_bosqueGrande.tmx";

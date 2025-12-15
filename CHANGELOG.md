@@ -285,3 +285,22 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 ### Fixed
 - Core: Agregada la llamada a `stage.act(delta)` en el render loop de `Escenario` (las animaciones no se reproducían).
 - Renderizado: Corrección de orden de dibujado y visibilidad de actores animados sobre el mapa estático.
+
+## [0.15.0] - 2025-12-15
+### Added
+- Core: Sistema de desatasco automático en `Jugador` al detectar colisión inicial.
+- Algoritmo: Distribución por grilla (12x12) para el evento `Inundacion`, asegurando cobertura equitativa.
+- Mecánica: Daño fijo por tick (4 HP) implementado en `EfectoVentisca`.
+
+### Changed
+- Refactor: Aplicado SRP en `GestorDesastres` y `GestorSpawneo`. La UI se centralizó en `Hud`.
+- Hoguera: Migración a TextureAtlas, reducción de hitbox a la base y lógica de daño por contacto (-10 HP).
+- Terremoto: Modificado para limpiar items del suelo preservando `Cama` y `Hoguera`.
+- GestorTiempo: La condición de victoria se movió al amanecer (05:00) del día final.
+- UI: Reducción de escala en alertas y reubicación de la tabla de estadísticas.
+
+### Fixed
+- Compilación: Resuelto error de tipos incompatibles entre `Hoguera` y `BloqueAnimado`.
+- Lógica: Corregida inyección de dependencias nulas entre `Escenario` y `Hud`.
+- Spawneo: Eliminada la aparición errónea de hogueras como loot aleatorio.
+- Assets: Añadida referencia faltante a `HOGUERA_TEXTURE` en `PathManager`.

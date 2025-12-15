@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -33,6 +34,10 @@ public class Jugador extends SerVivo {
     private float tiempoUltimoDañoContacto = 0f;
     private static final float COOLDOWN_DANO_CONTACTO = 1.0f;
 
+    private boolean invulnerable = false;
+    private float tiempoInvulnerable = 0f;
+    private final float DURACION_INVULNERABILIDAD = 1.5f;
+
     private boolean sintiendoCalor = false;
 
     private final Vector3 tempVecInput = new Vector3();
@@ -44,12 +49,33 @@ public class Jugador extends SerVivo {
     private final float INTERVALO_CLICK_DERECHO = 0.2f;
 
     public Jugador(String nombre, float x, float y) {
-        super(nombre, x, y, 24, 40, 100, 100, 120, 20,
+        super(nombre, x, y, 24, 40, 120, 120, 120, 20,
             Assets.get(PathManager.PLAYER_ATLAS, TextureAtlas.class));
 
         this.hitbox = new Rectangle(x, y, 1, 1);
         this.habilidadPrincipal = new AtaqueAranazo(0.5f, 0.1f, 25, 60f,
             40f, SerVivo.class, Color.BLUE);
+    }
+
+    // --- Nuevo método para la mejora de Lana ---
+    public void mejorarRangoAtaque(float rangoExtra, float areaExtra) {
+        if (habilidadPrincipal instanceof AtaqueAranazo) {
+            AtaqueAranazo ataque = (AtaqueAranazo) habilidadPrincipal;
+            ataque.aumentarRango(rangoExtra);
+            ataque.aumentarArea(areaExtra);
+        }
+    }
+
+    @Override
+    public void alterarVida(int cantidad) {
+        if (cantidad < 0 && invulnerable) return;
+        super.alterarVida(cantidad);
+        if (cantidad < 0) activarInvulnerabilidad();
+    }
+
+    private void activarInvulnerabilidad() {
+        this.invulnerable = true;
+        this.tiempoInvulnerable = DURACION_INVULNERABILIDAD;
     }
 
     @Override
@@ -63,10 +89,17 @@ public class Jugador extends SerVivo {
 
     @Override
     public void act(float delta) {
-        // CORRECCIÓN: Eliminamos el reinicio de sintiendoCalor aquí.
-        // Ahora se controla desde Escenario.java para evitar parpadeos.
-
         super.act(delta);
+
+        if (invulnerable) {
+            tiempoInvulnerable -= delta;
+            if (tiempoInvulnerable <= 0) {
+                invulnerable = false;
+                tiempoInvulnerable = 0;
+                getColor().a = 1f;
+            }
+        }
+
         if (getStage() == null) return;
 
         Camera cam = getStage().getCamera();
@@ -83,13 +116,17 @@ public class Jugador extends SerVivo {
         if (getTooltip() != null) getTooltip().actualizarPosicion();
     }
 
-    public void setSintiendoCalor(boolean calor) {
-        this.sintiendoCalor = calor;
+    @Override
+    public void draw(Batch batch, float parentAlpha) {
+        if (invulnerable) {
+            boolean visible = (tiempoInvulnerable % 0.15f) > 0.07f;
+            if (!visible) return;
+        }
+        super.draw(batch, parentAlpha);
     }
 
-    public boolean isSintiendoCalor() {
-        return sintiendoCalor;
-    }
+    public void setSintiendoCalor(boolean calor) { this.sintiendoCalor = calor; }
+    public boolean isSintiendoCalor() { return sintiendoCalor; }
 
     private void gestionarCombate(Camera cam) {
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
@@ -110,7 +147,6 @@ public class Jugador extends SerVivo {
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_7)) slotSeleccionado = 6;
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_8)) slotSeleccionado = 7;
         if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_9)) slotSeleccionado = 8;
-
         if (Gdx.input.isKeyJustPressed(Input.Keys.E)) usarObjetoSeleccionado();
         if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) tirarObjetoSeleccionado(cam);
     }
@@ -157,9 +193,13 @@ public class Jugador extends SerVivo {
     }
 
     private void moverse(float delta, Camera cam) {
+        // --- 1. SOLUCIÓN AL BUG DE QUEDAR TRABADO ---
+        // Verificamos si estamos atrapados en una pared ANTES de intentar movernos.
+        verificarDesatasco();
+
+        // --- Lógica de movimiento normal ---
         boolean clickDerechoPresionado = Gdx.input.isButtonPressed(Input.Buttons.RIGHT);
         boolean clickDerechoJustoAhora = Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT);
-
         if (clickDerechoPresionado) {
             timerClickDerecho += delta;
             if (clickDerechoJustoAhora || timerClickDerecho >= INTERVALO_CLICK_DERECHO) {
@@ -167,13 +207,9 @@ public class Jugador extends SerVivo {
                 tempVecInput.set(Gdx.input.getX(), Gdx.input.getY(), 0);
                 cam.unproject(tempVecInput);
                 tempDestino.set(tempVecInput.x, tempVecInput.y);
-
                 if (mundo != null) {
-                    if (estrategia instanceof EstrategiaMoverAPunto) {
-                        ((EstrategiaMoverAPunto) estrategia).setDestino(tempDestino);
-                    } else {
-                        estrategia = new EstrategiaMoverAPunto(tempDestino, mundo.getBloques());
-                    }
+                    if (estrategia instanceof EstrategiaMoverAPunto) ((EstrategiaMoverAPunto) estrategia).setDestino(tempDestino);
+                    else estrategia = new EstrategiaMoverAPunto(tempDestino, mundo.getBloques());
                 }
             }
         } else {
@@ -193,12 +229,21 @@ public class Jugador extends SerVivo {
         if (dx != 0 || dy != 0) {
             estrategia = null;
             tempDirMovimiento.set(dx, dy).nor().scl(getVelocidad() * delta);
+
+            // Movimiento en X
             float nextX = getX() + tempDirMovimiento.x;
             setPosition(nextX, getY());
-            if (mundo != null && colisionaConBloqueNoTransitable()) setX(oldX);
+            if (mundo != null && colisionaConBloqueNoTransitable()) {
+                setX(oldX);
+            }
+
+            // Movimiento en Y
             float nextY = getY() + tempDirMovimiento.y;
             setPosition(getX(), nextY);
-            if (mundo != null && colisionaConBloqueNoTransitable()) setY(oldY);
+            if (mundo != null && colisionaConBloqueNoTransitable()) {
+                setY(oldY);
+            }
+
         } else if (estrategia != null) {
             estrategia.actualizar(this, delta);
             if (mundo != null && colisionaConBloqueNoTransitable()) {
@@ -210,6 +255,32 @@ public class Jugador extends SerVivo {
         actualizarAnimacion(oldX, oldY);
     }
 
+    // --- NUEVO MÉTODO DE DESATASCO AUTOMÁTICO ---
+    private void verificarDesatasco() {
+        if (mundo != null && colisionaConBloqueNoTransitable()) {
+            // ¡Estamos atrapados! Intentamos empujar hacia las 4 direcciones cercanas
+            // para ver si alguna nos libera.
+            float oldX = getX();
+            float oldY = getY();
+
+            // Probamos saltos pequeños (4px) en cruz
+            float[] offsetsX = {4, -4, 0, 0, 8, -8, 0, 0};
+            float[] offsetsY = {0, 0, 4, -4, 0, 0, 8, -8};
+
+            for (int i = 0; i < offsetsX.length; i++) {
+                setPosition(oldX + offsetsX[i], oldY + offsetsY[i]);
+                if (!colisionaConBloqueNoTransitable()) {
+                    // Encontramos un lugar libre, nos quedamos aquí
+                    // Gdx.app.log("JUGADOR", "Desatascado automáticamente!");
+                    return;
+                }
+            }
+
+            // Si nada funcionó, volvemos a donde estábamos (ya estábamos trabados igual)
+            setPosition(oldX, oldY);
+        }
+    }
+
     private boolean colisionaConBloqueNoTransitable() {
         if (mundo == null) return false;
         if (getX() < 0) return true;
@@ -217,13 +288,9 @@ public class Jugador extends SerVivo {
         if (getX() + getWidth() > mundo.getAncho()) return true;
         if (getY() + getHeight() > mundo.getAlto()) return true;
 
-        float w = getWidth() * 0.4f;
-        float h = getHeight() * 0.2f;
-        float x = getX() + (getWidth() - w) / 2f;
-        float y = getY();
-        hitbox.set(x, y, w, h);
+        Rectangle r = getRectColision();
         for (Rectangle bloque : mundo.getRectangulosNoTransitables()) {
-            if (hitbox.overlaps(bloque)) return true;
+            if (r.overlaps(bloque)) return true;
         }
         return false;
     }
@@ -232,7 +299,11 @@ public class Jugador extends SerVivo {
     @Override public void moveBy(float x, float y) { super.moveBy(x, y); }
 
     @Override public Rectangle getRectColision() {
-        hitbox.set(getX() + getWidth()*0.1f, getY(), getWidth()*0.8f, getHeight()*0.8f);
+        float w = getWidth() * 0.4f;
+        float h = getHeight() * 0.2f;
+        float x = getX() + (getWidth() - w) / 2f;
+        float y = getY();
+        hitbox.set(x, y, w, h);
         return hitbox;
     }
 
@@ -265,6 +336,8 @@ public class Jugador extends SerVivo {
 
     private void revisarChoqueEnemigo(float delta) {
         tiempoUltimoDañoContacto += delta;
+        if (invulnerable) return;
+
         if (mundo == null) return;
         for (Enemigo enemigo : mundo.getEnemigos()) {
             if (enemigo.getVida() <= 0) continue;

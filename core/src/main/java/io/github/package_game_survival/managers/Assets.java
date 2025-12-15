@@ -28,6 +28,8 @@ public class Assets {
         manager.load(PathManager.PIEDRA_TEXTURE, Texture.class);
         manager.load(PathManager.CAMA_TEXTURE, Texture.class);
         manager.load(PathManager.HOGUERA_TEXTURE, Texture.class);
+        manager.load(PathManager.LANA_TEXTURE, Texture.class);
+
 
 
         manager.load(PathManager.MENU_MUSIC, Music.class);
@@ -55,11 +57,12 @@ public class Assets {
 
         manager.load(PathManager.VACA_TEXTURE_ATLAS, Texture.class);
         manager.load(PathManager.JABALI_TEXTURE_ATLAS, Texture.class);
-        manager.load(PathManager.OBEJA_TEXTURE_ATLAS, Texture.class);
+        manager.load(PathManager.OVEJA_TEXTURE_ATLAS, Texture.class);
 
         manager.load(PathManager.CLICK_ANIMATION, TextureAtlas.class);
         manager.load(PathManager.ARANAZO_ANIMATION, TextureAtlas.class);
         manager.load(PathManager.HOGUERA_ATLAS, TextureAtlas.class);
+        manager.load(PathManager.TORNADO_ATLAS, TextureAtlas.class);
 
         manager.setLoader(TiledMap.class, new TmxMapLoader(new InternalFileHandleResolver()));
         manager.load(PathManager.MAPA_BOSQUE, TiledMap.class);

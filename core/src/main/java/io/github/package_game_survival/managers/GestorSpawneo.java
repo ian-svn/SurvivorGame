@@ -5,220 +5,167 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Array;
 import io.github.package_game_survival.entidades.mapas.Escenario;
-import io.github.package_game_survival.entidades.objetos.Carne;
-import io.github.package_game_survival.entidades.objetos.Objeto;
-import io.github.package_game_survival.entidades.objetos.PocionDeAmatista;
-import io.github.package_game_survival.entidades.seres.animales.Animal;
-import io.github.package_game_survival.entidades.seres.animales.Jabali;
-import io.github.package_game_survival.entidades.seres.animales.Vaca;
-import io.github.package_game_survival.entidades.seres.enemigos.Enemigo;
-import io.github.package_game_survival.entidades.seres.enemigos.InvasorArquero;
-import io.github.package_game_survival.entidades.seres.enemigos.InvasorDeLaLuna;
-import io.github.package_game_survival.entidades.seres.enemigos.InvasorMago;
+import io.github.package_game_survival.entidades.objetos.*;
+import io.github.package_game_survival.entidades.seres.animales.*;
+import io.github.package_game_survival.entidades.seres.enemigos.*;
 
 public class GestorSpawneo {
 
     private final Escenario escenario;
-    private boolean eraDeNoche;
+    private final float anchoMundo, altoMundo;
+    private final Rectangle rectTest = new Rectangle();
 
     // Configuración
-    private final float DURACION_NOCHE = 120f;
-    private final int CANTIDAD_OLEADAS = 5;
-    private final float INTERVALO_OLEADA = DURACION_NOCHE / CANTIDAD_OLEADAS;
-
     private final int BASE_ENEMIGOS = 20;
-    private final int ENEMIGOS_EXTRA_POR_DIA = 5;
-    private final int VIDA_EXTRA_POR_DIA = 20;
-
+    private final int EXTRA_ENEMIGOS_DIA = 5;
+    private final int EXTRA_VIDA_DIA = 20;
     private final int BASE_ITEMS = 4;
-    private final int ITEMS_EXTRA_POR_DIA = 2;
-    private final int CANTIDAD_ANIMALES_DIA = 3;
+    private final int EXTRA_ITEMS_DIA = 2;
+    private final int ANIMALES_DIA = 3;
 
-    private int enemigosPorOleadaActual;
+    // Oleadas
+    private final float DURACION_NOCHE = 120f;
+    private final int OLEADAS = 5;
+    private final float INTERVALO = DURACION_NOCHE / OLEADAS;
+
+    private int enemigosPorOleada;
     private float timerNoche = 0f;
     private int oleadaActual = 0;
-
-    private final float mundoAncho;
-    private final float mundoAlto;
-    private final Rectangle rectTest = new Rectangle();
+    private boolean eraDeNoche;
 
     public GestorSpawneo(Escenario escenario, float ancho, float alto) {
         this.escenario = escenario;
-        this.mundoAncho = ancho;
-        this.mundoAlto = alto;
+        this.anchoMundo = ancho;
+        this.altoMundo = alto;
         this.eraDeNoche = escenario.getGestorTiempo().esDeNoche();
-
         recalcularDificultad(escenario.getGestorTiempo().getDia());
 
-        // Inicio seguro de Día
-        if (!eraDeNoche) {
-            spawnearItemsRandom(BASE_ITEMS);
-            spawnearAnimales(CANTIDAD_ANIMALES_DIA);
-            Gdx.app.log("SPAWNER", "¡Inicio Día! Items y Animales generados.");
-        } else {
-            spawnearGrupoEnemigos(enemigosPorOleadaActual);
-        }
-    }
-
-    private void recalcularDificultad(int diaActual) {
-        int diaCalc = Math.max(1, diaActual);
-        int totalEnemigosHoy = BASE_ENEMIGOS + (ENEMIGOS_EXTRA_POR_DIA * (diaCalc - 1));
-        this.enemigosPorOleadaActual = Math.max(1, totalEnemigosHoy / CANTIDAD_OLEADAS);
-
-        int bonoVidaHoy = (diaCalc - 1) * VIDA_EXTRA_POR_DIA;
-
-        Gdx.app.log("DIFICULTAD", "========================================");
-        Gdx.app.log("DIFICULTAD", " INICIO DEL DÍA " + diaActual);
-        Gdx.app.log("DIFICULTAD", " Enemigos Totales: " + totalEnemigosHoy);
-        Gdx.app.log("DIFICULTAD", " BUFF DE VIDA ENEMIGOS: +" + bonoVidaHoy + " HP");
-        Gdx.app.log("DIFICULTAD", "========================================");
+        if(!eraDeNoche) iniciarDia(escenario.getGestorTiempo().getDia());
     }
 
     public void update(float delta) {
-        boolean esDeNocheAhora = escenario.getGestorTiempo().esDeNoche();
-        int diaActual = escenario.getGestorTiempo().getDia();
+        boolean esDeNoche = escenario.getGestorTiempo().esDeNoche();
+        int dia = escenario.getGestorTiempo().getDia();
+        float dt = delta * (Gdx.input.isKeyPressed(Input.Keys.T) ? 50f : 1f);
 
-        float velocidad = 1.0f;
-        if (Gdx.input.isKeyPressed(Input.Keys.T)) velocidad = 50.0f;
-        float deltaAjustado = delta * velocidad;
-
-        if (esDeNocheAhora && !eraDeNoche) {
-            recalcularDificultad(diaActual);
+        if(esDeNoche && !eraDeNoche) {
+            recalcularDificultad(dia);
             timerNoche = 0f;
             oleadaActual = 0;
-            spawnearGrupoEnemigos(enemigosPorOleadaActual);
+            spawnEnemigos(enemigosPorOleada);
             oleadaActual++;
         }
 
-        if (esDeNocheAhora) {
-            gestionarOleadas(deltaAjustado);
-        }
-
-        if (!esDeNocheAhora && eraDeNoche) {
-            limpiarEnemigos();
-            int itemsHoy = BASE_ITEMS + (ITEMS_EXTRA_POR_DIA * (diaActual - 1));
-            spawnearItemsRandom(itemsHoy);
-            spawnearAnimales(CANTIDAD_ANIMALES_DIA);
-        }
-
-        this.eraDeNoche = esDeNocheAhora;
-    }
-
-    private void gestionarOleadas(float delta) {
-        if (oleadaActual < CANTIDAD_OLEADAS) {
-            timerNoche += delta;
-            if (timerNoche >= (oleadaActual * INTERVALO_OLEADA)) {
-                spawnearGrupoEnemigos(enemigosPorOleadaActual);
-                oleadaActual++;
-            }
-        }
-    }
-
-    // --- CORRECCIÓN AQUÍ: Búsqueda precisa por tamaño ---
-    private void spawnearAnimales(int cantidad) {
-        for (int i = 0; i < cantidad; i++) {
-
-            // 1. Decidimos QUÉ animal es antes de buscar sitio
-            boolean esVaca = MathUtils.randomBoolean();
-
-            // 2. Definimos el tamaño exacto según la clase (Valores sacados de Jabali.java y Vaca.java)
-            float anchoRequerido = esVaca ? 32 : 54;
-            float altoRequerido = esVaca ? 32 : 42;
-
-            // 3. Buscamos posición válida para ESE tamaño específico
-            Vector2 pos = getPosicionValida(anchoRequerido, altoRequerido);
-
-            if (pos != null) {
-                Animal animal;
-                if (esVaca) {
-                    animal = new Vaca(pos.x, pos.y);
-                } else {
-                    animal = new Jabali(pos.x, pos.y);
+        if(esDeNoche) {
+            if(oleadaActual < OLEADAS) {
+                timerNoche += dt;
+                if(timerNoche >= (oleadaActual * INTERVALO)) {
+                    spawnEnemigos(enemigosPorOleada);
+                    oleadaActual++;
                 }
+            }
+        }
 
-                animal.agregarAlMundo(escenario);
-                escenario.getAnimales().add(animal);
+        if(!esDeNoche && eraDeNoche) {
+            limpiarEnemigos();
+            iniciarDia(dia);
+        }
+        eraDeNoche = esDeNoche;
+    }
+
+    private void iniciarDia(int dia) {
+        int nItems = BASE_ITEMS + (EXTRA_ITEMS_DIA * (dia-1));
+        spawnItems(nItems);
+        spawnAnimales(ANIMALES_DIA);
+    }
+
+    private void recalcularDificultad(int dia) {
+        int total = BASE_ENEMIGOS + (EXTRA_ENEMIGOS_DIA * Math.max(0, dia-1));
+        this.enemigosPorOleada = Math.max(1, total / OLEADAS);
+    }
+
+    private void spawnEnemigos(int n) {
+        int dia = Math.max(1, escenario.getGestorTiempo().getDia());
+        int bonoHp = (dia-1) * EXTRA_VIDA_DIA;
+        for(int i=0; i<n; i++) {
+            Vector2 pos = buscarPos(32, 40);
+            if(pos != null) {
+                Enemigo e = factoryEnemigo(pos.x, pos.y);
+                if(bonoHp > 0) e.aumentarVidaMaxima(bonoHp);
+                e.agregarAlMundo(escenario);
+                escenario.getEnemigos().add(e);
             }
         }
     }
 
-    private void spawnearGrupoEnemigos(int cantidad) {
-        int diaActual = Math.max(1, escenario.getGestorTiempo().getDia());
-        int bonoVida = (diaActual - 1) * VIDA_EXTRA_POR_DIA;
+    private Enemigo factoryEnemigo(float x, float y) {
+        int r = MathUtils.random(0, 100);
+        if(r < 40) return new InvasorDeLaLuna(x, y);
+        if(r < 70) return new InvasorArquero(x, y);
+        return new InvasorMago(x, y);
+    }
 
-        for (int i = 0; i < cantidad; i++) {
-            Vector2 pos = getPosicionValida(32, 40);
-            if (pos != null) {
-                Enemigo enemigo;
-                int r = MathUtils.random(0, 100);
+    private void spawnAnimales(int n) {
+        for(int i=0; i<n; i++) {
+            int tipo = MathUtils.random(0, 2);
+            float w = (tipo==1)? 54 : (tipo==2? 42 : 32);
+            float h = (tipo==1)? 42 : 32;
+            Vector2 pos = buscarPos(w, h);
+            if(pos != null) {
+                Animal a = factoryAnimal(tipo, pos.x, pos.y);
+                a.agregarAlMundo(escenario);
+                escenario.getAnimales().add(a);
+            }
+        }
+    }
 
-                if (r < 40) enemigo = new InvasorDeLaLuna(pos.x, pos.y);
-                else if (r < 70) enemigo = new InvasorArquero(pos.x, pos.y);
-                else enemigo = new InvasorMago(pos.x, pos.y);
+    private Animal factoryAnimal(int tipo, float x, float y) {
+        switch(tipo) {
+            case 0: return new Vaca(x, y);
+            case 1: return new Jabali(x, y);
+            case 2: return new Oveja(x, y);
+            default: return null;
+        }
+    }
 
-                if (bonoVida > 0) enemigo.aumentarVidaMaxima(bonoVida);
+    // --- AQUÍ ESTABA TU ERROR PROBABLEMENTE ---
+    private void spawnItems(int n) {
+        for(int i=0; i<n; i++) {
+            Vector2 pos = buscarPos(32, 32);
+            if(pos != null) {
+                // SOLO Carne y Pocion. NADA MÁS.
+                Objeto o = (MathUtils.randomBoolean(0.3f))
+                    ? new Carne(pos.x, pos.y)
+                    : new PocionDeAmatista(pos.x, pos.y);
 
-                enemigo.agregarAlMundo(escenario);
-                escenario.getEnemigos().add(enemigo);
+                o.agregarAlMundo(escenario);
+                escenario.getObjetos().add(o);
             }
         }
     }
 
     private void limpiarEnemigos() {
-        Array<Enemigo> lista = escenario.getEnemigos();
-        for (Enemigo e : lista) {
-            e.setQuemandose(true);
-        }
+        for(Enemigo e : escenario.getEnemigos()) e.setQuemandose(true);
     }
 
-    private void spawnearItemsRandom(int cantidad) {
-        for (int i = 0; i < cantidad; i++) {
-            Vector2 pos = getPosicionValida(32, 32);
-            if (pos != null) {
-                Objeto objeto;
-                int r = MathUtils.random(0, 100);
+    private Vector2 buscarPos(float w, float h) {
+        float margen = 10f;
+        rectTest.setWidth(w + margen);
+        rectTest.setHeight(h + margen);
+        int intentos = 0;
+        while(intentos < 50) {
+            intentos++;
+            float x = MathUtils.random(50, anchoMundo-50);
+            float y = MathUtils.random(50, altoMundo-50);
+            rectTest.setPosition(x-margen/2, y-margen/2);
 
-                if (r <= 30) {
-                    objeto = new Carne(pos.x, pos.y);
-                } else {
-                    objeto = new PocionDeAmatista(pos.x, pos.y);
-                }
-
-                objeto.agregarAlMundo(escenario);
-                escenario.getObjetos().add(objeto);
+            boolean choca = false;
+            for(Rectangle b : escenario.getRectangulosNoTransitables()) if(rectTest.overlaps(b)) { choca=true; break; }
+            if(!choca && escenario.getJugador() != null) {
+                if(Vector2.dst(x, y, escenario.getJugador().getX(), escenario.getJugador().getY()) < 200) choca=true;
             }
-        }
-    }
-
-    private Vector2 getPosicionValida(float ancho, float alto) {
-        rectTest.setWidth(ancho);
-        rectTest.setHeight(alto);
-
-        // Aumentamos intentos a 50 para asegurar éxito
-        for (int i = 0; i < 50; i++) {
-            float x = MathUtils.random(50, mundoAncho - 50);
-            float y = MathUtils.random(50, mundoAlto - 50);
-            rectTest.setPosition(x, y);
-
-            boolean colisiona = false;
-
-            // 1. Chequeamos contra bloques sólidos
-            for (Rectangle bloque : escenario.getRectangulosNoTransitables()) {
-                if (rectTest.overlaps(bloque)) {
-                    colisiona = true;
-                    break;
-                }
-            }
-
-            // 2. Chequeamos contra el jugador
-            if (!colisiona && escenario.getJugador() != null) {
-                float distJugador = Vector2.dst(x, y, escenario.getJugador().getX(), escenario.getJugador().getY());
-                if (distJugador < 200) colisiona = true;
-            }
-
-            if (!colisiona) return new Vector2(x, y);
+            if(!choca) return new Vector2(x, y);
         }
         return null;
     }

@@ -9,7 +9,7 @@ import io.github.package_game_survival.managers.PathManager;
 public class Vaca extends Animal {
 
     public Vaca(float x, float y) {
-        super("Vaca", x, y, 32, 32, 125, 125, 10, 0,
+        super("Vaca", x, y, 48, 32, 125, 125, 10, 0,
             Assets.get(PathManager.VACA_TEXTURE_ATLAS, Texture.class));
 
         this.agregarDrop(Carne.class);

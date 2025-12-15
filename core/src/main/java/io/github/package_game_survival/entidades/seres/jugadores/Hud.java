@@ -3,17 +3,22 @@ package io.github.package_game_survival.entidades.seres.jugadores;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import io.github.package_game_survival.entidades.objetos.Objeto;
+import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.GestorTiempo;
+import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.pantallas.MyGame;
 import io.github.package_game_survival.standards.LabelStandard;
 import io.github.package_game_survival.standards.ProgressBarStandard;
@@ -22,22 +27,20 @@ public class Hud implements Disposable {
 
     public Stage stage;
     private Viewport viewport;
-
     private ProgressBarStandard barraDeVida;
     private Jugador jugador;
     private GestorTiempo gestorTiempo;
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
 
+    // UI Elements
+    private LabelStandard labelAviso;
+    private Image iconoFuego;
     private Table tablaStats;
-    private LabelStandard lblStatsVida;
-    private LabelStandard lblStatsDanio;
-    private LabelStandard lblStatsVelocidad;
+    private LabelStandard lblStatsVida, lblStatsDanio, lblStatsVelocidad;
 
     private static final float ANCHO_UI = MyGame.ANCHO_PANTALLA;
     private static final float ALTO_UI = MyGame.ALTO_PANTALLA;
-
-    // Referencia para la barra de vida (Arriba a la derecha)
     private final float BARRA_X = ANCHO_UI - 130 - 20;
     private final float BARRA_Y = 730;
 
@@ -50,22 +53,50 @@ public class Hud implements Disposable {
         viewport = new FitViewport(ANCHO_UI, ALTO_UI);
         stage = new Stage(viewport, batch);
 
-        inicializarComponentes();
+        if (gestorTiempo != null) {
+            inicializarComponentes();
+        }
+
+        inicializarAlertas();
         inicializarTablaStats();
+    }
+
+    public void setGestorTiempo(GestorTiempo gt) {
+        this.gestorTiempo = gt;
+        inicializarComponentes();
     }
 
     private void inicializarComponentes() {
         gestorTiempo.agregarAlStage(this.stage);
-
         barraDeVida = new ProgressBarStandard(0, 100, 130, 10, jugador.getVida(), false, "HP");
         barraDeVida.setPosicion(BARRA_X, BARRA_Y);
-
         stage.addActor(barraDeVida);
+    }
+
+    private void inicializarAlertas() {
+        // Label Aviso Desastre
+        labelAviso = new LabelStandard("");
+        labelAviso.setColor(Color.RED);
+        labelAviso.setFontScale(1.0f); // Tamaño normal
+        labelAviso.setAlignment(Align.center);
+
+        // CAMBIO: Posición más alta (casi pegado al borde superior)
+        labelAviso.setPosition(ANCHO_UI / 2f, ALTO_UI - 40, Align.center);
+
+        labelAviso.setVisible(false);
+        stage.addActor(labelAviso);
+
+        // Icono Fuego
+        Texture texFuego = Assets.get(PathManager.HOGUERA_TEXTURE, Texture.class);
+        iconoFuego = new Image(texFuego);
+        iconoFuego.setSize(32, 32);
+        iconoFuego.setPosition(ANCHO_UI - 50, ALTO_UI - 150);
+        iconoFuego.setVisible(false);
+        stage.addActor(iconoFuego);
     }
 
     private void inicializarTablaStats() {
         tablaStats = new Table();
-
         LabelStandard titulo = new LabelStandard("ESTADISTICAS");
         titulo.setColor(Color.GOLD);
         titulo.setFontScale(0.8f);
@@ -78,30 +109,41 @@ public class Hud implements Disposable {
         lblStatsDanio.setFontScale(0.7f);
         lblStatsVelocidad.setFontScale(0.7f);
 
-        // Alineamos el contenido de la tabla a la izquierda
         tablaStats.add(titulo).align(Align.left).padBottom(5).row();
         tablaStats.add(lblStatsVida).align(Align.left).padBottom(2).row();
         tablaStats.add(lblStatsDanio).align(Align.left).padBottom(2).row();
         tablaStats.add(lblStatsVelocidad).align(Align.left).padBottom(2).row();
-
-        // 1. Calculamos el tamaño real de la tabla con el texto
         tablaStats.pack();
 
-        // 2. CORRECCIÓN DE POSICIÓN:
-        // Alineamos la tabla a la DERECHA de la pantalla (con un margen de 20px)
-        // Esto asegura que el texto nunca se corte, sin importar cuán largo sea.
         float tablaX = ANCHO_UI - tablaStats.getWidth() - 20;
-        float tablaY = BARRA_Y - 120; // Debajo de la barra
-
+        float tablaY = BARRA_Y - 180;
         tablaStats.setPosition(tablaX, tablaY);
-
         tablaStats.setVisible(false);
         stage.addActor(tablaStats);
     }
 
+    public void mostrarAvisoDesastre(String texto) {
+        labelAviso.setText(texto);
+        labelAviso.setVisible(true);
+        labelAviso.clearActions();
+
+        // CAMBIO: Reduje el tiempo en pantalla de 3s a 2.5s para que no moleste tanto
+        labelAviso.addAction(Actions.sequence(
+            Actions.alpha(0),
+            Actions.fadeIn(0.3f),
+            Actions.delay(2.5f),
+            Actions.fadeOut(0.5f),
+            Actions.visible(false)
+        ));
+    }
+
     public void update(float delta) {
-        barraDeVida.setRange(0, jugador.getVidaMaxima());
-        barraDeVida.actualizar(jugador.getVida());
+        if (barraDeVida != null) {
+            barraDeVida.setRange(0, jugador.getVidaMaxima());
+            barraDeVida.actualizar(jugador.getVida());
+        }
+
+        iconoFuego.setVisible(jugador.isSintiendoCalor());
 
         if (Gdx.input.isKeyPressed(Input.Keys.TAB)) {
             actualizarDatosStats();
@@ -117,8 +159,6 @@ public class Hud implements Disposable {
         lblStatsVida.setText("HP: " + jugador.getVida() + "/" + jugador.getVidaMaxima());
         lblStatsDanio.setText("DMG: " + jugador.getDanio());
         lblStatsVelocidad.setText("SPD: " + jugador.getVelocidad());
-
-        // Recalculamos posición por si el texto cambia de tamaño (ej: de 1 a 100 de daño)
         tablaStats.pack();
         float tablaX = ANCHO_UI - tablaStats.getWidth() - 20;
         tablaStats.setX(tablaX);
