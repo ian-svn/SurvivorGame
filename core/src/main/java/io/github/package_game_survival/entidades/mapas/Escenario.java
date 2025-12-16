@@ -220,9 +220,9 @@ public class Escenario implements IMundoJuego, Disposable {
     @Override public Array<Enemigo> getEnemigos() { return enemigos; }
     @Override public Array<Objeto> getObjetos() { return objetos; }
     @Override public Jugador getJugador() { return jugador; }
-    @Override public Array<Animal> getAnimales() { return animales; }
+    public Array<Animal> getAnimales() { return animales; }
     @Override public void agregarActor(Actor actor) { stageMundo.addActor(actor); }
-    @Override public void agregarActorUI(Actor actor) { if (stageUI != null) stageUI.addActor(actor); else stageMundo.addActor(actor); }
+    public void agregarActorUI(Actor actor) { if (stageUI != null) stageUI.addActor(actor); else stageMundo.addActor(actor); }
     public OrthographicCamera getCamara() { return (OrthographicCamera) stageMundo.getCamera(); }
     public Stage getStageMundo() { return stageMundo; }
     public Stage getStageUI() { return stageUI; }

@@ -40,6 +40,29 @@ public class AudioControler implements AudioService {
         }
     }
 
+    public void stopSound(String nombre) {
+        Sound sonido = sounds.get(nombre);
+        if (sonido != null) {
+            sonido.stop();
+        }
+    }
+
+    public long loopSound(String nombre) {
+        Sound sonido = sounds.get(nombre);
+        if (sonido != null) {
+            // .loop() inicia el sonido y lo repite automáticamente
+            return sonido.loop();
+        }
+        return -1;
+    }
+
+    public void dispose() {
+        for (Sound sound : sounds.values()) {
+            sound.dispose();
+        }
+        sounds.clear();
+    }
+
     public void changeMusic(String musicId, String filePath, boolean looping){
         currentMusic.stop();
         loadMusic(musicId, filePath);

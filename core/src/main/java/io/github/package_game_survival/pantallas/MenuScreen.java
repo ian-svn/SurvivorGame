@@ -28,9 +28,9 @@ public class MenuScreen implements Screen {
 
         stage = new Stage(game.getViewport());
 
-        Image fondo = new Image(Assets.get(PathManager.MENU_BACKGROUND_TEXTURE, Texture.class));
-        fondo.setSize(stage.getViewport().getWorldWidth(), stage.getViewport().getWorldHeight());
-        stage.addActor(fondo);
+            Image fondo = new Image(Assets.get(PathManager.MENU_BACKGROUND_TEXTURE, Texture.class));
+            fondo.setSize(stage.getViewport().getWorldWidth(), stage.getViewport().getWorldHeight());
+            stage.addActor(fondo);
 
         Gdx.input.setInputProcessor(stage);
 
@@ -40,13 +40,12 @@ public class MenuScreen implements Screen {
 
         TextButtonStandard jugarButton = new TextButtonStandard("Jugar");
         jugarButton.setClickListener(() -> {
-            game.setScreen(new GameScreen(game));
-            AudioManager.getControler().changeMusic("gameMusic", PathManager.GAME_MUSIC, true);
-            AudioManager.getControler().setVolume(20);
+            game.setScreen(new CharacterSelectionScreen(game));
         });
 
         TextButtonStandard opcionesButton = new TextButtonStandard("Opciones");
-            opcionesButton.setClickListener(() -> {game.setScreen(new OptionsScreen(game));
+        opcionesButton.setClickListener(() -> {
+            game.setScreen(new OptionsScreen(game));
         });
 
         TextButtonStandard salirButton = new TextButtonStandard("Salir");
@@ -84,7 +83,12 @@ public class MenuScreen implements Screen {
 
     @Override
     public void dispose() {
-        stage.dispose();
+        // PROTECCIÓN CONTRA EL CRASH:
+        // Verificamos si stage no es null antes de borrarlo.
+        if (stage != null) {
+            stage.dispose();
+            stage = null; // Lo marcamos como nulo para que no se pueda borrar dos veces
+        }
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
     }
 }

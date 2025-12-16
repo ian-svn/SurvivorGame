@@ -11,18 +11,22 @@ import io.github.package_game_survival.interfaces.EstadoAnimacion;
 import io.github.package_game_survival.interfaces.IAtaque;
 import io.github.package_game_survival.interfaces.IEstrategiaMovimiento;
 import io.github.package_game_survival.interfaces.IMundoJuego;
+import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.GestorAnimacion;
+import io.github.package_game_survival.managers.PathManager;
 
 public abstract class SerVivo extends Entidad {
 
-    // ... (Variables y constructor igual que antes) ...
     private int vida;
     private int vidaMinima = 0;
-    private int vidaMaxima = 100;
+    protected int vidaMaxima;
+
+    protected int topeVidaPermitida = 300;
+    protected int limiteDanio = 150;
+
     private int velocidad;
     private int danio;
-    private final int LIMITE_DANIO = 60;
-    private final int LIMITE_VELOCIDAD = 150;
+
     protected IEstrategiaMovimiento estrategia;
     protected IAtaque habilidadPrincipal;
     protected IMundoJuego mundo;
@@ -43,71 +47,53 @@ public abstract class SerVivo extends Entidad {
         this.vidaMaxima = vidaMaxima;
         this.danio = danio;
         this.atlas = atlas;
+
+        try {
+            AudioManager.getControler().loadSound("hit", PathManager.HIT_SOUND);
+        } catch (Exception e) {}
+
         this.visual = new GestorAnimacion();
         if (atlas != null) visual.inicializarAtlas(atlas);
     }
 
-    // --- LÓGICA DE FÍSICA Y EMPUJE MEJORADA ---
-
     public void recibirEmpuje(float fuerzaX, float fuerzaY) {
         if (muerto) return;
-
-        // CAMBIO: Paso más fino (1f) para máxima precisión y evitar atravesar paredes
         float step = 1f;
-
-        // --- Mover en X ---
         float remainingX = Math.abs(fuerzaX);
         float signX = Math.signum(fuerzaX);
-
         while (remainingX > 0) {
             float move = Math.min(remainingX, step);
-            // Si intentamos mover y chocamos, paramos inmediatamente en este eje
-            if (!intentarMover(move * signX, 0)) {
-                break;
-            }
+            if (!intentarMover(move * signX, 0)) break;
             remainingX -= move;
         }
-
-        // --- Mover en Y ---
         float remainingY = Math.abs(fuerzaY);
         float signY = Math.signum(fuerzaY);
-
         while (remainingY > 0) {
             float move = Math.min(remainingY, step);
-            if (!intentarMover(0, move * signY)) {
-                break;
-            }
+            if (!intentarMover(0, move * signY)) break;
             remainingY -= move;
         }
     }
 
-    /**
-     * Intenta mover la entidad. Si choca, revierte.
-     */
     private boolean intentarMover(float dx, float dy) {
         float oldX = getX();
         float oldY = getY();
-
         moveBy(dx, dy);
-
         if (colisionaConMundo()) {
             setX(oldX);
             setY(oldY);
-            return false; // Hubo colisión
+            return false;
         }
-        return true; // Movimiento exitoso
+        return true;
     }
 
     private boolean colisionaConMundo() {
         if (mundo == null) return false;
-
-        // 1. Bordes del Mapa
         if (getX() < 0) return true;
         if (getY() < 0) return true;
         if (getX() + getWidth() > mundo.getAncho()) return true;
         if (getY() + getHeight() > mundo.getAlto()) return true;
 
-        // 2. Obstáculos
         Rectangle miRect = getRectColision();
         for (Rectangle bloque : mundo.getRectangulosNoTransitables()) {
             if (miRect.overlaps(bloque)) return true;
@@ -115,13 +101,28 @@ public abstract class SerVivo extends Entidad {
         return false;
     }
 
-    // ... (Resto de métodos: alterarDanio, alterarVida, getters/setters, act, draw igual que antes) ...
-    // Solo asegúrate de copiar el resto de la clase igual que la tenías.
+    public void alterarVelocidad(int cantidad) {
+        this.velocidad += cantidad;
+    }
 
-    public void alterarDanio(int cantidad) { this.danio = Math.max(0, Math.min(danio + cantidad, LIMITE_DANIO)); }
-    public void alterarVelocidad(int cantidad) { this.velocidad = Math.max(0, Math.min(velocidad + cantidad, LIMITE_VELOCIDAD)); }
-    public void aumentarVidaMaxima(int cantidad) { this.vidaMaxima += cantidad; this.vida += cantidad; }
-    public void setMundo(IMundoJuego mundo) { this.mundo = mundo; }
+    public void alterarDanio(int cantidad) {
+        this.danio += cantidad;
+        if (this.danio > limiteDanio) this.danio = limiteDanio;
+        if (this.danio < 0) this.danio = 0;
+    }
+
+    public void aumentarVidaMaxima(int cantidad) {
+        if (this.vidaMaxima + cantidad <= topeVidaPermitida) {
+            this.vidaMaxima += cantidad;
+            this.vida += cantidad;
+        } else {
+            int diferencia = topeVidaPermitida - this.vidaMaxima;
+            if (diferencia > 0) {
+                this.vidaMaxima = topeVidaPermitida;
+                this.vida += diferencia;
+            }
+        }
+    }
 
     public void alterarVida(int cantidad) {
         if (muerto) return;
@@ -130,6 +131,7 @@ public abstract class SerVivo extends Entidad {
             setColor(Color.RED);
             isHurt = true;
             tiempoHurt = DURACION_ROJO;
+            try { AudioManager.getControler().playSound("hit"); } catch(Exception e){}
         }
         this.vida = Math.max(vidaMinima, Math.min(vida, vidaMaxima));
         if (vida <= vidaMinima) {
@@ -138,14 +140,14 @@ public abstract class SerVivo extends Entidad {
         }
     }
 
-    public boolean isMuerto() { return muerto; }
-
     @Override
     public void act(float delta) {
         super.act(delta);
         if (muerto) return;
+
         if (habilidadPrincipal != null) habilidadPrincipal.update(delta);
         if (visual != null) visual.update(delta);
+
         if (isHurt) {
             tiempoHurt -= delta;
             if (tiempoHurt <= 0) {
@@ -155,10 +157,21 @@ public abstract class SerVivo extends Entidad {
         }
     }
 
-    public void atacar(Vector2 destino, IMundoJuego mundo) {
-        if (!muerto && habilidadPrincipal != null) habilidadPrincipal.intentarAtacar(this, destino, mundo);
+    @Override
+    public void agregarAlMundo(IMundoJuego mundo) {
+        this.mundo = mundo;
+        super.agregarAlMundo(mundo);
     }
-    public boolean estaAtacando() { return habilidadPrincipal != null && habilidadPrincipal.estaCasteando(); }
+
+    public void atacar(Vector2 destino, IMundoJuego mundo) {
+        if (!muerto && habilidadPrincipal != null) {
+            habilidadPrincipal.intentarAtacar(this, destino, mundo);
+        }
+    }
+
+    public boolean estaAtacando() {
+        return habilidadPrincipal != null && habilidadPrincipal.estaCasteando();
+    }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
@@ -187,13 +200,15 @@ public abstract class SerVivo extends Entidad {
         }
     }
 
-    // Getters y Setters necesarios
+    public boolean isMuerto() { return muerto; }
+
     public int getVida() { return vida; }
     public int getVidaMaxima() { return vidaMaxima; }
     public float getCentroX() { return getX() + getWidth() / 2f; }
     public int getVelocidad() { return velocidad; }
     public void setVelocidad(int velocidad) { this.velocidad = velocidad; }
     public int getDanio() { return danio; }
+    public void setMundo(IMundoJuego mundo) { this.mundo = mundo; }
     public IEstrategiaMovimiento getEstrategia() { return estrategia; }
     public void setEstrategia(IEstrategiaMovimiento estrategia) { this.estrategia = estrategia; }
     public GestorAnimacion getVisual() { return visual; }

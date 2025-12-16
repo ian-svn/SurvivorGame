@@ -13,15 +13,13 @@ import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.TextButtonStandard;
 
-import java.security.Key;
-
 public class FastMenuScreen implements Screen {
 
     private final MyGame game;
     private final GameScreen gameScreen;
 
     private Stage stage;
-    private Skin background;
+    private Skin skin;
 
     public FastMenuScreen(final MyGame game, final GameScreen gameScreen) {
         this.game = game;
@@ -30,41 +28,72 @@ public class FastMenuScreen implements Screen {
 
     @Override
     public void show() {
-        this.background = Assets.get(PathManager.BACKGROUND, Skin.class);
+        // Cargar Skin
+        this.skin = Assets.get(PathManager.BACKGROUND, Skin.class);
+
         stage = new Stage(game.getViewport());
         Gdx.input.setInputProcessor(stage);
 
+        // 1. BOTÓN REANUDAR
         TextButtonStandard reanudarButton = new TextButtonStandard("Reanudar");
         reanudarButton.setClickListener(() -> {
-                game.setScreen(gameScreen);
-                dispose();
-                gameScreen.getCamara().zoom = 0.6f;
+            // No detenemos el viento aquí para que la atmósfera siga al volver al juego
+            game.setScreen(gameScreen);
+            gameScreen.getCamara().zoom = 0.6f;
         });
 
-        TextButtonStandard resetButton = new TextButtonStandard("Jugar otra vez");
+        // 2. BOTÓN REINICIAR
+        TextButtonStandard resetButton = new TextButtonStandard("Reiniciar");
         resetButton.setClickListener(() -> {
-                game.setScreen(new GameScreen(game));
-                dispose();
+            // CORRECCIÓN: Detener sonido PRIMERO
+            AudioManager.getControler().stopSound("viento");
+
+            CharacterSelectionScreen.TipoClase tipo = gameScreen.getTipoClaseActual();
+            game.setScreen(new GameScreen(game, tipo));
+            dispose();
         });
 
+        // 3. BOTÓN CAMBIAR PERSONAJE
+        TextButtonStandard cambiarPjButton = new TextButtonStandard("Cambiar Personaje");
+        cambiarPjButton.setClickListener(() -> {
+            // CORRECCIÓN: Detener sonido PRIMERO
+            AudioManager.getControler().stopSound("viento");
+
+            game.setScreen(new CharacterSelectionScreen(game));
+            gameScreen.dispose();
+            dispose();
+        });
+
+        // 4. BOTÓN VOLVER AL MENU
         TextButtonStandard volverMenuButton = new TextButtonStandard("Volver al Menu");
         volverMenuButton.setClickListener(() -> {
+            // CORRECCIÓN: Detener sonido PRIMERO
+            AudioManager.getControler().stopSound("viento");
+
             game.setScreen(new MenuScreen(game));
+
+            // Música del menú
             AudioManager.getControler().changeMusic("menuMusic", PathManager.MENU_MUSIC, true);
             AudioManager.getControler().setVolume(20);
+
+            gameScreen.dispose();
             dispose();
         });
 
         Table table = new Table();
-        table.setBackground(background.getDrawable("fondoMenu"));
+        // Fondo opcional si el skin lo tiene
+        if (skin != null && skin.has("fondoMenu", com.badlogic.gdx.scenes.scene2d.utils.Drawable.class)) {
+            table.setBackground(skin.getDrawable("fondoMenu"));
+        }
+
         table.setFillParent(true);
         table.center();
         table.pad(50);
-        table.add(reanudarButton).width(220).height(60).pad(10);
-        table.row();
-        table.add(resetButton).width(220).height(60).pad(10);
-        table.row();
-        table.add(volverMenuButton).width(220).height(60).pad(10);
+
+        table.add(reanudarButton).width(250).height(60).pad(10).row();
+        table.add(resetButton).width(250).height(60).pad(10).row();
+        table.add(cambiarPjButton).width(250).height(60).pad(10).row();
+        table.add(volverMenuButton).width(250).height(60).pad(10).row();
 
         stage.addActor(table);
     }
@@ -78,6 +107,7 @@ public class FastMenuScreen implements Screen {
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
             game.setScreen(gameScreen);
             gameScreen.getCamara().zoom = 0.6f;
+            Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
         }
     }
 

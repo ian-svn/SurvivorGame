@@ -13,8 +13,6 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
     private final Array<Bloque> obstaculos;
     private boolean terminado = false;
 
-    // --- Variables Temporales para evitar Garbage Collection ---
-    private final Vector2 tempPos = new Vector2();
     private final Vector2 tempDir = new Vector2();
     private final Rectangle tempRect = new Rectangle();
 
@@ -27,53 +25,47 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
     public void actualizar(SerVivo serVivo, float delta) {
         if (terminado) return;
 
-        tempPos.set(serVivo.getX(), serVivo.getY());
-
-        // Calculamos vector dirección hacia el destino
-        // Usamos el centro del SerVivo para calcular mejor la trayectoria
+        // Vector hacia destino desde el CENTRO del personaje (más preciso)
         float centroX = serVivo.getX() + serVivo.getAncho() / 2;
         float centroY = serVivo.getY() + serVivo.getAlto() / 2;
 
         tempDir.set(destino.x - centroX, destino.y - centroY);
 
-        float distancia = tempDir.len();
-
-        // Si está muy cerca, terminamos (reducido a 2.5f para mayor precisión)
-        if (distancia < 2.5f) {
+        // Distancia mínima para considerar que llegó (evita vibración final)
+        if (tempDir.len() < 3.0f) {
             terminado = true;
             return;
         }
 
-        tempDir.nor(); // Normalizar
+        tempDir.nor();
         float distanciaMovimiento = serVivo.getVelocidad() * delta;
 
-        // Calculamos el movimiento deseado total
         float moveX = tempDir.x * distanciaMovimiento;
         float moveY = tempDir.y * distanciaMovimiento;
 
         float nextX = serVivo.getX() + moveX;
         float nextY = serVivo.getY() + moveY;
 
-        // --- LÓGICA DE DESLIZAMIENTO (SLIDING) ---
-
-        // 1. Intentar movimiento completo (Diagonal)
+        // 1. Intento mover en diagonal
         if (!hayColision(nextX, nextY, serVivo)) {
             serVivo.setPosition(nextX, nextY);
         }
         else {
-            // 2. Si falla, intentar solo eje X (Deslizar horizontalmente)
-            boolean posibleX = !hayColision(nextX, serVivo.getY(), serVivo);
+            // SLIDING (Deslizamiento)
 
-            // 3. Si falla, intentar solo eje Y (Deslizar verticalmente)
-            boolean posibleY = !hayColision(serVivo.getX(), nextY, serVivo);
+            // 2. Intento mover solo en X
+            boolean puedeEnX = !hayColision(nextX, serVivo.getY(), serVivo);
 
-            if (posibleX) {
+            // 3. Intento mover solo en Y
+            boolean puedeEnY = !hayColision(serVivo.getX(), nextY, serVivo);
+
+            if (puedeEnX) {
                 serVivo.setPosition(nextX, serVivo.getY());
-            } else if (posibleY) {
+            } else if (puedeEnY) {
                 serVivo.setPosition(serVivo.getX(), nextY);
             } else {
-                // Si está totalmente bloqueado, no se mueve, pero no vibra.
-                // Opcional: Podrías marcar 'terminado = true' si se queda atascado mucho tiempo
+                // Bloqueado total. No nos movemos, pero NO cancelamos la estrategia.
+                // El jugador podría deslizarse si cambia ligeramente el ángulo.
             }
         }
     }
@@ -81,14 +73,21 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
     private boolean hayColision(float nextX, float nextY, SerVivo serVivo) {
         if (obstaculos == null || obstaculos.isEmpty()) return false;
 
-        // Actualizamos el rectángulo temporal en la posición futura
-        // Nota: Es importante usar el mismo tamaño de hitbox que usa el personaje
-        tempRect.set(nextX, nextY, serVivo.getAncho(), serVivo.getAlto() / 2);
+        // IMPORTANTE: Usamos getRectColision() del SerVivo, que ahora es 30x30
+        Rectangle hitbox = serVivo.getRectColision();
+        tempRect.set(nextX, nextY, hitbox.width, hitbox.height);
 
-        // Iteración optimizada
+        // Ajuste de posición: La hitbox del jugador es relativa a su sprite.
+        // getRectColision() devuelve la caja YA posicionada.
+        // Pero aquí queremos probar una posición FUTURA.
+        // El offset X es (anchoSprite - anchoHitbox) / 2
+        float offsetX = (serVivo.getWidth() - hitbox.width) / 2;
+        float offsetY = 0; // Hitbox en los pies
+
+        tempRect.setPosition(nextX + offsetX, nextY + offsetY);
+
         for (int i = 0; i < obstaculos.size; i++) {
             Bloque bloque = obstaculos.get(i);
-
             if (bloque.isTransitable()) continue;
 
             if (tempRect.overlaps(bloque.getRectColision())) {
@@ -101,11 +100,6 @@ public class EstrategiaMoverAPunto implements IEstrategiaMovimiento {
     @Override
     public boolean haTerminado(SerVivo serVivo) {
         return terminado;
-    }
-
-    public void setDestino(float x, float y) {
-        this.destino.set(x, y);
-        this.terminado = false;
     }
 
     public void setDestino(Vector2 nuevoDestino) {

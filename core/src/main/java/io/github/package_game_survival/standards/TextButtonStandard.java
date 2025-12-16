@@ -16,6 +16,8 @@ public class TextButtonStandard extends TextButton {
 
     public TextButtonStandard(String text) {
         super(text, Assets.get(PathManager.TEXT_BUTTON, Skin.class));
+
+        // Listener para el cursor (Hover)
         this.addListener(new InputListener() {
             @Override
             public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
@@ -26,17 +28,17 @@ public class TextButtonStandard extends TextButton {
             public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
                 Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
             }
-
         });
 
-
+        // Listener para el sonido por defecto
         this.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                AudioManager.getAudioControler().playSound("click");
+                // Asegúrate que tu AudioManager tiene el método getControler() o getAudioControler()
+                // Uso getControler() basado en tus clases anteriores.
+                AudioManager.getControler().playSound("click");
             }
         });
-
     }
 
     public void setClickListener(Runnable run){
@@ -44,10 +46,14 @@ public class TextButtonStandard extends TextButton {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 run.run();
+                // Restauramos cursor al hacer click por si cambia de pantalla
                 Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
             }
         });
     }
 
+    public void setEscalaFuente(float escala){
+        this.setScale(escala);
+    }
 
 }

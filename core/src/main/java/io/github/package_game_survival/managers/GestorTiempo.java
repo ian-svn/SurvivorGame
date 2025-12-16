@@ -2,6 +2,7 @@ package io.github.package_game_survival.managers;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -20,22 +21,20 @@ public class GestorTiempo {
     private Table tablaUI;
 
     private boolean juegoGanado = false;
-    private final int DIA_FINAL = 6;
+    private final int DIA_FINAL = 5;
 
     private static final float BRILLO_MAXIMO = 1.0f;
     private static final float BRILLO_MINIMO = 0.5f;
     private static final int HORA_AMANECER = 5;
     private static final int HORA_ANOCHECER = 20;
 
-    // Tiempos
     private static final float DURACION_REAL_DIA = 60f;
-    private static final float DURACION_REAL_NOCHE = 120f;
+    private static final float DURACION_REAL_NOCHE = 90f;
     private static final int MINUTOS_JUEGO_DIA = (HORA_ANOCHECER - HORA_AMANECER) * 60;
     private static final int MINUTOS_JUEGO_NOCHE = (24 - (HORA_ANOCHECER - HORA_AMANECER)) * 60;
     private static final float SEG_POR_MIN_DIA = DURACION_REAL_DIA / MINUTOS_JUEGO_DIA;
     private static final float SEG_POR_MIN_NOCHE = DURACION_REAL_NOCHE / MINUTOS_JUEGO_NOCHE;
 
-    // Transiciones shader
     private static final float HORA_AMANECER_INICIO = 5f;
     private static final float HORA_AMANECER_FIN = 9f;
     private static final float HORA_ATARDECER_INICIO = 18f;
@@ -115,13 +114,15 @@ public class GestorTiempo {
 
             segRestantes = (minFaltantes * SEG_POR_MIN_NOCHE) - acumuladorTiempo;
             estado = "Amanecer en: ";
-            labelReloj.setColor(com.badlogic.gdx.graphics.Color.CYAN);
+            labelReloj.setColor(Color.YELLOW);
+            labelDia.setColor(Color.YELLOW);
         } else {
             int minObjetivo = HORA_ANOCHECER * 60;
             int minFaltantes = minObjetivo - minActual;
             segRestantes = (minFaltantes * SEG_POR_MIN_DIA) - acumuladorTiempo;
             estado = "Noche en: ";
-            labelReloj.setColor(com.badlogic.gdx.graphics.Color.YELLOW);
+            labelReloj.setColor(Color.NAVY);
+            labelDia.setColor(Color.BLUE);
         }
 
         if (segRestantes < 0) segRestantes = 0;

@@ -1,6 +1,5 @@
 package io.github.package_game_survival.managers;
 
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.MathUtils;
@@ -9,15 +8,16 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import io.github.package_game_survival.desastres.Charco;
 import io.github.package_game_survival.desastres.EfectoVentisca;
-import io.github.package_game_survival.entidades.desastres.Tornado;
+import io.github.package_game_survival.desastres.Tornado;
 import io.github.package_game_survival.entidades.mapas.Escenario;
-import io.github.package_game_survival.entidades.seres.jugadores.Hud;
-import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
-import io.github.package_game_survival.entidades.objetos.Objeto;
-
-// [NUEVOS IMPORTS] Para identificar qué salvar
 import io.github.package_game_survival.entidades.objetos.Cama;
 import io.github.package_game_survival.entidades.objetos.Hoguera;
+import io.github.package_game_survival.entidades.objetos.Objeto;
+import io.github.package_game_survival.entidades.seres.jugadores.Hud;
+import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
+import io.github.package_game_survival.managers.Audio.AudioManager;
+
+import static io.github.package_game_survival.managers.PathManager.TORNADO_ATLAS;
 
 public class GestorDesastres {
 
@@ -28,15 +28,16 @@ public class GestorDesastres {
     private final Hud hud;
     private final EfectoVentisca efectoVentisca;
 
-    // Estados
     private boolean activaVentisca = false;
     private boolean activaTornado = false;
     private boolean activaInundacion = false;
     private boolean activaTerremoto = false;
 
-    private Array<TipoDesastre> bolsaDesastres;
+    private float timerDanoVentisca = 0f;
+    private final float INTERVALO_DANO_VENTISCA = 2.0f;
+    private final int DANO_VENTISCA = 15;
 
-    // Variables control
+    private Array<TipoDesastre> bolsaDesastres;
     private int contadorNoches = 0;
     private boolean esDeNochePrevio = false;
     private boolean eventoNocheActivado = false;
@@ -45,16 +46,23 @@ public class GestorDesastres {
     private boolean estabaEnAgua = false;
     private final Rectangle rectAux = new Rectangle();
 
-    // Constantes Velocidad
-    private final int VELOCIDAD_NORMAL = 120;
+    private int velocidadActualJugador; // CAMBIO: Usamos esto para recordar la velocidad real con buffs
     private final int VELOCIDAD_AGUA = 60;
-    private final int VELOCIDAD_TERREMOTO = (int) (VELOCIDAD_NORMAL * 0.7f);
+    private int velocidadTerremoto;
 
     public GestorDesastres(Escenario escenario, Jugador jugador, Hud hud) {
         this.escenario = escenario;
         this.jugador = jugador;
         this.hud = hud;
         this.efectoVentisca = new EfectoVentisca(escenario.getAncho(), escenario.getAlto(), jugador);
+
+        // Inicializamos con la velocidad base del personaje (ej: 160)
+        this.velocidadActualJugador = jugador.getVelocidad();
+        this.velocidadTerremoto = (int) (velocidadActualJugador * 0.6f);
+
+        try {
+            AudioManager.getControler().loadSound("viento", PathManager.VIENTO_SOUND);
+        } catch (Exception e) {}
 
         llenarBolsaDesastres();
     }
@@ -84,12 +92,17 @@ public class GestorDesastres {
         if (esDeNoche && !esDeNochePrevio) {
             contadorNoches++;
             eventoNocheActivado = false;
+            if (escenario.getEnemigos() != null) {
+                for (var enemigo : escenario.getEnemigos()) {
+                    enemigo.escalarDificultad(contadorNoches);
+                }
+            }
         }
         esDeNochePrevio = esDeNoche;
 
         if (esDeNoche && !eventoNocheActivado && contadorNoches > 0) {
             int dia = escenario.getGestorTiempo().getDia();
-            activarEventoAleatorio(dia == 5);
+            activarEventoAleatorio(dia == 4);
             eventoNocheActivado = true;
         }
     }
@@ -98,6 +111,14 @@ public class GestorDesastres {
         if (activaVentisca) {
             var cam = escenario.getCamara();
             efectoVentisca.update(delta, cam.position.x, cam.position.y, cam.viewportWidth * cam.zoom, cam.viewportHeight * cam.zoom);
+
+            timerDanoVentisca += delta;
+            if (timerDanoVentisca >= INTERVALO_DANO_VENTISCA) {
+                if (!jugador.isSintiendoCalor()) {
+                    jugador.alterarVida(-DANO_VENTISCA);
+                }
+                timerDanoVentisca = 0f;
+            }
         }
 
         if (fuerzaTemblor > 0) {
@@ -111,27 +132,42 @@ public class GestorDesastres {
         gestionarVelocidadGlobal();
     }
 
+    // --- CORRECCIÓN IMPORTANTE ---
     private void gestionarVelocidadGlobal() {
+        boolean hayDesastreDeVelocidad = false;
+
+        // 1. Prioridad: Terremoto
         if (activaTerremoto) {
-            aplicarVelocidad(VELOCIDAD_TERREMOTO);
-            return;
+            aplicarVelocidad(velocidadTerremoto);
+            hayDesastreDeVelocidad = true;
         }
-        if (activaInundacion && jugadorPisaAgua()) {
+        // 2. Prioridad: Agua
+        else if (activaInundacion && jugadorPisaAgua()) {
             if (!estabaEnAgua) {
                 aplicarVelocidad(VELOCIDAD_AGUA);
                 estabaEnAgua = true;
             }
-        } else {
-            if (estabaEnAgua) {
-                aplicarVelocidad(VELOCIDAD_NORMAL);
+            hayDesastreDeVelocidad = true;
+        }
+
+        // 3. Si NO hay desastre activo afectando la velocidad
+        if (!hayDesastreDeVelocidad) {
+            // Si acabamos de salir del agua o terremoto, restauramos la velocidad guardada
+            if (estabaEnAgua || jugador.getVelocidad() < velocidadActualJugador) {
+                aplicarVelocidad(velocidadActualJugador);
                 estabaEnAgua = false;
-            } else if (!activaTerremoto && jugador.getVelocidad() != VELOCIDAD_NORMAL) {
-                aplicarVelocidad(VELOCIDAD_NORMAL);
+            }
+            // CLAVE: Actualizamos la velocidad base si el jugador recibió un buff (carne)
+            // mientras no estaba en un desastre.
+            else {
+                velocidadActualJugador = jugador.getVelocidad();
             }
         }
     }
 
-    private void aplicarVelocidad(int vel) { if (jugador.getVelocidad() != vel) jugador.setVelocidad(vel); }
+    private void aplicarVelocidad(int vel) {
+        if (jugador.getVelocidad() != vel) jugador.setVelocidad(vel);
+    }
 
     private boolean jugadorPisaAgua() {
         for (Actor actor : escenario.getStageMundo().getActors()) {
@@ -162,6 +198,7 @@ public class GestorDesastres {
                 activaVentisca = true;
                 efectoVentisca.setActivo(true);
                 efectoVentisca.setIntensidadCeguera(0.5f);
+                try { AudioManager.getControler().loopSound("viento"); } catch(Exception e){}
                 break;
             case TORNADO:
                 activaTornado = true;
@@ -173,49 +210,42 @@ public class GestorDesastres {
                 break;
             case TERREMOTO:
                 activaTerremoto = true;
-                aplicarEfectoTerremoto(); // <--- Aquí es donde limpiamos objetos
+                aplicarEfectoTerremoto();
                 break;
         }
     }
 
-    // --- MODIFICADO: NO ROMPE CAMAS NI HOGUERAS ---
     private void aplicarEfectoTerremoto() {
         jugador.alterarVida(-20);
-
         Array<Objeto> objetos = escenario.getObjetos();
 
-        // Iteramos hacia atrás para poder borrar elementos sin romper el índice
         for (int i = objetos.size - 1; i >= 0; i--) {
             Objeto obj = objetos.get(i);
-
-            // FILTRO DE SEGURIDAD:
-            // Si el objeto es una Cama o una Hoguera, lo ignoramos (no se borra)
             if (obj instanceof Cama || obj instanceof Hoguera) {
                 continue;
             }
-
-            // Si es cualquier otra cosa (carne, poción, etc.), se borra
-            obj.remove();
+            obj.delete();
             objetos.removeIndex(i);
         }
-
         fuerzaTemblor = 5.0f;
     }
 
     private void spawnTornados(int cantidad) {
-        TextureAtlas atlas = Assets.get(PathManager.TORNADO_ATLAS, TextureAtlas.class);
+        TextureAtlas atlas = io.github.package_game_survival.managers.Assets.get(TORNADO_ATLAS, TextureAtlas.class);
         float anguloBase = MathUtils.random(0, 360);
         for (int i = 0; i < cantidad; i++) {
             float angulo = anguloBase + (360f / cantidad) * i;
             float dist = 500f;
             float x = jugador.getX() + MathUtils.cosDeg(angulo) * dist;
             float y = jugador.getY() + MathUtils.sinDeg(angulo) * dist;
-            escenario.agregarActor(new Tornado(x, y, atlas, jugador));
+
+            Tornado tornado = new Tornado(x, y, atlas, jugador);
+            tornado.agregarAlMundo(escenario);
         }
     }
 
     private void spawnInundacionGrid() {
-        Texture tex = Assets.get(PathManager.AGUA_TEXTURE, Texture.class);
+        com.badlogic.gdx.graphics.Texture tex = io.github.package_game_survival.managers.Assets.get(io.github.package_game_survival.managers.PathManager.AGUA_TEXTURE, com.badlogic.gdx.graphics.Texture.class);
         int cols = 12, filas = 12;
         float cw = escenario.getAncho()/cols;
         float ch = escenario.getAlto()/filas;
@@ -229,7 +259,7 @@ public class GestorDesastres {
         }
     }
 
-    private void intentarPonerCharco(int c, int f, float cw, float ch, Texture tex) {
+    private void intentarPonerCharco(int c, int f, float cw, float ch, com.badlogic.gdx.graphics.Texture tex) {
         boolean ok = false;
         int intentos = 0;
         while(!ok && intentos < 5) {
@@ -241,7 +271,7 @@ public class GestorDesastres {
             rectAux.set(x,y,w,h);
             if(esSitioLibre(rectAux)) {
                 Charco charco = new Charco(x, y, w, h, tex, jugador);
-                escenario.agregarActor(charco);
+                charco.agregarAlMundo(escenario);
                 charco.toBack();
                 ok = true;
             }
@@ -256,15 +286,26 @@ public class GestorDesastres {
     }
 
     private void limpiarTodosLosDesastres() {
+        if (activaVentisca) {
+            try { AudioManager.getControler().stopSound("viento"); } catch(Exception e){}
+        }
+
         activaVentisca = false; activaTornado = false; activaInundacion = false; activaTerremoto = false;
         efectoVentisca.setActivo(false);
-        aplicarVelocidad(VELOCIDAD_NORMAL);
+
+        // Restauramos a la última velocidad conocida del jugador
+        aplicarVelocidad(velocidadActualJugador);
+
         estabaEnAgua = false;
         fuerzaTemblor = 0;
         Array<Actor> actores = escenario.getStageMundo().getActors();
         for(int i=actores.size-1; i>=0; i--) {
             Actor a = actores.get(i);
-            if(a instanceof Tornado || a instanceof Charco) a.remove();
+            if(a instanceof Tornado) {
+                ((Tornado)a).delete();
+            } else if(a instanceof Charco) {
+                ((Charco)a).delete();
+            }
         }
     }
 

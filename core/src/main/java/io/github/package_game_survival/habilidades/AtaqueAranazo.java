@@ -4,96 +4,135 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Polygon;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import io.github.package_game_survival.entidades.efectos.EfectoVisual;
 import io.github.package_game_survival.entidades.seres.SerVivo;
-import io.github.package_game_survival.entidades.seres.animales.Animal;
 import io.github.package_game_survival.interfaces.IMundoJuego;
 import io.github.package_game_survival.managers.Assets;
+import io.github.package_game_survival.managers.Audio.AudioManager;
 import io.github.package_game_survival.managers.PathManager;
 
 public class AtaqueAranazo extends AtaqueBase {
 
-    // CAMBIO 1: Quitamos 'final' para poder modificarlo dinámicamente
     private float anchoArea;
-    private final float FUERZA_EMPUJE = 15f;
-
     private final Color colorVisual;
 
-    public AtaqueAranazo(float cooldown, float tiempoCasteo, int danio, float rango, float anchoArea, Class<? extends SerVivo> claseObjetivo, Color color) {
-        super(cooldown, tiempoCasteo, danio, rango, claseObjetivo);
-        this.anchoArea = anchoArea;
+    // Guardamos la geometría calculada al inicio para usarla al final
+    private final Polygon areaGolpeSnapshot;
+    private final Vector2 direccionEmpuje = new Vector2();
+
+    // Variables para guardar dónde pintar el efecto al final
+    private float xVisual, yVisual, rotacionVisual;
+
+    public AtaqueAranazo(float cooldown, float duracionCast, int danio, float rango,
+                         float ancho, Class<? extends SerVivo> objetivo, Color color) {
+        super(cooldown, duracionCast, danio, rango, objetivo);
+
+        this.anchoArea = ancho;
         this.colorVisual = color;
+        this.areaGolpeSnapshot = new Polygon();
+
+        recalcularDimensionesPoligono();
     }
 
-    // CAMBIO 2: Métodos necesarios para la mejora de la Lana
-    public void aumentarRango(float cantidad) {
-        this.rango += cantidad;
-        // Opcional: Límite para que no pegue en todo el mapa
-        if (this.rango > 300) this.rango = 300;
+    public void aumentarRango(float r) { this.rango += r; recalcularDimensionesPoligono(); }
+    public void aumentarArea(float a) { this.anchoArea += a; recalcularDimensionesPoligono(); }
+
+    private void recalcularDimensionesPoligono() {
+        float[] vertices = new float[] {
+            0, -anchoArea/2,
+            rango, -anchoArea/2,
+            rango, anchoArea/2,
+            0, anchoArea/2
+        };
+        areaGolpeSnapshot.setVertices(vertices);
+        areaGolpeSnapshot.setOrigin(0, 0);
     }
 
-    public void aumentarArea(float cantidad) {
-        this.anchoArea += cantidad;
-        // Opcional: Límite de ancho
-        if (this.anchoArea > 200) this.anchoArea = 200;
-    }
-
+    // 1. AL HACER CLICK: Solo calculamos y bloqueamos el destino (Snapshot)
     @Override
-    protected void ejecutarEfecto(SerVivo atacante, Vector2 destino, IMundoJuego mundo) {
-        Vector2 centroAtacante = new Vector2(atacante.getCentroX(), atacante.getY() + atacante.getAlto()/2);
-        Vector2 direccion = new Vector2(destino).sub(centroAtacante).nor();
-        float angulo = direccion.angleDeg();
+    protected void onInicioCasteo(SerVivo atacante, Vector2 destino, IMundoJuego mundo) {
+        float cx = atacante.getCentroX();
+        float cy = atacante.getCentroY();
 
-        // 1. VISUAL
-        TextureAtlas atlas = Assets.get(PathManager.ARANAZO_ANIMATION, TextureAtlas.class);
-        if (atlas != null) {
-            EfectoVisual efecto = new EfectoVisual(atlas, "aranazo", centroAtacante.x, centroAtacante.y - (anchoArea / 2f), 0.05f, angulo);
+        Vector2 dir = new Vector2(destino).sub(cx, cy).nor();
+        float angulo = dir.angleDeg();
 
-            // Usa 'this.rango' y 'this.anchoArea' que ahora pueden cambiar
-            efecto.setSize(this.rango, this.anchoArea);
-            efecto.setOrigin(0, this.anchoArea / 2f);
-            efecto.setRotation(angulo);
-            efecto.setColor(this.colorVisual);
+        // Guardamos vector de empuje
+        this.direccionEmpuje.set(dir);
 
-            mundo.agregarActor(efecto);
-        }
+        // Guardamos la hitbox física (Invisible por ahora)
+        areaGolpeSnapshot.setPosition(cx, cy);
+        areaGolpeSnapshot.setRotation(angulo);
 
-        // 2. FÍSICA
-        Polygon areaAtaque = new Polygon(new float[]{0, 0, rango, 0, rango, anchoArea, 0, anchoArea});
-        areaAtaque.setOrigin(0, anchoArea / 2);
-        areaAtaque.setPosition(centroAtacante.x, centroAtacante.y - (anchoArea/2));
-        areaAtaque.setRotation(angulo);
+        // Guardamos datos para pintar el efecto LUEGO (cuando termine el tiempo)
+        this.xVisual = cx;
+        this.yVisual = cy;
+        this.rotacionVisual = angulo;
 
-        Array<SerVivo> posiblesObjetivos = new Array<>();
-        if (claseObjetivo.getSimpleName().equals("Jugador")) {
-            if (mundo.getJugador() != null) posiblesObjetivos.add(mundo.getJugador());
-        } else {
-            if (mundo.getEnemigos() != null) posiblesObjetivos.addAll(mundo.getEnemigos());
-            if (claseObjetivo.isAssignableFrom(Animal.class) && mundo.getAnimales() != null) {
-                posiblesObjetivos.addAll(mundo.getAnimales());
-            }
-        }
+        // Opcional: Sonido de "preparación" o "carga" aquí si quisieras
+    }
 
-        boolean huboImpacto = false;
+    // 2. AL TERMINAR EL TIEMPO: ¡ZAS! Visual + Daño juntos
+    @Override
+    protected void ejecutarGolpe(SerVivo atacante, Vector2 destino, IMundoJuego mundo) {
+        // AHORA mostramos el efecto visual (Flash instantáneo)
+        spawnEfectoVisual(mundo);
 
-        for (SerVivo victima : posiblesObjetivos) {
-            if (victima == null || victima == atacante) continue;
-            if (victima.isMuerto() || victima.getVida() <= 0) continue;
+        // Sonido de impacto
+        try { AudioManager.getControler().playSound("ataque"); } catch (Exception e) {}
 
-            Polygon hitBoxVictima = new Polygon(new float[]{0,0, victima.getAncho(), 0, victima.getAncho(), victima.getAlto(), 0, victima.getAlto()});
-            hitBoxVictima.setPosition(victima.getX(), victima.getY());
+        Array<Actor> actores = mundo.getStageMundo().getActors();
 
-            if (Intersector.overlapConvexPolygons(areaAtaque, hitBoxVictima)) {
-                int danioTotal = this.danio + atacante.getDanio();
-                victima.alterarVida(-danioTotal);
-                victima.recibirEmpuje(direccion.x * FUERZA_EMPUJE, direccion.y * FUERZA_EMPUJE);
+        for (Actor a : actores) {
+            if (a instanceof SerVivo) {
+                SerVivo victima = (SerVivo) a;
 
-                if (!huboImpacto) {
-                    huboImpacto = true;
+                if (victima == atacante) continue;
+                if (victima.getVida() <= 0) continue;
+
+                if (claseObjetivo.isInstance(victima)) {
+                    // Usamos el área que calculamos AL PRINCIPIO
+                    if (Intersector.overlapConvexPolygons(areaGolpeSnapshot, rectToPoly(victima.getRectColision()))) {
+
+                        int danioTotal = this.danioBase + atacante.getDanio();
+                        victima.alterarVida(-danioTotal);
+                        victima.recibirEmpuje(direccionEmpuje.x * 20f, direccionEmpuje.y * 20f);
+                    }
                 }
             }
         }
     }
+
+    private void spawnEfectoVisual(IMundoJuego mundo) {
+        TextureAtlas atlas = Assets.get(PathManager.ARANAZO_ANIMATION, TextureAtlas.class);
+        if (atlas != null) {
+            // El efecto dura poco (0.15s) para que se sienta como un golpe rápido
+            EfectoVisual efecto = new EfectoVisual(atlas, "aranazo", 0.05f, false);
+
+            // Usamos las coordenadas guardadas al inicio
+            efecto.setPosition(xVisual, yVisual - (anchoArea / 2f));
+            efecto.setOrigin(0, anchoArea / 2f);
+            efecto.setSize(rango, anchoArea);
+            efecto.setRotation(rotacionVisual);
+            efecto.setColor(this.colorVisual);
+
+            mundo.agregarActor(efecto);
+        }
+    }
+
+    private Polygon rectToPoly(Rectangle r) {
+        float[] v = new float[] {
+            r.x, r.y,
+            r.x + r.width, r.y,
+            r.x + r.width, r.y + r.height,
+            r.x, r.y + r.height
+        };
+        return new Polygon(v);
+    }
+
+    public float getAncho() { return anchoArea; }
 }

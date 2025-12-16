@@ -1,91 +1,57 @@
 package io.github.package_game_survival.entidades.efectos;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.utils.Array;
-import io.github.package_game_survival.entidades.Entidad;
-import io.github.package_game_survival.interfaces.IMundoJuego;
+import com.badlogic.gdx.scenes.scene2d.Actor;
 
-public class EfectoVisual extends Entidad {
+public class EfectoVisual extends Actor {
 
-    private final Animation<TextureRegion> animacion;
-    private float tiempoEstado = 0f;
+    private Animation<TextureRegion> animation;
+    private float stateTime = 0f;
+    private boolean loop = false;
 
-    public EfectoVisual(TextureAtlas atlas, String regionName, float x, float y, float frameDuration, float angulo) {
-        super("Efecto_" + regionName, x, y, 0, 0);
-
-        Array<AtlasRegion> regions = atlas.findRegions(regionName);
-
-        // Si no encuentra el grupo, buscamos manualmente "nombre1", "nombre2"...
-        if (regions == null || regions.isEmpty()) {
-            regions = new Array<>();
-            int i = 1;
-            AtlasRegion r;
-            while ((r = atlas.findRegion(regionName + i)) != null) {
-                regions.add(r);
-                i++;
-            }
-            // Intento final: buscar el nombre exacto sin números
-            if (regions.isEmpty()) {
-                r = atlas.findRegion(regionName);
-                if (r != null) regions.add(r);
-            }
+    public EfectoVisual(TextureAtlas atlas, String regionName, float frameDuration, boolean loop) {
+        // Busca la región, si no la encuentra usa todas las regiones del atlas por defecto
+        var regiones = atlas.findRegions(regionName);
+        if (regiones == null || regiones.isEmpty()) {
+            regiones = atlas.getRegions();
         }
 
-        if (regions.isEmpty()) {
-            //Gdx.app.error("EFECTO_VISUAL", "¡ERROR! No se encontró la textura: " + regionName);
-            this.animacion = null;
-        } else {
-            this.animacion = new Animation<>(frameDuration, regions, Animation.PlayMode.NORMAL);
-
-            TextureRegion primerFrame = regions.first();
-            setSize(primerFrame.getRegionWidth(), primerFrame.getRegionHeight());
-            setOrigin(getWidth() / 2, getHeight() / 2);
-
-        }
-
-        setRotation(angulo);
-    }
-
-    @Override
-    public void agregarAlMundo(IMundoJuego mundo) {
-        mundo.agregarActor(this);
-        this.toFront(); // ASEGURA QUE SE DIBUJE ENCIMA DE TODO
+        this.animation = new Animation<>(frameDuration, regiones, loop ? Animation.PlayMode.LOOP : Animation.PlayMode.NORMAL);
+        this.loop = loop;
     }
 
     @Override
     public void act(float delta) {
         super.act(delta);
-        if (animacion == null) {
-            remove();
-            return;
-        }
-        tiempoEstado += delta;
-        if (animacion.isAnimationFinished(tiempoEstado)) {
-            remove();
+        stateTime += delta;
+
+        // Si la animación terminó y no es loop, eliminamos el actor
+        if (!loop && animation.isAnimationFinished(stateTime)) {
+            this.remove();
         }
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        if (animacion == null) return;
-        TextureRegion frame = animacion.getKeyFrame(tiempoEstado, false);
+        TextureRegion currentFrame = animation.getKeyFrame(stateTime);
+        if (currentFrame != null) {
+            Color c = getColor();
+            batch.setColor(c.r, c.g, c.b, c.a * parentAlpha);
 
-        Color color = getColor();
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha);
+            // Dibujamos respetando rotación y escala (importante para el arañazo)
+            batch.draw(currentFrame,
+                getX(), getY(),
+                getOriginX(), getOriginY(),
+                getWidth(), getHeight(),
+                getScaleX(), getScaleY(),
+                getRotation()
+            );
 
-        batch.draw(frame,
-            getX(), getY(),
-            getOriginX(), getOriginY(),
-            getWidth(), getHeight(),
-            getScaleX(), getScaleY(),
-            getRotation());
-
-        batch.setColor(Color.WHITE);
+            batch.setColor(Color.WHITE);
+        }
     }
 }

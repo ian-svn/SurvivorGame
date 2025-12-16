@@ -7,85 +7,63 @@ import io.github.package_game_survival.interfaces.IMundoJuego;
 
 public abstract class AtaqueBase implements IAtaque {
 
-    public enum EstadoHabilidad {
-        LISTO,
-        CASTEANDO,    // Cargando el ataque
-        ENFRIAMIENTO  // Cooldown
-    }
-
-    protected float tiempoEnfriamiento;
-    protected float tiempoCasteo;
-    protected float temporizador;
-    protected EstadoHabilidad estado;
-
-    protected int danio;
+    protected float cooldownMaximo;
+    protected float duracionCasteo; // Este es el tiempo de "preparación" antes del golpe
+    protected int danioBase;
     protected float rango;
     protected Class<? extends SerVivo> claseObjetivo;
 
-    protected SerVivo atacanteRef;
-    protected Vector2 destinoRef = new Vector2();
-    protected IMundoJuego mundoRef;
+    protected float timerCooldown = 0f;
+    protected float timerCasteo = 0f;
+    protected boolean casteando = false;
 
-    public AtaqueBase(float tiempoEnfriamiento, float tiempoCasteo, int danio, float rango, Class<? extends SerVivo> claseObjetivo) {
-        this.tiempoEnfriamiento = tiempoEnfriamiento;
-        this.tiempoCasteo = tiempoCasteo;
-        this.danio = danio;
+    // Snapshot de datos
+    protected Vector2 destinoGuardado = new Vector2();
+    protected SerVivo atacanteGuardado;
+    protected IMundoJuego mundoGuardado;
+
+    public AtaqueBase(float cooldown, float duracionCasteo, int danio, float rango, Class<? extends SerVivo> claseObjetivo) {
+        this.cooldownMaximo = cooldown;
+        this.duracionCasteo = duracionCasteo;
+        this.danioBase = danio;
         this.rango = rango;
         this.claseObjetivo = claseObjetivo;
-        this.estado = EstadoHabilidad.LISTO;
-        this.temporizador = 0;
+    }
+
+    @Override
+    public void intentarAtacar(SerVivo atacante, Vector2 destino, IMundoJuego mundo) {
+        if (timerCooldown > 0 || casteando) return;
+
+        this.atacanteGuardado = atacante;
+        this.mundoGuardado = mundo;
+        this.destinoGuardado.set(destino);
+
+        this.casteando = true;
+        this.timerCasteo = duracionCasteo; // Empieza la cuenta regresiva
+
+        onInicioCasteo(atacante, destino, mundo);
     }
 
     @Override
     public void update(float delta) {
-        if (estado == EstadoHabilidad.LISTO) return;
+        if (timerCooldown > 0) timerCooldown -= delta;
 
-        temporizador -= delta;
+        if (casteando) {
+            timerCasteo -= delta;
 
-        if (estado == EstadoHabilidad.CASTEANDO) {
-            // Cancelar si el dueño murió
-            if (atacanteRef != null && atacanteRef.getVida() <= 0) {
-                estado = EstadoHabilidad.LISTO;
-                return;
-            }
-
-            // Si termina el tiempo y sigue vivo, dispara
-            if (temporizador <= 0) {
-                ejecutarEfecto(atacanteRef, destinoRef, mundoRef);
-                estado = EstadoHabilidad.ENFRIAMIENTO;
-                temporizador = tiempoEnfriamiento;
-            }
-        }
-        else if (estado == EstadoHabilidad.ENFRIAMIENTO) {
-            if (temporizador <= 0) {
-                estado = EstadoHabilidad.LISTO;
+            // CUANDO LLEGA A 0 -> EJECUTA EL GOLPE
+            if (timerCasteo <= 0) {
+                ejecutarGolpe(atacanteGuardado, destinoGuardado, mundoGuardado);
+                casteando = false;
+                timerCooldown = cooldownMaximo;
             }
         }
     }
 
-    @Override
-    public boolean intentarAtacar(SerVivo atacante, Vector2 destino, IMundoJuego mundo) {
-        if (estado != EstadoHabilidad.LISTO) return false;
+    protected abstract void onInicioCasteo(SerVivo atacante, Vector2 destino, IMundoJuego mundo);
+    protected abstract void ejecutarGolpe(SerVivo atacante, Vector2 destino, IMundoJuego mundo);
 
-        this.atacanteRef = atacante;
-        this.destinoRef.set(destino);
-        this.mundoRef = mundo;
-
-        if (tiempoCasteo > 0) {
-            estado = EstadoHabilidad.CASTEANDO;
-            temporizador = tiempoCasteo;
-        } else {
-            ejecutarEfecto(atacante, destino, mundo);
-            estado = EstadoHabilidad.ENFRIAMIENTO;
-            temporizador = tiempoEnfriamiento;
-        }
-        return true;
-    }
-
-    @Override
-    public boolean estaCasteando() {
-        return estado == EstadoHabilidad.CASTEANDO;
-    }
-
-    protected abstract void ejecutarEfecto(SerVivo atacante, Vector2 destino, IMundoJuego mundo);
+    @Override public boolean estaCasteando() { return casteando; }
+    @Override public boolean isEnCooldown() { return timerCooldown > 0; }
+    public float getRango() { return rango; }
 }

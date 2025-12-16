@@ -1,6 +1,5 @@
 package io.github.package_game_survival.entidades.seres.enemigos;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
@@ -13,8 +12,6 @@ import io.github.package_game_survival.entidades.objetos.Objeto;
 import io.github.package_game_survival.entidades.seres.SerVivo;
 import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
 import io.github.package_game_survival.interfaces.IMundoJuego;
-import io.github.package_game_survival.managers.Assets;
-import io.github.package_game_survival.managers.PathManager;
 import io.github.package_game_survival.standards.TooltipStandard;
 
 public abstract class Enemigo extends SerVivo {
@@ -23,6 +20,9 @@ public abstract class Enemigo extends SerVivo {
     protected Array<Bloque> bloques;
     private Rectangle hitbox;
 
+    // Tooltip propio para poder actualizarlo
+    private TooltipStandard tooltipEnemigo;
+
     protected float rangoAtaque = 50f;
 
     private boolean quemandose = false;
@@ -30,7 +30,6 @@ public abstract class Enemigo extends SerVivo {
     private final float INTERVALO_DAÑO = 0.5f;
     private final int DAÑO_POR_TICK = 5;
 
-    // --- NUEVO: Control para saber si debe tirar items al morir ---
     private boolean dropsHabilitados = true;
 
     private static class DropPosible {
@@ -45,9 +44,16 @@ public abstract class Enemigo extends SerVivo {
 
     public Enemigo(String nombre, float x, float y, float ancho, float alto,
                    int vidaInicial, int vidaMaxima, int velocidad, int danio, TextureAtlas atlas) {
-        // CORREGIDO: Se pasa el parámetro 'atlas' directamente
         super(nombre, x, y, ancho, alto, vidaInicial, vidaMaxima, velocidad, danio, atlas);
         this.listaDrops = new Array<>();
+        setSize(ancho, alto);
+    }
+
+    public void escalarDificultad(int numeroNoche) {
+        if (numeroNoche > 0) {
+            this.setVelocidad(this.getVelocidad() + (numeroNoche * 10));
+            this.aumentarVidaMaxima(numeroNoche * 20);
+        }
     }
 
     public void setQuemandose(boolean quemandose) {
@@ -69,22 +75,43 @@ public abstract class Enemigo extends SerVivo {
             new Vector2(objetivo.getX(), objetivo.getY()), bloques
         );
 
-        if (mundo instanceof Escenario) {
-            instanciarTooltip(new TooltipStandard(getName(), this, (Escenario) mundo));
+        // Creamos nuestro tooltip personalizado
+        this.tooltipEnemigo = new TooltipStandard(generarInfoTooltip(), this);
+    }
+
+    private String generarInfoTooltip() {
+        return getName() + "\nHP: " + getVida() + "/" + getVidaMaxima();
+    }
+
+    @Override
+    public void act(float delta) {
+        super.act(delta);
+        if (isMuerto()) return;
+
+        // ACTUALIZAR TOOLTIP CON VIDA EN TIEMPO REAL
+        if (tooltipEnemigo != null) {
+            tooltipEnemigo.setText(generarInfoTooltip());
         }
+
+        if (quemandose) {
+            timerQuemar += delta;
+            if (timerQuemar >= INTERVALO_DAÑO) {
+                timerQuemar = 0f;
+                if (getVida() - DAÑO_POR_TICK <= 0) dropsHabilitados = false;
+                alterarVida(-DAÑO_POR_TICK);
+            }
+        }
+
+        comportamientoIA(delta);
     }
 
     @Override
     public void delete() {
         super.delete();
-
-        // --- CAMBIO: Solo dropear si está habilitado (Si NO murió por sol) ---
         if (dropsHabilitados && mundo != null) {
-
             if (listaDrops.notEmpty() && MathUtils.randomBoolean(0.5f)) {
                 float dado = MathUtils.random();
                 float acumulador = 0f;
-
                 for (DropPosible drop : listaDrops) {
                     acumulador += drop.probabilidad;
                     if (dado <= acumulador) {
@@ -95,43 +122,13 @@ public abstract class Enemigo extends SerVivo {
                             if (mundo instanceof Escenario) {
                                 ((Escenario) mundo).getObjetos().add(loot);
                             }
-                        } catch (Exception e) {
-                            Gdx.app.error("DROP", "Error: " + e.getMessage());
-                        }
+                        } catch (Exception e) {}
                         break;
                     }
                 }
             }
         }
-
-        if (mundo != null) {
-            mundo.getEnemigos().removeValue(this, true);
-        }
-    }
-
-    @Override
-    public void act(float delta) {
-        super.act(delta);
-        if (isMuerto()) return;
-
-        // --- LÓGICA DE QUEMADURA Y MUERTE SIN DROP ---
-        if (quemandose) {
-            timerQuemar += delta;
-            if (timerQuemar >= INTERVALO_DAÑO) {
-                timerQuemar = 0f;
-
-                // Si el próximo tick lo va a matar...
-                if (getVida() - DAÑO_POR_TICK <= 0) {
-                    dropsHabilitados = false; // DESACTIVAMOS DROPS
-                }
-
-                alterarVida(-DAÑO_POR_TICK);
-            }
-        }
-
-        comportamientoIA(delta);
-
-        if(getTooltip() != null) getTooltip().actualizarPosicion();
+        if (mundo != null) mundo.getEnemigos().removeValue(this, true);
     }
 
     private void comportamientoIA(float delta) {
@@ -153,7 +150,6 @@ public abstract class Enemigo extends SerVivo {
 
     private void moverseHaciaObjetivo(float delta) {
         if (isMuerto()) return;
-
         float oldX = getX();
         float oldY = getY();
 
@@ -161,7 +157,7 @@ public abstract class Enemigo extends SerVivo {
             estrategia = new EstrategiaMoverAPunto(new Vector2(objetivo.getX(), objetivo.getY()), bloques);
         }
         if (estrategia instanceof EstrategiaMoverAPunto) {
-            ((EstrategiaMoverAPunto) estrategia).setDestino(objetivo.getX(), objetivo.getY());
+            ((EstrategiaMoverAPunto) estrategia).setDestino(new Vector2(objetivo.getX(), objetivo.getY()));
         }
 
         estrategia.actualizar(this, delta);

@@ -35,7 +35,7 @@ public class EfectoVentisca implements Disposable {
     private final float TIEMPO_PARA_EMPEZAR_DANO = 2.0f;
 
     // CAMBIO: Daño fijo solicitado
-    private final int DANIO_POR_HIT = 4;
+    private final int DANIO_POR_HIT = 10;
 
     public EfectoVentisca(float anchoMundo, float altoMundo, Jugador jugador) {
         this.anchoMundo = anchoMundo;

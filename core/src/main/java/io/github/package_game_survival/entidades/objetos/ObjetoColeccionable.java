@@ -8,13 +8,12 @@ public class ObjetoColeccionable extends Objeto {
 
     public ObjetoColeccionable(String nombre, float x, float y, Texture texture) {
         super(nombre, x, y, 32, 32, texture);
-        setName(nombre);
+        // setName ya lo hace super()
     }
 
     @Override
     public void act(float delta) {
         super.act(delta);
-        if (getTooltip() != null) getTooltip().actualizarPosicion();
     }
 
     @Override
@@ -24,9 +23,7 @@ public class ObjetoColeccionable extends Objeto {
 
     @Override
     public void agregarAlMundo(IMundoJuego mundo) {
-        mundo.agregarActor(this);
-
-        // --- CAMBIO CLAVE ---
+        super.agregarAlMundo(mundo); // Activa Tooltip
         this.toBack();
     }
 }

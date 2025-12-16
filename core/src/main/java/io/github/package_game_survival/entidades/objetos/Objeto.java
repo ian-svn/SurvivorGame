@@ -24,13 +24,22 @@ public abstract class Objeto extends Entidad {
     protected boolean desaparecible = true;
 
     public Objeto(String nombre, float x, float y, float ancho, float alto, Texture texture){
+        // Pasamos datos a Entidad para que configure nombre y tamaño (tooltip/mouse)
         super(nombre, x, y, ancho, alto);
+
         if (texture != null) {
             this.visual = new GestorAnimacion(new TextureRegion(texture));
         } else {
             this.visual = new GestorAnimacion();
         }
         setColor(Color.WHITE);
+    }
+
+    // --- CRÍTICO: Implementación base para activar Tooltip ---
+    @Override
+    public void agregarAlMundo(IMundoJuego mundo) {
+        // Llamamos a la lógica de Entidad que crea el TooltipStandard
+        super.agregarAlMundo(mundo);
     }
 
     public void setDesaparecible(boolean desaparecible) {
@@ -48,14 +57,15 @@ public abstract class Objeto extends Entidad {
 
     @Override
     public void act(float delta) {
-        super.act(delta);
+        super.act(delta); // Actualiza el tooltip en Entidad
+
         if (!desaparecible) return;
 
         tiempoVida += delta;
 
         if (tiempoVida >= TIEMPO_MAXIMO) {
             marcadoParaBorrar = true;
-            this.remove();
+            delete(); // Usamos delete() de Entidad que limpia todo
         }
     }
 
@@ -68,9 +78,7 @@ public abstract class Objeto extends Entidad {
 
             if (desaparecible && tiempoVida > INICIO_PARPADEO) {
                 float tiempoRestante = TIEMPO_MAXIMO - tiempoVida;
-                // Velocidad parpadeo basada en los 10 segundos restantes
                 float velocidadParpadeo = (10f - tiempoRestante) * 3f;
-
                 float parpadeo = Math.abs(MathUtils.sin(tiempoVida * velocidadParpadeo));
                 if (parpadeo < 0.5f) alpha = 0.4f;
                 else alpha = 1f;
@@ -85,17 +93,17 @@ public abstract class Objeto extends Entidad {
     public int getPuntos() { return this.puntos; }
     public TextureRegion getRegionVisual() { return visual.getFrame(); }
     public Color getColorVisual() { return getColor(); }
-    public void adquirir() { remove(); }
+
+    public void adquirir() {
+        delete(); // Limpieza completa
+    }
 
     @Override
     public Rectangle getRectColision() {
         if (hitbox == null) {
-            hitbox = new Rectangle(getX(), getY(), getAncho(), getAlto());
+            hitbox = new Rectangle(getX(), getY(), getWidth(), getHeight());
         }
         hitbox.setPosition(getX(), getY());
         return hitbox;
     }
-
-    @Override
-    public abstract void agregarAlMundo(IMundoJuego mundo);
 }

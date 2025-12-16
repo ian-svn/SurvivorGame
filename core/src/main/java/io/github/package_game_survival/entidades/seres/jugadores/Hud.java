@@ -16,6 +16,8 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import io.github.package_game_survival.entidades.objetos.Objeto;
+import io.github.package_game_survival.habilidades.AtaqueAranazo;
+import io.github.package_game_survival.interfaces.IAtaque;
 import io.github.package_game_survival.managers.Assets;
 import io.github.package_game_survival.managers.GestorTiempo;
 import io.github.package_game_survival.managers.PathManager;
@@ -33,11 +35,17 @@ public class Hud implements Disposable {
     private SpriteBatch batch;
     private ShapeRenderer shapeRenderer;
 
-    // UI Elements
     private LabelStandard labelAviso;
     private Image iconoFuego;
     private Table tablaStats;
-    private LabelStandard lblStatsVida, lblStatsDanio, lblStatsVelocidad;
+
+    // Labels de Stats
+    private LabelStandard lblStatsVida;
+    private LabelStandard lblStatsDanio;
+    private LabelStandard lblStatsVelocidad;
+    // NUEVOS LABELS
+    private LabelStandard lblStatsRango;
+    private LabelStandard lblStatsArea;
 
     private static final float ANCHO_UI = MyGame.ANCHO_PANTALLA;
     private static final float ALTO_UI = MyGame.ALTO_PANTALLA;
@@ -74,19 +82,12 @@ public class Hud implements Disposable {
     }
 
     private void inicializarAlertas() {
-        // Label Aviso Desastre
-        labelAviso = new LabelStandard("");
-        labelAviso.setColor(Color.RED);
-        labelAviso.setFontScale(1.0f); // Tamaño normal
-        labelAviso.setAlignment(Align.center);
-
-        // CAMBIO: Posición más alta (casi pegado al borde superior)
-        labelAviso.setPosition(ANCHO_UI / 2f, ALTO_UI - 40, Align.center);
-
+        labelAviso = new LabelStandard("", Color.RED, 1.0f);
+        labelAviso.setCentrado();
+        labelAviso.setPosition(ANCHO_UI / 2f, ALTO_UI - 40);
         labelAviso.setVisible(false);
         stage.addActor(labelAviso);
 
-        // Icono Fuego
         Texture texFuego = Assets.get(PathManager.HOGUERA_TEXTURE, Texture.class);
         iconoFuego = new Image(texFuego);
         iconoFuego.setSize(32, 32);
@@ -97,26 +98,29 @@ public class Hud implements Disposable {
 
     private void inicializarTablaStats() {
         tablaStats = new Table();
-        LabelStandard titulo = new LabelStandard("ESTADISTICAS");
-        titulo.setColor(Color.GOLD);
-        titulo.setFontScale(0.8f);
 
-        lblStatsVida = new LabelStandard("HP: 0/0");
-        lblStatsDanio = new LabelStandard("DMG: 0");
-        lblStatsVelocidad = new LabelStandard("SPD: 0");
+        LabelStandard titulo = new LabelStandard("ESTADISTICAS", Color.NAVY, 0.8f);
 
-        lblStatsVida.setFontScale(0.7f);
-        lblStatsDanio.setFontScale(0.7f);
-        lblStatsVelocidad.setFontScale(0.7f);
+        lblStatsVida = new LabelStandard("HP: 0/0", Color.BLUE, 0.7f);
+        lblStatsDanio = new LabelStandard("DMG: 0", Color.BLUE, 0.7f);
+        lblStatsVelocidad = new LabelStandard("SPD: 0", Color.BLUE, 0.7f);
+
+        // Inicializamos los nuevos labels
+        lblStatsRango = new LabelStandard("RNG: 0", Color.BLUE, 0.7f);
+        lblStatsArea = new LabelStandard("AREA: 0", Color.BLUE, 0.7f);
 
         tablaStats.add(titulo).align(Align.left).padBottom(5).row();
         tablaStats.add(lblStatsVida).align(Align.left).padBottom(2).row();
         tablaStats.add(lblStatsDanio).align(Align.left).padBottom(2).row();
         tablaStats.add(lblStatsVelocidad).align(Align.left).padBottom(2).row();
+        // Agregamos al layout
+        tablaStats.add(lblStatsRango).align(Align.left).padBottom(2).row();
+        tablaStats.add(lblStatsArea).align(Align.left).padBottom(2).row();
+
         tablaStats.pack();
 
         float tablaX = ANCHO_UI - tablaStats.getWidth() - 20;
-        float tablaY = BARRA_Y - 180;
+        float tablaY = BARRA_Y - 220; // Bajamos un poco más la tabla
         tablaStats.setPosition(tablaX, tablaY);
         tablaStats.setVisible(false);
         stage.addActor(tablaStats);
@@ -127,10 +131,9 @@ public class Hud implements Disposable {
         labelAviso.setVisible(true);
         labelAviso.clearActions();
 
-        // CAMBIO: Reduje el tiempo en pantalla de 3s a 2.5s para que no moleste tanto
         labelAviso.addAction(Actions.sequence(
             Actions.alpha(0),
-            Actions.fadeIn(0.3f),
+            Actions.fadeIn(0.5f),
             Actions.delay(2.5f),
             Actions.fadeOut(0.5f),
             Actions.visible(false)
@@ -159,6 +162,17 @@ public class Hud implements Disposable {
         lblStatsVida.setText("HP: " + jugador.getVida() + "/" + jugador.getVidaMaxima());
         lblStatsDanio.setText("DMG: " + jugador.getDanio());
         lblStatsVelocidad.setText("SPD: " + jugador.getVelocidad());
+
+        IAtaque ataque = jugador.getHabilidadPrincipal();
+        if (ataque instanceof AtaqueAranazo) {
+            AtaqueAranazo aranazo = (AtaqueAranazo) ataque;
+            lblStatsRango.setText("RNG: " + (int)aranazo.getRango());
+            lblStatsArea.setText("AREA: " + (int)aranazo.getAncho());
+        } else {
+            lblStatsRango.setText("RNG: -");
+            lblStatsArea.setText("AREA: -");
+        }
+
         tablaStats.pack();
         float tablaX = ANCHO_UI - tablaStats.getWidth() - 20;
         tablaStats.setX(tablaX);
@@ -200,6 +214,11 @@ public class Hud implements Disposable {
 
     public void resize(int width, int height) {
         viewport.update(width, height, true);
+    }
+
+    // Método auxiliar para que otras clases agreguen actores al HUD (ej: Tooltips)
+    public void agregarActor(com.badlogic.gdx.scenes.scene2d.Actor actor) {
+        stage.addActor(actor);
     }
 
     @Override

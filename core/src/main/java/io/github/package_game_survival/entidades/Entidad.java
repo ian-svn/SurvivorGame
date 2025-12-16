@@ -3,6 +3,7 @@ package io.github.package_game_survival.entidades;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Disposable;
+import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.interfaces.Colisionable;
 import io.github.package_game_survival.interfaces.IMundoJuego;
 import io.github.package_game_survival.standards.TooltipStandard;
@@ -25,15 +26,18 @@ public abstract class Entidad extends Actor implements Colisionable, Disposable 
         }
     }
 
-    // --- NUEVO MÉTODO DELETE ---
-    // Este es el método que usaremos para eliminar entidades de forma segura
     public void delete() {
-        this.remove(); // Se quita del Stage (Actor)
-
-        // Aquí podrías agregar lógica extra como soltar recursos, partículas de muerte, etc.
+        this.remove();
     }
 
-    public abstract void agregarAlMundo(IMundoJuego mundo);
+    public void agregarAlMundo(IMundoJuego mundo) {
+        mundo.agregarActor(this);
+        if (mundo instanceof Escenario) {
+            if (this.tooltip == null) {
+                this.tooltip = new TooltipStandard(getName(), this, (Escenario) mundo);
+            }
+        }
+    }
 
     @Override
     public Rectangle getRectColision() {
@@ -47,6 +51,11 @@ public abstract class Entidad extends Actor implements Colisionable, Disposable 
     public String getNombre() { return getName(); }
     public float getAncho() { return getWidth(); }
     public float getAlto() { return getHeight(); }
+
+    // --- MÉTODOS QUE FALTABAN ---
+    public float getCentroX() { return getX() + getWidth() / 2; }
+    public float getCentroY() { return getY() + getHeight() / 2; }
+
     public TooltipStandard getTooltip() { return tooltip; }
     public void instanciarTooltip(TooltipStandard tooltip) { this.tooltip = tooltip; }
 

@@ -29,8 +29,8 @@ public class Assets {
         manager.load(PathManager.CAMA_TEXTURE, Texture.class);
         manager.load(PathManager.HOGUERA_TEXTURE, Texture.class);
         manager.load(PathManager.LANA_TEXTURE, Texture.class);
-
-
+        manager.load(PathManager.CAZADOR_TEXTURE, Texture.class);
+        manager.load(PathManager.GUERRERO_TEXTURE, Texture.class);
 
         manager.load(PathManager.MENU_MUSIC, Music.class);
         manager.load(PathManager.GAME_MUSIC, Music.class);
@@ -38,6 +38,8 @@ public class Assets {
         manager.load(PathManager.GRAB_OBJECT_SOUND, Sound.class);
         manager.load(PathManager.PLACE_BLOCK_SOUND, Sound.class);
         manager.load(PathManager.HIT_SOUND, Sound.class);
+        manager.load(PathManager.CONSUMIR_SOUND, Sound.class);
+        manager.load(PathManager.VIENTO_SOUND, Sound.class);
 
         manager.load(PathManager.BACKGROUND, Skin.class);
         manager.load(PathManager.LABEL, Skin.class);
@@ -54,6 +56,7 @@ public class Assets {
         manager.load(PathManager.ENEMIGO_MAGO_ATLAS, TextureAtlas.class);
         manager.load(PathManager.ENEMIGO_ARQUERO_ATLAS, TextureAtlas.class);
         manager.load(PathManager.CLICK_ANIMATION, TextureAtlas.class);
+        manager.load(PathManager.CAZADOR_ATLAS, TextureAtlas.class);
 
         manager.load(PathManager.VACA_TEXTURE_ATLAS, Texture.class);
         manager.load(PathManager.JABALI_TEXTURE_ATLAS, Texture.class);

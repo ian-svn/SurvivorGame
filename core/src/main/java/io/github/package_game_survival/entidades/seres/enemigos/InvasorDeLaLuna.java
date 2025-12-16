@@ -13,7 +13,7 @@ public class InvasorDeLaLuna extends Enemigo {
 
     public InvasorDeLaLuna(float x, float y) {
         super("Invasor De La Luna", x, y, 30, 40, 140,
-            140, 45, 10,
+            80, 45, 20,
             Assets.get(PathManager.ENEMIGO_ATLAS, TextureAtlas.class)
         );
 

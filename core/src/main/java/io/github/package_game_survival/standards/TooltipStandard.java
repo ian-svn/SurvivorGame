@@ -1,7 +1,7 @@
 package io.github.package_game_survival.standards;
 
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextTooltip;
 import com.badlogic.gdx.scenes.scene2d.ui.TooltipManager;
@@ -17,7 +17,7 @@ public class TooltipStandard {
 
     static {
         tm.animations = false;
-        tm.initialTime = 0.5f;
+        tm.initialTime = 0.1f;
         tm.subsequentTime = 0f;
         tm.resetTime = 0f;
         tm.offsetX = 10f;
@@ -25,23 +25,28 @@ public class TooltipStandard {
     }
 
     private final TextTooltip tooltip;
-    private final Actor actor;
-    private final OrthographicCamera camera;
 
-    public TooltipStandard(String text, Actor actor, Escenario escenario) {
-        this.actor = actor;
-        this.camera = escenario.getCamara();
+    // Constructor para actores generales (Jugador, Items)
+    public TooltipStandard(String text, Actor actor) {
         tooltip = new TextTooltip(text, tm, skinTooltip);
         tooltip.getContainer().setBackground((Drawable) null);
-
         actor.addListener(tooltip);
     }
 
-    public void actualizarPosicion() {
-        if (actor.getStage() == null) return;
-        float x = actor.getX();
-        float y = actor.getY() + actor.getHeight() + 15f;
-
-        tooltip.getContainer().setPosition(x, y);
+    // Constructor de compatibilidad (por si lo usas en Escenario)
+    public TooltipStandard(String text, Actor actor, Escenario escenario) {
+        this(text, actor);
     }
+
+    // --- NUEVO: PERMITE CAMBIAR EL TEXTO EN VIVO ---
+    public void setText(String newText) {
+        // Accedemos al Label interno del TextTooltip y le cambiamos el texto
+        Label label = tooltip.getActor();
+        if (label != null) {
+            label.setText(newText);
+            tooltip.getContainer().pack(); // Reajustar tamaño del fondo
+        }
+    }
+
+    public void actualizarPosicion() { }
 }

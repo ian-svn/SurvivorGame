@@ -304,3 +304,44 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1
 - Lógica: Corregida inyección de dependencias nulas entre `Escenario` y `Hud`.
 - Spawneo: Eliminada la aparición errónea de hogueras como loot aleatorio.
 - Assets: Añadida referencia faltante a `HOGUERA_TEXTURE` en `PathManager`.
+
+## [0.15.0] - 2025-12-15
+### Added
+- Core: Sistema de desatasco automático en `Jugador` al detectar colisión inicial.
+- Algoritmo: Distribución por grilla (12x12) para el evento `Inundacion`, asegurando cobertura equitativa.
+- Mecánica: Daño fijo por tick (4 HP) implementado en `EfectoVentisca`.
+
+### Changed
+- Refactor: Aplicado SRP en `GestorDesastres` y `GestorSpawneo`. La UI se centralizó en `Hud`.
+- Hoguera: Migración a TextureAtlas, reducción de hitbox a la base y lógica de daño por contacto (-10 HP).
+- Terremoto: Modificado para limpiar items del suelo preservando `Cama` y `Hoguera`.
+- GestorTiempo: La condición de victoria se movió al amanecer (05:00) del día final.
+- UI: Reducción de escala en alertas y reubicación de la tabla de estadísticas.
+
+### Fixed
+- Compilación: Resuelto error de tipos incompatibles entre `Hoguera` y `BloqueAnimado`.
+- Lógica: Corregida inyección de dependencias nulas entre `Escenario` y `Hud`.
+- Spawneo: Eliminada la aparición errónea de hogueras como loot aleatorio.
+- Assets: Añadida referencia faltante a `HOGUERA_TEXTURE` en `PathManager`.
+
+## [1.0.0] - 2025-12-16
+
+## Added
+- Sistema de combate "Snapshot" (permite esquivar ataques).
+- IA de Tornado con estados (Apuntar -> Embestir -> Esperar).
+- Evento de "Doble Desastre" en la Noche 4.
+
+## Changed
+- Ciclo Día/Noche ajustado: 30s Día / 90s Noche.
+- Victoria al amanecer del Día 5.
+- Hitbox del jugador reducida (solo pies) para mejor movimiento.
+- Límites de stats aumentados.
+- Tornados ahora dañan a enemigos (40 dmg) y al jugador (20 dmg + empuje).
+- Menús detienen sonidos ambiente al cambiar de pantalla.
+
+## Fixed
+- Crash por archivos de audio faltantes solucionado.
+- Buffs de velocidad (Carne Podrida) ahora funcionan correctamente.
+- Tooltips arreglados para desastres y objetos.
+- Tooltips de enemigos muestran vida en tiempo real.
+- Errores de compilación y dependencias circulares resueltos.

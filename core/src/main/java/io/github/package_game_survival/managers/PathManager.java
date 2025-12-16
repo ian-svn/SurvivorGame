@@ -11,6 +11,8 @@ public final class PathManager {
     public static final String PLACE_BLOCK_SOUND = "sounds/place_block.mp3";
     public static final String GRAB_OBJECT_SOUND = "sounds/grab_object.mp3";
     public static final String HIT_SOUND = "sounds/hit.mp3";
+    public static final String CONSUMIR_SOUND = "sounds/consumir.mp3";
+    public static final String VIENTO_SOUND = "sounds/sonidoViento.mp3";
 
     public static final String GAME_MUSIC = "sounds/MyCastleTown.mp3";
     public static final String MENU_MUSIC = "sounds/MenuTheme.mp3";
@@ -45,6 +47,7 @@ public final class PathManager {
     public static final String ENEMIGO_ATLAS = "sprites/enemigo.atlas";
     public static final String ENEMIGO_MAGO_ATLAS = "sprites/enemigoMago.atlas";
     public static final String ENEMIGO_ARQUERO_ATLAS = "sprites/enemigoArquero.atlas";
+    public static final String CAZADOR_ATLAS = "sprites/cazador.atlas";
     public static final String CLICK_ANIMATION = "atlas/click.atlas";
     public static final String ARANAZO_ANIMATION = "atlas/aranazo.atlas";
     public static final String HOGUERA_ATLAS = "atlas/hoguera.atlas";
@@ -54,10 +57,11 @@ public final class PathManager {
     public static final String JABALI_TEXTURE_ATLAS = "sprites/jabali.png";
     public static final String OVEJA_TEXTURE_ATLAS = "sprites/oveja.png";
     public static final String CAMA_TEXTURE = "sprites/cama.png";
+    public static final String CAZADOR_TEXTURE = "sprites/cazadorIdle.png";
+    public static final String GUERRERO_TEXTURE = "sprites/guerreroIdle.png";
 
     public static final String MAPA_BOSQUE = "mapas/bosque/tilemap_bosqueGrande.tmx";
 
     public static final String BRILLO_FRAG = "shaders/brillo.frag";
     public static final String BRILLO_VERT = "shaders/brillo.vert";
-
 }

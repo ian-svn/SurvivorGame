@@ -2,6 +2,7 @@ package io.github.package_game_survival.pantallas;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputMultiplexer; // CLAVE PARA TOOLTIPS
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -22,6 +23,8 @@ import io.github.package_game_survival.entidades.mapas.Escenario;
 import io.github.package_game_survival.entidades.objetos.Objeto;
 import io.github.package_game_survival.entidades.seres.animales.Animal;
 import io.github.package_game_survival.entidades.seres.enemigos.Enemigo;
+import io.github.package_game_survival.entidades.seres.jugadores.Cazador;
+import io.github.package_game_survival.entidades.seres.jugadores.Guerrero;
 import io.github.package_game_survival.entidades.seres.jugadores.Hud;
 import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
 import io.github.package_game_survival.managers.Assets;
@@ -34,6 +37,7 @@ public class GameScreen implements Screen {
 
     private final MyGame game;
     private final FastMenuScreen fm;
+
     private final Stage stageMundo;
     private final Stage stageUI;
     private final FitViewport viewportUI;
@@ -41,6 +45,10 @@ public class GameScreen implements Screen {
     private final Jugador jugador;
     private final Escenario escenario;
     private final OrthographicCamera camara;
+
+    // --- INPUT MULTIPLEXER ---
+    private final InputMultiplexer inputMultiplexer;
+
     private final Vector3 tempVec = new Vector3();
     private Animation<TextureRegion> clickAnimation;
     private LabelStandard labelFinJuego, labelVolverMenu;
@@ -49,22 +57,36 @@ public class GameScreen implements Screen {
     private static float ANCHO_MUNDO;
     private static float ALTO_MUNDO;
 
-    public GameScreen(MyGame game) {
+    private final CharacterSelectionScreen.TipoClase tipoClaseActual;
+
+    public GameScreen(MyGame game, CharacterSelectionScreen.TipoClase tipoClase) {
         this.game = game;
-        ANCHO_MUNDO = game.ANCHO_PANTALLA;
-        ALTO_MUNDO = game.ALTO_PANTALLA;
+        this.tipoClaseActual = tipoClase;
+
+        ANCHO_MUNDO = MyGame.ANCHO_PANTALLA;
+        ALTO_MUNDO = MyGame.ALTO_PANTALLA;
 
         this.stageMundo = new Stage(game.getViewport());
         this.viewportUI = new FitViewport(ANCHO_MUNDO, ALTO_MUNDO);
         this.stageUI = new Stage(viewportUI);
-        Gdx.input.setInputProcessor(stageUI);
 
-        this.jugador = new Jugador("Ian", ANCHO_MUNDO/2, ALTO_MUNDO/2);
+        // CONFIGURACIÓN DE INPUT PARA QUE FUNCIONEN LOS TOOLTIPS Y LA UI
+        inputMultiplexer = new InputMultiplexer();
+        inputMultiplexer.addProcessor(stageUI);    // Prioridad 1: Botones de UI
+        inputMultiplexer.addProcessor(stageMundo); // Prioridad 2: Actores del mundo (Tooltips)
+        Gdx.input.setInputProcessor(inputMultiplexer);
 
-        // 1. Crear HUD sin tiempo
+        // Instanciación del Jugador
+        float startX = ANCHO_MUNDO / 2;
+        float startY = ALTO_MUNDO / 2;
+
+        if (tipoClase == CharacterSelectionScreen.TipoClase.CAZADOR) {
+            this.jugador = new Cazador(startX, startY);
+        } else {
+            this.jugador = new Guerrero(startX, startY);
+        }
+
         this.hud = new Hud(game.batch, jugador, null);
-
-        // 2. Crear Escenario con HUD
         this.escenario = new Escenario(stageMundo, jugador, hud);
         this.escenario.setStageUI(stageUI);
 
@@ -75,6 +97,10 @@ public class GameScreen implements Screen {
 
         inicializarUI();
         cargarEfectosVisuales();
+    }
+
+    public CharacterSelectionScreen.TipoClase getTipoClaseActual() {
+        return tipoClaseActual;
     }
 
     private void inicializarUI() {
@@ -123,6 +149,7 @@ public class GameScreen implements Screen {
         } else if (juegoTerminado) {
             jugador.setEstrategia(null);
         } else {
+            // LÓGICA DE MOVIMIENTO MANUAL (POLLING) - NO SE VE AFECTADA POR EL MULTIPLEXER
             if (Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)) {
                 tempVec.set(Gdx.input.getX(), Gdx.input.getY(), 0);
                 camara.unproject(tempVec);
@@ -161,6 +188,8 @@ public class GameScreen implements Screen {
         labelVolverMenu.setPosition(ANCHO_MUNDO/2f - labelVolverMenu.getPrefWidth()/2f, ALTO_MUNDO/2f - 100);
     }
 
+    public OrthographicCamera getCamara() { return camara; }
+
     @Override public void resize(int w, int h) {
         stageMundo.getViewport().update(w, h, true);
         viewportUI.update(w, h, true);
@@ -176,10 +205,12 @@ public class GameScreen implements Screen {
         AudioManager.getControler().stopMusic();
     }
 
-    // MÉTODO QUE FALTABA Y CAUSABA ERROR EN FASTMENUSCREEN
-    public OrthographicCamera getCamara() { return camara; }
+    @Override public void show() {
+        // Restaurar el multiplexer al volver del menú
+        Gdx.input.setInputProcessor(inputMultiplexer);
+        BrilloManager.redimensionar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+    }
 
-    @Override public void show() { Gdx.input.setInputProcessor(stageUI); BrilloManager.redimensionar(Gdx.graphics.getWidth(), Gdx.graphics.getHeight()); }
     @Override public void pause() {}
     @Override public void resume() {}
     @Override public void hide() {}

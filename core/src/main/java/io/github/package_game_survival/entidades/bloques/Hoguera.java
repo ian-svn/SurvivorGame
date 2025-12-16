@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import io.github.package_game_survival.entidades.seres.jugadores.Jugador;
 import io.github.package_game_survival.interfaces.IMundoJuego;
@@ -14,23 +15,23 @@ import io.github.package_game_survival.managers.PathManager;
 public class Hoguera extends Objeto {
 
     private Jugador jugador;
-    private final float RADIO_CALOR = 180f; // Distancia para quitar el frío
-    private final int DANIO_FUEGO = 10;     // Daño al tocarla
+    private final float RADIO_CALOR = 180f;
+    private final int DANIO_FUEGO = 10;
     private final Vector2 centroAux = new Vector2();
 
-    // Animación
     private Animation<TextureRegion> animacionFuego;
     private float stateTime = 0f;
-
-    // Cooldown interno para no spamear llamadas innecesarias (aunque el jugador tenga invulnerabilidad)
     private float tiempoParaQuemar = 0f;
 
+    private final Rectangle hitboxBase = new Rectangle();
+
     public Hoguera(float x, float y) {
-        super("Hoguera", x, y, 32, 40, null);
+        super("Hoguera", x, y, 32, 44, null);
+
         this.setDesaparecible(false);
 
+        // Carga de animación
         TextureAtlas atlas = Assets.get(PathManager.HOGUERA_ATLAS, TextureAtlas.class);
-        // Buscamos "hoguera" o usamos todas las regiones si no hay nombre específico
         TextureAtlas.AtlasRegion region = atlas.findRegion("hoguera");
         if (region != null) {
             animacionFuego = new Animation<>(0.1f, atlas.findRegions("hoguera"), Animation.PlayMode.LOOP);
@@ -40,39 +41,48 @@ public class Hoguera extends Objeto {
     }
 
     @Override
+    public void agregarAlMundo(IMundoJuego mundo) {
+        // CRÍTICO: Llamamos al padre para que cree el tooltip
+        super.agregarAlMundo(mundo);
+
+        this.jugador = mundo.getJugador();
+        this.toBack(); // Que se dibuje detrás del jugador si coinciden
+    }
+
+    @Override
     public void act(float delta) {
-        super.act(delta);
+        super.act(delta); // Actualiza tooltip
         stateTime += delta;
 
         if (jugador != null) {
-            // 1. Lógica de CALOR (Radio)
+            // Lógica Calor
             centroAux.set(getX() + getWidth()/2, getY() + getHeight()/2);
-            float distancia = centroAux.dst(jugador.getCentroX(), jugador.getY());
-
-            if (distancia < RADIO_CALOR) {
+            if (centroAux.dst(jugador.getCentroX(), jugador.getY()) < RADIO_CALOR) {
                 jugador.setSintiendoCalor(true);
             }
 
-            // 2. Lógica de DAÑO (Contacto)
-            // Usamos un pequeño timer (0.1s) para no saturar, pero el daño real
-            // lo limita la invulnerabilidad del jugador.
+            // Lógica Daño
             if (tiempoParaQuemar > 0) tiempoParaQuemar -= delta;
-
             if (tiempoParaQuemar <= 0 && this.getRectColision().overlaps(jugador.getRectColision())) {
-                // Intentamos hacer daño. Si el jugador es invulnerable, el método alterarVida lo ignorará.
-                // Si ya se le pasó la invulnerabilidad, recibirá el daño y se volverá invulnerable de nuevo.
                 jugador.alterarVida(-DANIO_FUEGO);
-                tiempoParaQuemar = 0.5f; // Reintentar en 0.5s
+                tiempoParaQuemar = 0.5f;
             }
         }
     }
 
     @Override
+    public Rectangle getRectColision() {
+        // Hitbox pequeña en la base
+        float wHit = 24;
+        float hHit = 20;
+        hitboxBase.set(getX() + (getWidth() - wHit) / 2, getY(), wHit, hHit);
+        return hitboxBase;
+    }
+
+    @Override
     public void draw(Batch batch, float parentAlpha) {
         TextureRegion currentFrame = null;
-        if (animacionFuego != null) {
-            currentFrame = animacionFuego.getKeyFrame(stateTime);
-        }
+        if (animacionFuego != null) currentFrame = animacionFuego.getKeyFrame(stateTime);
 
         if (currentFrame != null) {
             Color c = getColor();
@@ -82,13 +92,5 @@ public class Hoguera extends Objeto {
         }
     }
 
-    @Override
-    public void agregarAlMundo(IMundoJuego mundo) {
-        mundo.agregarActor(this);
-        this.toBack();
-        this.jugador = mundo.getJugador();
-    }
-
-    @Override
-    public void adquirir() { }
+    @Override public void adquirir() { } // No se puede recoger
 }

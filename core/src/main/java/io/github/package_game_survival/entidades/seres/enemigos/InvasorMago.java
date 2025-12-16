@@ -13,10 +13,10 @@ public class InvasorMago extends Enemigo {
 
     public InvasorMago(float x, float y) {
         super("Invasor Mago", x, y, 30, 40, 100,
-            100, 20, 30, Assets.get(PathManager.ENEMIGO_MAGO_ATLAS, TextureAtlas.class));
+            60, 20, 10, Assets.get(PathManager.ENEMIGO_MAGO_ATLAS, TextureAtlas.class));
 
         this.rangoAtaque = 180f;
-        this.habilidadPrincipal = new AtaqueAranazo(3f, 1f, 10, 180f,
+        this.habilidadPrincipal = new AtaqueAranazo(3f, 1.3f, 15, 180f,
             60f, Jugador.class, Color.VIOLET);
 
         this.agregarDrop(CarnePodrida.class, 0.75f);

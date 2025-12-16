@@ -12,11 +12,18 @@ import io.github.package_game_survival.managers.PathManager;
 public class InvasorArquero extends Enemigo {
 
     public InvasorArquero(float x, float y) {
-        super("Invasor Arquero", x, y, 30, 50, 125,
-            125, 15, 10, Assets.get(PathManager.ENEMIGO_ARQUERO_ATLAS, TextureAtlas.class));
+        // BALANCE:
+        // Vida: 180 (Antes menos)
+        // Velocidad: 135
+        // Daño: 20
+        super("Invasor Arquero", x, y, 30, 50, 180,
+            70, 35, 15, Assets.get(PathManager.ENEMIGO_ARQUERO_ATLAS, TextureAtlas.class));
 
-        this.rangoAtaque = 100f;
-        this.habilidadPrincipal = new AtaqueAranazo(2f, 0.8f, 15, 130f,
+        // Rango de visión/ataque aumentado a 150
+        this.rangoAtaque = 150f;
+
+        // Habilidad mejorada
+        this.habilidadPrincipal = new AtaqueAranazo(2f, 1f, 20, 180f,
             15f, Jugador.class, Color.GREEN);
 
         this.agregarDrop(CarnePodrida.class, 0.75f);
