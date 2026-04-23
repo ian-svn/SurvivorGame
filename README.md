@@ -18,7 +18,7 @@ https://github.com/ian-svn/SurvivorGame/wiki
 
 
 ## Video Corto de Demostración:
-https://youtu.be/y4Y17grUKIs
+https://www.youtube.com/watch?v=cwG6f7SCY_0
 
 ## Instrucciones Básicas de Compilación y Ejecución:
 
